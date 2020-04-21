@@ -13,8 +13,7 @@
 # remember the tabulator in the first column !!!
 
 .f90.o:
-	$(CPP) $(CPPFLAGS) $< -o $(*)_tmp.f90 ; \
-        $(MPIF90) $(F90FLAGS) -c $(*)_tmp.f90 -o $(*).o
+	$(MPIF90) $(F90FLAGS) -c $<
 
 # .f.o and .c.o: do not modify
 
@@ -103,7 +102,7 @@ CPPFLAGS       = -P -traditional $(DFLAGS) $(IFLAGS)
 # F90 flags must include MODFLAGS, IFLAGS, and FDFLAGS with appropriate syntax
 
 CFLAGS         = -O3 $(DFLAGS) $(IFLAGS)
-F90FLAGS       = $(FFLAGS)  $(FDFLAGS) $(CUDA_F90FLAGS) $(IFLAGS) $(MODFLAGS)
+F90FLAGS       = $(FFLAGS) -x f95-cpp-input -fopenmp $(FDFLAGS) $(CUDA_F90FLAGS) $(IFLAGS) $(MODFLAGS)
 FFLAGS         = -O3 -g -fopenmp -fno-range-check -fno-trapping-math -ffpe-summary=no
 
 # compiler flags without optimization for fortran-77
