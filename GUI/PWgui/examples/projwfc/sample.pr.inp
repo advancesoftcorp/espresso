@@ -1,0 +1,10 @@
+ &PROJWFC
+                      prefix = 'pwscf' ,
+                      outdir = '/scratch/tone/test/' ,
+                      ngauss = 1 ,
+                     degauss = 0.03 ,
+                      DeltaE = 0.01 ,
+                        Emin = -10.0 ,
+                        Emax = 4.0 ,
+ /
+

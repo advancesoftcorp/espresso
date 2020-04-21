@@ -1,0 +1,150 @@
+Jan 23 2012 Anton Kokalj (tone.kokalj@ijs.si)
+	* adding bands.x and dos.x modules
+	* editing of ChangeLog has been discontinued and in the meantime,
+		the pwgui was made syncronized with the incoming QE 5.0.
+
+Dec  2 2008 Anton Kokalj (tone.kokalj@ijs.si)
+	* syncronizing pwgui with QE CVS, i.e., updating pw, ph, and
+		atomic modules.
+
+Jun  2 2008 Anton Kokalj (tone.kokalj@ijs.si)
+	* fixing a "recently introduced" bug: widgtes (enabled/disabled)
+		associated to various type of K_POINTS input were not
+		managed properly (spotted by Lorenzo Paulatto)
+
+
+May  8 2008 Anton Kokalj (tone.kokalj@ijs.si)
+	* syncronizing all PWgui help files (with the aid og helpdoc
+		utility)
+	* small updates to all modules
+	* changing the version number to 4.0
+
+Jan/Feb 2008 Anton Kokalj (tone.kokalj@ijs.si)
+	* syncronizing PWgui modules with QE CVS (very many changes). The
+		ld1.x (atomic) module fully completed now. ph.x module
+		reorganized in different pages.
+
+Tue May 23 2006 Anton Kokalj (tone.kokalj@ijs.si)
+	* synchronizing PWgui modules with QE-3.1
+
+2005-09-14 19:23  giannozz
+
+        * modules/chdens/chdens-event.tcl, modules/chdens/chdens-help.tcl,
+          modules/chdens/chdens.tcl, modules/chdens/commands.tcl,
+          doc/pwdocs/Makefile, modules/pp/pp-event.tcl,
+          modules/pp/pp-help.tcl, modules/pp/pp.tcl, src/pwscf.itcl:
+
+        GUI updated to reflect new input of pp.x - chdens.x input removed,
+        documentation (marginally) updated
+
+2005-09-13 15:54  kokalj
+
+	* modules/atomic/: atomic.tcl, atomic-event.tcl:
+
+	Elaborating a bit on Paolo's coding. In particular, making pages 
+	and event handlers ...
+
+2005-09-12 19:13  giannozz
+
+	* modules/atomic/atomic-event.tcl, modules/atomic/atomic-help.tcl,
+	  modules/atomic/atomic.tcl, modules/atomic/commands.tcl, VERSION,
+	  src/pwscf.itcl:
+
+	First attempt, not yet completely working, of a GUI for the atomic code
+
+2005-08-03 11:07  giannozz
+
+	* modules/chdens/: chdens-event.tcl, chdens-help.tcl, chdens.tcl:
+
+	GUI for chdens updated
+
+2005-08-02 18:13  giannozz
+
+	* doc/pwdocs/: Makefile, htmlise.sh:
+
+	manual => users-guide
+
+Fri Mar 25 2005  Anton Kokalj (tone.kokalj@ijs.si)
+	* pwgui_vfs/Makefile.*: the standalone binaries can be now created
+		much easier
+	
+Thu Mar 24 2005  Anton Kokalj (tone.kokalj@ijs.si)
+	* pw.tcl, pw-help.tcl: adding the pwscf's wf_collect variable
+
+Thu Mar 24 2005  Stefano de Gironcoli (degironc@sissa.it)
+	* pw.tcl, pw-help.tcl, pw-event.tcl: adding nspin=4 option and 
+                angle1, angle2 variables needed in the noncollinear case
+
+Wed Mar 23 2005  Anton Kokalj (tone.kokalj@ijs.si)
+	* pw.tcl, pw-help.tcl: pw.x module updated to syntax of PWscf-2.1.2
+	* pp.tcl, pp-help.tcl: pp.x module slightly updated to syntax of
+		PWscf-2.1.2 
+	* run.itcl: changing a bit the "Run" behaviour
+	
+Tue Feb 01 2005  Anton Kokalj (tone.kokalj@ijs.si)
+	* pw.tcl:: fixing the "posint" bug with the k-shift validation (set to
+		binary (0/1) validation
+
+Mon Jan 17 2005  Anton Kokalj (tone.kokalj@ijs.si)
+	* projwfc module updated (files: pwojwfc.tcl, projwfc-help.tcl)
+	* run.itcl: regsub syntax bug fixed
+	
+Mon Sep 20 2004 Anton Kokalj (tone.kokalj@ijs.si) and Carlo Sbraccia (sbraccia@sissa.it)
+	* adding "Run" menubutton: added file: run.itcl; adapted files:
+		menustate.itcl (adding runnable support), pwscf.itcl, 
+		settings.itcl.
+
+Sat Sep 04 2004 Anton Kokalj (tone.kokalj@ijs.si) and Carlo Sbraccia (sbraccia@sissa.it)
+	* updating PWgui for PWscf 2.1 ( a lot of changes )
+	* PWgui version: the PWgui version will now match the version of
+		PWscf, so that the compatibility of the two codes will be obvious
+
+Fri Apr 23 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* pw-event.tcl: tracevar on "nat": the starting_magnetization entries were not
+		updated accordingly
+	* chdens-event.tcl: tracevar on "plot_out": the epsilon/idpol entries were not
+		updated accordingly
+
+Tue Apr 06 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* modutils.tcl: adding some ::pwscf::readFilter::* utility procs
+		for better support of the syntax-error handling mechanism
+		for reading the input files (added procs: findNamelists,
+		findCards, findNamelistsAndCards)
+	* adding readfilter for chdens.x, prowfc.x modules, and improving
+		readfilter procs for pw.x, ph.x, pp.x, d3.x modules
+	
+Mon Apr 05 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* Makefile, sys_utils/starkit.sh, pwgui_vfs/: adding support for
+		building starpack binaries
+	* pw.tcl, pw-help.tcl: correction of format of last_image
+		coordinates for calculation='neb'
+	
+Thu Apr 01 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* pw.tcl: correcting typo "minization" -> "minimization"
+	
+Wed Mar 03 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* Makefile: cvsinit target: cd doc/pwdocs --> -cd /doc/pwdocs
+	
+Mon Feb 21 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* adding external/lib/Makefile
+	* adding _create_bin target to ./Makefile
+	* improving tarball targets of ./Makefile
+	* adding Tcl-related http's to ./INSTALL file
+	
+Mon Feb 20 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* adding the defaultPager and defaultEditor. i.e., internal editor
+		and pager (better porting to non-unix systems)
+
+Fri Feb 20 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* package was renamed from TkPWscf to PWgui 
+	* porting the package to MS-Windows
+
+Wed Feb 18 2004 Anton Kokalj (tone.kokalj@ijs.si)	
+	* src-tcl/ directory renamed to src/
+	* CVS: moving the PWgui and GUIB repositories to O-sesame
+		repository. Some changes of Makefile etc. were required
+	
+Tue Feb 17 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* ChangeLog: the beginning of the ChangeLog
+
+ChangeLog ends here

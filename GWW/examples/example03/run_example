@@ -1,0 +1,197 @@
+#!/bin/sh
+
+###
+### Initial file from QE modified by
+### G. Stenuit (06/08/2009)
+###
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether ECHO has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example shows how to use projwfc.x to compute"
+$ECHO "the orbital decomposition of the total DOS from GWA energies"
+
+# set the needed environment variables
+. ../../../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x projwfc.x"
+PSEUDO_LIST="C.pz-vbc.UPF H.pz-vbc.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# check if bands.dat exist !
+if test ! -r ../../example01/results/ch4-bands.dat ; then
+      $ECHO
+      $ECHO "ERROR: ../../example01/results/bands.dat not existent or not readable"
+      $ECHO "Please run example01 FIRST !!"
+      $ECHO "Aborting"
+      exit 1
+fi
+$ECHO " done"
+
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PROJWFC_COMMAND="$PARA_PREFIX $BIN_DIR/projwfc.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running projwfc.x as: $PROJWFC_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/pwscf*
+$ECHO " done"
+
+# self-consistent calculation at Gamma
+    cat > methane_scf.in << EOF
+&control
+    calculation = 'scf',
+    restart_mode='from_scratch',
+    prefix='ch4',
+    tprnfor = .true.,
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav=  1,
+    celldm(1) =15.0,
+    nat=5,
+    ntyp= 2,
+    ecutwfc =40.0,
+ /
+ &electrons
+    diagonalization='cg'
+    mixing_beta = 0.5,
+    conv_thr =  1.0d-8
+ /
+ATOMIC_SPECIES
+ H  1.0   H.pz-vbc.UPF
+ C  12.0  C.pz-vbc.UPF
+ATOMIC_POSITIONS {bohr}
+H        1.198204546   1.198204546   1.198204546
+H       -1.198204546  -1.198204546   1.198204546
+H        1.198204546  -1.198204546  -1.198204546
+H       -1.198204546   1.198204546  -1.198204546
+C        0.000000000   0.000000000   0.000000000
+EOF
+$ECHO "  running the scf calculation for methane molecule...\c"
+$PW_COMMAND < methane_scf.in > methane_scf.out
+check_failure $?
+$ECHO " done"
+
+
+# non self-consistent calculation at Gamma
+    cat > methane_nscf.in << EOF
+&control
+    calculation = 'nscf',
+    restart_mode='from_scratch',
+    prefix='ch4',
+    tprnfor = .true.,
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav=  1,
+    celldm(1) =15.0,
+    nat=5,
+    ntyp= 2,
+    ecutwfc =40.0,
+    nbnd=5
+ /
+ &electrons
+    diagonalization='cg'
+    mixing_beta = 0.5,
+    conv_thr =  1.0d-8
+ /
+ATOMIC_SPECIES
+ H  1.0   H.pz-vbc.UPF
+ C  12.0  C.pz-vbc.UPF
+ATOMIC_POSITIONS {bohr}
+H        1.198204546   1.198204546   1.198204546
+H       -1.198204546  -1.198204546   1.198204546
+H        1.198204546  -1.198204546  -1.198204546
+H       -1.198204546   1.198204546  -1.198204546
+C        0.000000000   0.000000000   0.000000000
+EOF
+$ECHO "  running the non scf calculation for methane molecule...\c"
+$PW_COMMAND < methane_nscf.in > methane_nscf.out
+check_failure $?
+$ECHO " done"
+
+# copy the bands.dat file from example01
+$ECHO "Copy the bands.dat file generated in example01 ...\c"
+cp ../../example01/results/ch4-bands.dat bands.dat
+
+# projwfc calculation at Gamma
+cat > methane.pdos_pp.in << EOF
+&projwfc
+   outdir='$TMP_DIR/'
+   prefix='ch4'
+   lgww=.true.
+   Emin=-30.0, Emax=5.0, DeltaE=0.05,
+   ngauss=0, degauss=0.01559
+/
+EOF
+$ECHO "  running the projwfc calculation at Gamma for C6H6...\c"
+$PROJWFC_COMMAND < methane.pdos_pp.in > methane.pdos_pp.out
+check_failure $?
+$ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/pwscf*
+$ECHO " done"
+
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"

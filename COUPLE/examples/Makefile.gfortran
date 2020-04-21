@@ -1,0 +1,54 @@
+# Makefile for library coupling interface
+include ../../make.inc
+
+# FLAGS for OpenMPI when QE was compiled with GNU Fortran 4.x
+MPICXX=mpicxx
+MPICXXFLAGS=-DOMPI_SKIP_MPICXX=1 -O2 -Wall -g
+MPILIBS=-lgfortran -lmpi_mpifh -lmpi
+
+# location of required libraries
+PWOBJS = ../src/libqecouple.a ../../PW/src/libpw.a
+CPOBJS = ../src/libqecouple.a ../../CPV/src/libcp.a
+QEMODS = ../../Modules/libqemod.a ../../KS_Solvers/Davidson/libdavid.a \
+	 ../../KS_Solvers/CG/libcg.a ../../FFTXlib/libqefft.a  \
+	 ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
+	 ../../dft-d3/libdftd3qe.a
+LIBOBJS	= ../../clib/clib.a ../../iotk/src/libiotk.a
+
+TLDEPS=couple
+
+
+all : tldeps c2pw.x f2pw.x c2cp.x f2cp.x
+
+f2pw.x : f2pw.o $(PWOBJS) 
+	$(LD) $(LDFLAGS) -o $@ $^ $(QEMODS) $(LIBOBJS) $(LIBS)
+
+c2pw.x : c2pw.o $(PWOBJS)
+	$(MPICXX) $(LDFLAGS) -o $@ $^ $(MPILIBS) $(QEMODS) $(LIBOBJS) $(LIBS)
+
+f2cp.x : f2cp.o $(CPOBJS)
+	$(LD) $(LDFLAGS) -o $@ $^ $(QEMODS) $(LIBOBJS) $(LIBS)
+
+c2cp.x : c2cp.o $(CPOBJS)
+	$(MPICXX) $(LDFLAGS) -o $@ $^ $(MPILIBS) $(QEMODS) $(LIBOBJS) $(LIBS)
+
+%.o: %.cpp
+	$(MPICXX) -I../include -c $(MPICXXFLAGS) $< -o $@
+
+tldeps:
+	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
+
+clean :
+	- /bin/rm -f *.x *.o *.a *~ *.F90 *.d *.mod *.i *.L
+
+# explicit dependencies
+
+f2pw.o: f2pw.f90
+
+c2pw.o: c2pw.cpp ../include/libqecouple.h
+
+f2cp.o: f2cp.f90
+
+c2cp.o: c2cp.cpp ../include/libqecouple.h
+
+# DO NOT DELETE

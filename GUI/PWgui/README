@@ -1,0 +1,109 @@
+
+ ==============================================================================
+                   * * * README file for PWgui * * *
+ ==============================================================================
+
+This is the PWgui---a GUI for the PWscf set of programs within the
+open-source Quantum ESPRESSO suite for quantum simulation of materials
+(see http://www.quantum-espresso.org). PWgui is written in [incr
+Tcl]---an extension of Tcl scripting language (hence no compilation is
+needed for the PWgui source package). However the package depends on
+the [incr Tcl] and related software. Therefore you have two
+possibilities:
+
+   (i)  to use a standalone executable which run out of the box. Works
+	only on the platforms for which executable has been built. Currently
+	the following platforms are supported: Linux, Windows, Mac. 
+
+   (ii) to use source package if required Tcl software is installed
+        (see SOFTWARE REQUIREMENTS section below)
+
+See the file "INSTALL" for installation instructions.
+
+
+CURRENT STATUS
+--------------
+
+The main purpose of the PWgui is to facilitate the creation and
+manipulation (editing) of input files for PWscf set of programs. It is
+possible to run the PWscf programs by using the GUI. This feature
+requires to set the path of the PWscf executables via
+"File-->Settings" menu (tab: PWscf settings). The GUI can also use the
+XCRYSDEN program (http://www.xcrysden.org/) for the visualization of
+atomic structures from the pw.x input/output files, or for the
+visualization of properties calculated via the sequence: pw.x-->pp.x
+(when the property was saved into an XSF file).
+
+Currently, the following PWscf programs (modules) are supported: 
+
+ * pw.x
+ * neb.x's neb.dat
+ * ph.x
+ * pp.x
+ * projwfc.x
+ * bands.x
+ * dos.x
+ * ld1.x (atomic)
+
+Directory structure of the PWgui source package:
+
+src/		main source directory of the PWgui
+modules/	GUIB definition files for PWscf programs (modules)
+lib/		libraries used by the PWgui
+images/		icons and images
+examples/	PWscf example input files
+doc/		documentation
+
+
+
+COPYING
+-------
+
+The PWgui is covered by the GNU General Public License. Note that the
+PWgui uses also some external Tcl software, which is covered by
+modified BSD-like free software licenses.
+
+The material included in the directory external/ is the Tcl-related
+software. For the corresponding license see the file
+external/lib/copyright.
+
+All the material included in this distribution is free software; you
+can redistribute it and/or modify it under the terms of the GNU
+General Public License as published by the Free Software Foundation;
+either version 2 of the License, or (at your option) any later
+version.
+
+These programs are distributed in the hope that they will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+
+NOTE ABOUT THE STANDALONE EXECUTABLES
+-------------------------------------
+
+Standalone executables are build using the Starkit's SDX
+utility. These executables are starkits---a STAandalone Runtime
+tclKITs (http://www.equi4.com/starkit.html). The Tclkit license is the
+following:
+
+"Tclkit is a combination of Tcl/Tk, IncrTcl, TclVFS, Zlib, and
+ Metakit. Metakit is open source, using an X/MIT-style license. Tcl/Tk,
+ IncrTcl, TclVFS, and Zlib have their own, BSD-ish open source
+ licenses, so in my understanding this code can be used freely, also
+ commercially.
+
+ When Tclkit is distributed as part of a commercial package, copyright
+ attributions and license terms for the above need to be included in
+ the distribution.
+
+ A reference to the origin of Tclkit is appreciated but not required."
+
+
+--
+Anton Kokalj (tone.kokalj@ijs.si), Mon Jan 23 12:28:40 CET 2012

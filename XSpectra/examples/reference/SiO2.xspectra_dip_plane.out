@@ -1,0 +1,666 @@
+
+     Program XSpectra v.5.2.0 (svn rev. 11610M) starts on 20Aug2015 at 16:19:36 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please cite
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/quote
+
+     Parallel version (MPI), running on     1 processors
+
+     -------------------------------------------------------------------------
+                    __  ____                 _
+                    \ \/ / _\_ __   ___  ___| |_ _ __ __ _
+                     \  /\ \| '_ \ / _ \/ __| __| '__/ _` |
+                     /  \_\ \ |_) |  __/ (__| |_| | | (_| |
+                    /_/\_\__/ .__/ \___|\___|\__|_|  \__,_|
+                            |_|
+
+     In publications arising from the use of XSpectra, please cite:
+      - O. Bunau and M. Calandra,
+        Phys. Rev. B 87, 205105 (2013)
+      - Ch. Gougoussis, M. Calandra, A. P. Seitsonen, F. Mauri,
+        Phys. Rev. B 80, 075102 (2009)
+      - M. Taillefumier, D. Cabaret, A. M. Flank, and F. Mauri,
+        Phys. Rev. B 66, 195107 (2002)
+
+     -------------------------------------------------------------------------
+                                Reading input_file
+     -------------------------------------------------------------------------
+
+     calculation: xanes_dipole
+
+     xepsilon  [crystallographic coordinates]:   1.000000   1.000000   0.000000
+
+     xonly_plot: FALSE
+        => complete calculation: Lanczos + spectrum plot
+
+     filecore (core-wavefunction file): Si.wfc              
+
+     main plot parameters:
+        cut_occ_states: TRUE
+        gamma_mode:  constant
+        -> using xgamma [eV]:  0.80
+        xemin [eV]: -10.00
+        xemax [eV]: 100.00
+        xnepoint: 1000
+        energy zero automatically set to the Fermi level
+
+     Fermi level determined from SCF save directory (SiO2.save)
+     NB: For an insulator (SCF calculated with occupations="fixed")
+         the Fermi level will be placed at the position of HOMO.
+
+     WARNING: variable ef_r is obsolete
+
+     -------------------------------------------------------------------------
+                      Reading SCF save directory: SiO2.save
+     -------------------------------------------------------------------------
+
+
+     Reading data from directory:
+     /Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/results/tmp/SiO2.save
+
+   Info: using nr1, nr2, nr3 values from input
+
+   Info: using nr1, nr2, nr3 values from input
+
+     IMPORTANT: XC functional enforced from input :
+     Exchange-correlation      =  SLA  PW   PBE  PBE ( 1  4  3  4 0 0)
+     Any further DFT definition will be discarded
+     Please, verify this is what you really want
+
+     WARNING: atomic wfc #  2 for atom type 1 has zero norm
+     WARNING: atomic wfc #  2 for atom type 2 has zero norm
+               file O_PBE_USPP.UPF: wavefunction(s)  2S renormalized
+
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         889     475    151                23595     9203    1559
+
+
+     the Fermi energy is     6.4758 ev
+
+     -------------------------------------------------------------------------
+                           Getting the Fermi energy 
+     -------------------------------------------------------------------------
+
+     From SCF save directory:
+        ef    [eV]:    6.4758
+
+     -> ef (in eV) will be written in x_save_file
+
+     -------------------------------------------------------------------------
+                           Energy zero of the spectrum 
+     -------------------------------------------------------------------------
+
+     -> ef will be used as energy zero of the spectrum
+
+     G-vector sticks info
+     --------------------
+     sticks:   dense  smooth     PW     G-vecs:    dense   smooth      PW
+     Sum         889     475    169                23595     9203    2057
+
+
+
+     bravais-lattice index     =            4
+     lattice parameter (alat)  =       9.2863  a.u.
+     unit-cell volume          =     762.9417 (a.u.)^3
+     number of atoms/cell      =            9
+     number of atomic types    =            3
+     number of electrons       =        48.00
+     number of Kohn-Sham states=           30
+     kinetic-energy cutoff     =      20.0000  Ry
+     charge density cutoff     =     150.0000  Ry
+     Exchange-correlation      =  SLA  PW   PBE  PBE ( 1  4  3  4 0 0)
+
+     celldm(1)=   9.286303  celldm(2)=   0.000000  celldm(3)=   1.100100
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of alat)
+               a(1) = (   1.000000   0.000000   0.000000 )  
+               a(2) = (  -0.500000   0.866025   0.000000 )  
+               a(3) = (   0.000000   0.000000   1.100100 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/alat)
+               b(1) = (  1.000000  0.577350 -0.000000 )  
+               b(2) = (  0.000000  1.154701  0.000000 )  
+               b(3) = (  0.000000 -0.000000  0.909008 )  
+
+
+     PseudoPot. # 1 for Si read from file:
+     /Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/pseudo/Si_PBE_USPP.UPF
+     MD5 check sum: 2fb286e7979bc4fe35b54746d77eb429
+     Pseudo is Ultrasoft, Zval =  4.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of 1141 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     PseudoPot. # 2 for Si read from file:
+     /Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/pseudo/Si_PBE_USPP.UPF
+     MD5 check sum: 2fb286e7979bc4fe35b54746d77eb429
+     Pseudo is Ultrasoft, Zval =  4.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of 1141 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     PseudoPot. # 3 for O  read from file:
+     /Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/pseudo/O_PBE_USPP.UPF
+     MD5 check sum: 390ba29e75625707450f3bd3f0eb6be9
+     Pseudo is Ultrasoft, Zval =  6.0
+     Generated by new atomic code, or converted to UPF format
+     Using radial grid of 1269 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     atomic species   valence    mass     pseudopotential
+        Sih            4.00    28.08600     Si( 1.00)
+        Si             4.00    28.08600     Si( 1.00)
+        O              6.00    15.99940     O ( 1.00)
+
+      2 Sym. Ops. (no inversion) found
+
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (alat units)
+         1           Sih tau(   1) = (   0.4700000   0.0000000   0.0000000  )
+         2           Si  tau(   2) = (  -0.2350000   0.4070319   0.7334000  )
+         3           Si  tau(   3) = (  -0.2350000  -0.4070319   0.3667000  )
+         4           O   tau(   4) = (   0.2792500   0.2318350   0.1308019  )
+         5           O   tau(   5) = (   0.0611500   0.3577551   0.6025981  )
+         6           O   tau(   6) = (  -0.3404000   0.1259201   0.8642019  )
+         7           O   tau(   7) = (  -0.3404000  -0.1259201   0.2358981  )
+         8           O   tau(   8) = (   0.0611500  -0.3577551   0.4975019  )
+         9           O   tau(   9) = (   0.2792500  -0.2318350  -0.1308019  )
+
+     number of k points=    27  Methfessel-Paxton smearing, width (Ry)=  0.0300
+                       cart. coord. in units 2pi/alat
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0740741
+        k(    2) = (   0.0000000   0.0000000   0.3030028), wk =   0.0740741
+        k(    3) = (   0.0000000   0.0000000   0.6060055), wk =   0.0740741
+        k(    4) = (   0.0000000   0.3849002   0.0000000), wk =   0.0740741
+        k(    5) = (   0.0000000   0.3849002   0.3030028), wk =   0.0740741
+        k(    6) = (   0.0000000   0.3849002   0.6060055), wk =   0.0740741
+        k(    7) = (   0.0000000   0.7698004   0.0000000), wk =   0.0740741
+        k(    8) = (   0.0000000   0.7698004   0.3030028), wk =   0.0740741
+        k(    9) = (   0.0000000   0.7698004   0.6060055), wk =   0.0740741
+        k(   10) = (   0.3333333   0.1924501   0.0000000), wk =   0.0740741
+        k(   11) = (   0.3333333   0.1924501   0.3030028), wk =   0.0740741
+        k(   12) = (   0.3333333   0.1924501   0.6060055), wk =   0.0740741
+        k(   13) = (   0.3333333   0.5773503   0.0000000), wk =   0.0740741
+        k(   14) = (   0.3333333   0.5773503   0.3030028), wk =   0.0740741
+        k(   15) = (   0.3333333   0.5773503   0.6060055), wk =   0.0740741
+        k(   16) = (   0.3333333   0.9622504   0.0000000), wk =   0.0740741
+        k(   17) = (   0.3333333   0.9622504   0.3030028), wk =   0.0740741
+        k(   18) = (   0.3333333   0.9622504   0.6060055), wk =   0.0740741
+        k(   19) = (   0.6666667   0.3849002   0.0000000), wk =   0.0740741
+        k(   20) = (   0.6666667   0.3849002   0.3030028), wk =   0.0740741
+        k(   21) = (   0.6666667   0.3849002   0.6060055), wk =   0.0740741
+        k(   22) = (   0.6666667   0.7698004   0.0000000), wk =   0.0740741
+        k(   23) = (   0.6666667   0.7698004   0.3030028), wk =   0.0740741
+        k(   24) = (   0.6666667   0.7698004   0.6060055), wk =   0.0740741
+        k(   25) = (   0.6666667   1.1547005   0.0000000), wk =   0.0740741
+        k(   26) = (   0.6666667   1.1547005   0.3030028), wk =   0.0740741
+        k(   27) = (   0.6666667   1.1547005   0.6060055), wk =   0.0740741
+
+     Dense  grid:    23595 G-vectors     FFT dimensions: (  40,  40,  40)
+
+     Smooth grid:     9203 G-vectors     FFT dimensions: (  27,  27,  30)
+
+     Largest allocated arrays     est. size (Mb)     dimensions
+        Kohn-Sham Wavefunctions         0.54 Mb     (    1184,   30)
+        NL pseudopotentials             1.30 Mb     (    1184,   72)
+        Each V/rho on FFT grid          0.98 Mb     (   64000)
+        Each G-vector array             0.18 Mb     (   23595)
+        G-vector shells                 0.01 Mb     (    1138)
+     Largest temporary arrays     est. size (Mb)     dimensions
+        Auxiliary wavefunctions         0.54 Mb     (    1184,   30)
+        Each subspace H/S matrix        0.01 Mb     (      30,   30)
+        Each <psi_i|beta_j> matrix      0.03 Mb     (      72,   30)
+
+     The potential is recalculated from file :
+     /Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/results/tmp/SiO2.save/charge-density.dat
+
+     Starting wfc are   60 atomic wfcs
+
+     -------------------------------------------------------------------------
+               Reading core wavefunction file for the absorbing atom
+     -------------------------------------------------------------------------
+
+     Si.wfc successfully read
+
+     -------------------------------------------------------------------------
+                              Attributing the PAW radii 
+                     for the absorbing atom [units: Bohr radius]
+     -------------------------------------------------------------------------
+
+        PAW proj 1: r_paw(l= 0)= 3.60  (1.5*r_cut)
+        PAW proj 2: r_paw(l= 0)= 3.60  (1.5*r_cut)
+        PAW proj 3: r_paw(l= 1)= 2.40  (from input file))
+        PAW proj 4: r_paw(l= 1)= 2.40  (from input file))
+        PAW proj 5: r_paw(l= 2)= 3.00  (1.5*r_cut)
+
+        NB: The calculation will not necessary use all these r_paw values.
+            - For a edge in the electric-dipole approximation,
+              only the r_paw(l=1) values are used.
+            - For a K edge in the electric-quadrupole approximation,
+              only the r_paw(l=2) values are used.
+
+            - For a L2 or L3 edge in the electric-quadrupole approximation,
+
+              all projectors (s, p and d) are used.
+
+
+     init_gipaw_1: projectors nearly linearly dependent:
+     ntyp =  1, l/n1/n2 =  1 2 1  0.99554741
+
+
+     -------------------------------------------------------------------------
+                          Starting XANES calculation
+                     in the electric dipole approximation
+     -------------------------------------------------------------------------
+
+     Method of calculation based on the Lanczos recursion algorithm
+     --------------------------------------------------------------
+        - STEP 1: Construction of a kpoint-dependent Lanczos basis,
+          in which the Hamiltonian is tridiagonal (each 'iter' 
+          corresponds to the calculation of one more Lanczos vector)
+        - STEP 2: Calculation of the cross-section as a continued fraction
+          averaged over the k-points.
+
+     ... Begin STEP 1 ...
+
+        Radial transition matrix element(s) used in the calculation of the
+        initial vector of the Lanczos basis (|tilde{phi}_abs> normalized)
+        | For PAW proj. (l=1) #1: radial matrix element =   0.026695735
+        | For PAW proj. (l=1) #2: radial matrix element =   0.024893931
+
+        |-------------------------------------------------------------
+        ! k-point #     1:  ( 0.0000,  0.0000,  0.0000),  0.0741,   1
+        |-------------------------------------------------------------
+        |   Hilbert space is saturated
+        |   xniter is set equal to       1155
+        |   Increase kinetic-energy cutoff in your SCF calculation!
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14416406E-01
+        |   Estimated error at iter     50:   1.00285791
+        |   Estimated error at iter    100:   0.10220550
+        |   Estimated error at iter    150:   0.02496042
+        |   Estimated error at iter    200:   0.00642121
+        |   Estimated error at iter    250:   0.00296386
+        |   Estimated error at iter    300:   0.00120615
+        !   => CONVERGED at iter    350 with error=  0.00022332
+        |-------------------------------------------------------------
+        ! k-point #     2:  ( 0.0000,  0.0000,  0.3030),  0.0741,   1
+        |-------------------------------------------------------------
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14420525E-01
+        |   Estimated error at iter     50:   1.00287314
+        |   Estimated error at iter    100:   0.06648453
+        |   Estimated error at iter    150:   0.03238287
+        |   Estimated error at iter    200:   0.00863399
+        |   Estimated error at iter    250:   0.00350046
+        !   => CONVERGED at iter    300 with error=  0.00097219
+        |-------------------------------------------------------------
+        ! k-point #     3:  ( 0.0000,  0.0000,  0.6060),  0.0741,   1
+        |-------------------------------------------------------------
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14420525E-01
+        |   Estimated error at iter     50:   1.00287314
+        |   Estimated error at iter    100:   0.06648453
+        |   Estimated error at iter    150:   0.03237380
+        |   Estimated error at iter    200:   0.00868710
+        |   Estimated error at iter    250:   0.00361713
+        !   => CONVERGED at iter    300 with error=  0.00093606
+        |-------------------------------------------------------------
+        ! k-point #     4:  ( 0.0000,  0.3849,  0.0000),  0.0741,   1
+        |-------------------------------------------------------------
+        |   Hilbert space is saturated
+        |   xniter is set equal to       1150
+        |   Increase kinetic-energy cutoff in your SCF calculation!
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14418568E-01
+        |   Estimated error at iter     50:   1.00286630
+        |   Estimated error at iter    100:   0.07806384
+        |   Estimated error at iter    150:   0.02270751
+        |   Estimated error at iter    200:   0.00763963
+        |   Estimated error at iter    250:   0.00347398
+        !   => CONVERGED at iter    300 with error=  0.00097101
+        |-------------------------------------------------------------
+        ! k-point #     5:  ( 0.0000,  0.3849,  0.3030),  0.0741,   1
+        |-------------------------------------------------------------
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14418642E-01
+        |   Estimated error at iter     50:   1.00285087
+        |   Estimated error at iter    100:   0.10388944
+        |   Estimated error at iter    150:   0.02777892
+        |   Estimated error at iter    200:   0.00961158
+        |   Estimated error at iter    250:   0.00243900
+        !   => CONVERGED at iter    300 with error=  0.00095643
+        |-------------------------------------------------------------
+        ! k-point #     6:  ( 0.0000,  0.3849,  0.6060),  0.0741,   1
+        |-------------------------------------------------------------
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14418540E-01
+        |   Estimated error at iter     50:   1.00284246
+        |   Estimated error at iter    100:   0.10568030
+        |   Estimated error at iter    150:   0.02368441
+        |   Estimated error at iter    200:   0.01140207
+        |   Estimated error at iter    250:   0.00397433
+        |   Estimated error at iter    300:   0.00120563
+        !   => CONVERGED at iter    350 with error=  0.00045807
+        |-------------------------------------------------------------
+        ! k-point #     7:  ( 0.0000,  0.7698,  0.0000),  0.0741,   1
+        |-------------------------------------------------------------
+        |   Hilbert space is saturated
+        |   xniter is set equal to       1150
+        |   Increase kinetic-energy cutoff in your SCF calculation!
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14418568E-01
+        |   Estimated error at iter     50:   1.00286630
+        |   Estimated error at iter    100:   0.07806384
+        |   Estimated error at iter    150:   0.02322226
+        |   Estimated error at iter    200:   0.00841092
+        |   Estimated error at iter    250:   0.00355133
+        !   => CONVERGED at iter    300 with error=  0.00092155
+        |-------------------------------------------------------------
+        ! k-point #     8:  ( 0.0000,  0.7698,  0.3030),  0.0741,   1
+        |-------------------------------------------------------------
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14418540E-01
+        |   Estimated error at iter     50:   1.00284246
+        |   Estimated error at iter    100:   0.10568030
+        |   Estimated error at iter    150:   0.02365731
+        |   Estimated error at iter    200:   0.01120968
+        |   Estimated error at iter    250:   0.00365714
+        |   Estimated error at iter    300:   0.00121210
+        !   => CONVERGED at iter    350 with error=  0.00047476
+        |-------------------------------------------------------------
+        ! k-point #     9:  ( 0.0000,  0.7698,  0.6060),  0.0741,   1
+        |-------------------------------------------------------------
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14418642E-01
+        |   Estimated error at iter     50:   1.00285087
+        |   Estimated error at iter    100:   0.10388944
+        |   Estimated error at iter    150:   0.02779008
+        |   Estimated error at iter    200:   0.00959134
+        |   Estimated error at iter    250:   0.00243589
+        |   Estimated error at iter    300:   0.00100320
+        !   => CONVERGED at iter    350 with error=  0.00035482
+        |-------------------------------------------------------------
+        ! k-point #    10:  ( 0.3333,  0.1925,  0.0000),  0.0741,   1
+        |-------------------------------------------------------------
+        |   Hilbert space is saturated
+        |   xniter is set equal to       1150
+        |   Increase kinetic-energy cutoff in your SCF calculation!
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14418502E-01
+        |   Estimated error at iter     50:   1.00284298
+        |   Estimated error at iter    100:   0.08020650
+        |   Estimated error at iter    150:   0.01893203
+        |   Estimated error at iter    200:   0.01041788
+        |   Estimated error at iter    250:   0.00267328
+        |   Estimated error at iter    300:   0.00139538
+        !   => CONVERGED at iter    350 with error=  0.00040613
+        |-------------------------------------------------------------
+        ! k-point #    11:  ( 0.3333,  0.1925,  0.3030),  0.0741,   1
+        |-------------------------------------------------------------
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14418536E-01
+        |   Estimated error at iter     50:   1.00285067
+        |   Estimated error at iter    100:   0.09633836
+        |   Estimated error at iter    150:   0.02790117
+        |   Estimated error at iter    200:   0.00931780
+        |   Estimated error at iter    250:   0.00373912
+        |   Estimated error at iter    300:   0.00116677
+        !   => CONVERGED at iter    350 with error=  0.00049841
+        |-------------------------------------------------------------
+        ! k-point #    12:  ( 0.3333,  0.1925,  0.6060),  0.0741,   1
+        |-------------------------------------------------------------
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14418582E-01
+        |   Estimated error at iter     50:   1.00284899
+        |   Estimated error at iter    100:   0.10553797
+        |   Estimated error at iter    150:   0.03349060
+        |   Estimated error at iter    200:   0.00931366
+        |   Estimated error at iter    250:   0.00252475
+        !   => CONVERGED at iter    300 with error=  0.00096040
+        |-------------------------------------------------------------
+        ! k-point #    13:  ( 0.3333,  0.5774,  0.0000),  0.0741,   1
+        |-------------------------------------------------------------
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14418892E-01
+        |   Estimated error at iter     50:   1.00285727
+        |   Estimated error at iter    100:   0.11175884
+        |   Estimated error at iter    150:   0.02788370
+        |   Estimated error at iter    200:   0.01052806
+        |   Estimated error at iter    250:   0.00271636
+        |   Estimated error at iter    300:   0.00120508
+        !   => CONVERGED at iter    350 with error=  0.00034133
+        |-------------------------------------------------------------
+        ! k-point #    14:  ( 0.3333,  0.5774,  0.3030),  0.0741,   1
+        |-------------------------------------------------------------
+        |   Hilbert space is saturated
+        |   xniter is set equal to       1149
+        |   Increase kinetic-energy cutoff in your SCF calculation!
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14419298E-01
+        |   Estimated error at iter     50:   1.00286104
+        |   Estimated error at iter    100:   0.09886444
+        |   Estimated error at iter    150:   0.02922640
+        |   Estimated error at iter    200:   0.00844608
+        |   Estimated error at iter    250:   0.00379074
+        |   Estimated error at iter    300:   0.00121239
+        !   => CONVERGED at iter    350 with error=  0.00045422
+        |-------------------------------------------------------------
+        ! k-point #    15:  ( 0.3333,  0.5774,  0.6060),  0.0741,   1
+        |-------------------------------------------------------------
+        |   Hilbert space is saturated
+        |   xniter is set equal to       1149
+        |   Increase kinetic-energy cutoff in your SCF calculation!
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14419207E-01
+        |   Estimated error at iter     50:   1.00285608
+        |   Estimated error at iter    100:   0.09002052
+        |   Estimated error at iter    150:   0.02458730
+        |   Estimated error at iter    200:   0.00945907
+        |   Estimated error at iter    250:   0.00315732
+        |   Estimated error at iter    300:   0.00101711
+        !   => CONVERGED at iter    350 with error=  0.00048322
+        |-------------------------------------------------------------
+        ! k-point #    16:  ( 0.3333,  0.9623,  0.0000),  0.0741,   1
+        |-------------------------------------------------------------
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14417328E-01
+        |   Estimated error at iter     50:   1.00286310
+        |   Estimated error at iter    100:   0.06774535
+        |   Estimated error at iter    150:   0.02357116
+        |   Estimated error at iter    200:   0.00838638
+        |   Estimated error at iter    250:   0.00418068
+        |   Estimated error at iter    300:   0.00141662
+        !   => CONVERGED at iter    350 with error=  0.00043569
+        |-------------------------------------------------------------
+        ! k-point #    17:  ( 0.3333,  0.9623,  0.3030),  0.0741,   1
+        |-------------------------------------------------------------
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14418029E-01
+        |   Estimated error at iter     50:   1.00287936
+        |   Estimated error at iter    100:   0.10303751
+        |   Estimated error at iter    150:   0.02665293
+        |   Estimated error at iter    200:   0.00648680
+        |   Estimated error at iter    250:   0.00321893
+        |   Estimated error at iter    300:   0.00120863
+        !   => CONVERGED at iter    350 with error=  0.00044714
+        |-------------------------------------------------------------
+        ! k-point #    18:  ( 0.3333,  0.9623,  0.6060),  0.0741,   1
+        |-------------------------------------------------------------
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14417936E-01
+        |   Estimated error at iter     50:   1.00287700
+        |   Estimated error at iter    100:   0.06057265
+        |   Estimated error at iter    150:   0.03226833
+        |   Estimated error at iter    200:   0.00965904
+        |   Estimated error at iter    250:   0.00359912
+        |   Estimated error at iter    300:   0.00126258
+        !   => CONVERGED at iter    350 with error=  0.00046354
+        |-------------------------------------------------------------
+        ! k-point #    19:  ( 0.6667,  0.3849,  0.0000),  0.0741,   1
+        |-------------------------------------------------------------
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14418502E-01
+        |   Estimated error at iter     50:   1.00284298
+        |   Estimated error at iter    100:   0.08020650
+        |   Estimated error at iter    150:   0.01894350
+        |   Estimated error at iter    200:   0.01043853
+        |   Estimated error at iter    250:   0.00258924
+        |   Estimated error at iter    300:   0.00137870
+        !   => CONVERGED at iter    350 with error=  0.00041345
+        |-------------------------------------------------------------
+        ! k-point #    20:  ( 0.6667,  0.3849,  0.3030),  0.0741,   1
+        |-------------------------------------------------------------
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14418582E-01
+        |   Estimated error at iter     50:   1.00284899
+        |   Estimated error at iter    100:   0.10553797
+        |   Estimated error at iter    150:   0.03348668
+        |   Estimated error at iter    200:   0.00929784
+        |   Estimated error at iter    250:   0.00256009
+        !   => CONVERGED at iter    300 with error=  0.00077772
+        |-------------------------------------------------------------
+        ! k-point #    21:  ( 0.6667,  0.3849,  0.6060),  0.0741,   1
+        |-------------------------------------------------------------
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14418536E-01
+        |   Estimated error at iter     50:   1.00285067
+        |   Estimated error at iter    100:   0.09633836
+        |   Estimated error at iter    150:   0.02784002
+        |   Estimated error at iter    200:   0.00922105
+        |   Estimated error at iter    250:   0.00372334
+        |   Estimated error at iter    300:   0.00133213
+        !   => CONVERGED at iter    350 with error=  0.00052854
+        |-------------------------------------------------------------
+        ! k-point #    22:  ( 0.6667,  0.7698,  0.0000),  0.0741,   1
+        |-------------------------------------------------------------
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14417328E-01
+        |   Estimated error at iter     50:   1.00286310
+        |   Estimated error at iter    100:   0.06774535
+        |   Estimated error at iter    150:   0.02352101
+        |   Estimated error at iter    200:   0.00834749
+        |   Estimated error at iter    250:   0.00417297
+        |   Estimated error at iter    300:   0.00141797
+        !   => CONVERGED at iter    350 with error=  0.00045171
+        |-------------------------------------------------------------
+        ! k-point #    23:  ( 0.6667,  0.7698,  0.3030),  0.0741,   1
+        |-------------------------------------------------------------
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14417936E-01
+        |   Estimated error at iter     50:   1.00287700
+        |   Estimated error at iter    100:   0.06057265
+        |   Estimated error at iter    150:   0.03208685
+        |   Estimated error at iter    200:   0.00902490
+        |   Estimated error at iter    250:   0.00360896
+        |   Estimated error at iter    300:   0.00132837
+        !   => CONVERGED at iter    350 with error=  0.00042903
+        |-------------------------------------------------------------
+        ! k-point #    24:  ( 0.6667,  0.7698,  0.6060),  0.0741,   1
+        |-------------------------------------------------------------
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14418029E-01
+        |   Estimated error at iter     50:   1.00287936
+        |   Estimated error at iter    100:   0.10303751
+        |   Estimated error at iter    150:   0.02666422
+        |   Estimated error at iter    200:   0.00641288
+        |   Estimated error at iter    250:   0.00316254
+        |   Estimated error at iter    300:   0.00122437
+        !   => CONVERGED at iter    350 with error=  0.00044749
+        |-------------------------------------------------------------
+        ! k-point #    25:  ( 0.6667,  1.1547,  0.0000),  0.0741,   1
+        |-------------------------------------------------------------
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14418892E-01
+        |   Estimated error at iter     50:   1.00285727
+        |   Estimated error at iter    100:   0.11175884
+        |   Estimated error at iter    150:   0.02786077
+        |   Estimated error at iter    200:   0.01067946
+        |   Estimated error at iter    250:   0.00275440
+        |   Estimated error at iter    300:   0.00118450
+        !   => CONVERGED at iter    350 with error=  0.00032406
+        |-------------------------------------------------------------
+        ! k-point #    26:  ( 0.6667,  1.1547,  0.3030),  0.0741,   1
+        |-------------------------------------------------------------
+        |   Hilbert space is saturated
+        |   xniter is set equal to       1149
+        |   Increase kinetic-energy cutoff in your SCF calculation!
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14419207E-01
+        |   Estimated error at iter     50:   1.00285608
+        |   Estimated error at iter    100:   0.09002052
+        |   Estimated error at iter    150:   0.02456326
+        |   Estimated error at iter    200:   0.00942122
+        |   Estimated error at iter    250:   0.00321415
+        |   Estimated error at iter    300:   0.00104321
+        !   => CONVERGED at iter    350 with error=  0.00050974
+        |-------------------------------------------------------------
+        ! k-point #    27:  ( 0.6667,  1.1547,  0.6060),  0.0741,   1
+        |-------------------------------------------------------------
+        |   Hilbert space is saturated
+        |   xniter is set equal to       1149
+        |   Increase kinetic-energy cutoff in your SCF calculation!
+ okvan= T
+        |   Norm of the initial Lanczos vector: 0.14419298E-01
+        |   Estimated error at iter     50:   1.00286104
+        |   Estimated error at iter    100:   0.09886444
+        |   Estimated error at iter    150:   0.02872318
+        |   Estimated error at iter    200:   0.00677022
+        |   Estimated error at iter    250:   0.00377436
+        |   Estimated error at iter    300:   0.00131576
+        !   => CONVERGED at iter    350 with error=  0.00047527
+
+     Results of STEP 1 successfully written in x_save_file
+     x_save_file name: 
+     ->  SiO2.xspectra_dip_plane.sav                                      
+     x_save_file version:  2
+
+     ... End STEP 1 ...
+
+     ... Begin STEP 2 ...
+
+     The spectrum is calculated using the following parameters:
+        energy-zero of the spectrum [eV]:    6.4758
+        the occupied states are cut
+        xemin [eV]: -10.00
+        xemax [eV]: 100.00
+        xnepoint: 1000
+        constant broadening parameter [eV]:    0.800
+        Core level energy [eV]:  -1839.    
+         (from electron binding energy of neutral atoms in X-ray data booklet)
+
+     Cross-section successfully written in xanes.dat
+
+     ... End STEP 2 ...
+
+     xanes        :     66.39s CPU     67.23s WALL (       1 calls)
+
+     -------------------------------------------------------------------------
+                                END JOB XSpectra
+     -------------------------------------------------------------------------
+

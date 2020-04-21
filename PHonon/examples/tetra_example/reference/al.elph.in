@@ -1,0 +1,20 @@
+Al electron-phonon
+&INPUTPH
+          prefix = 'aluminum',
+          outdir = '/mnt/c/Users/kawamuura/program/QE/qe_priv/tempdir/',
+          fildyn = 'al.dyn'
+        fildvscf = 'dv',
+         fildrho = 'drho',
+           ldisp = .true.,
+        lshift_q = .true.,
+             nq1 = 4, 
+             nq2 = 4,
+             nq3 = 4,
+ electron_phonon = "lambda_tetra"
+             nk1 = 16,
+             nk2 = 16,
+             nk3 = 16,
+/
+&INPUTa2F
+ nfreq = 500
+/

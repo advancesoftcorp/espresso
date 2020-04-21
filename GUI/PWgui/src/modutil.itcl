@@ -1,0 +1,407 @@
+#
+# $RCSfile: modutil.itcl,v $ --
+#
+#      This file contains utilities functions used/shared by 
+#      various modules, such as auxiliary functions for 
+#      readfilters, ...
+#
+# Copyright (c) 2004  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: modutil.itcl,v 1.4 2008-02-15 17:30:04 kokalj Exp $ 
+#
+
+namespace eval ::pwscf::readFilter {}
+
+
+#****f* module/Functions
+# SYNOPSIS
+proc ::pwscf::readFilter::replaceFlag {line reference args} {    
+    # PURPOSE
+    # Handle properly multiple flags with the same meaning, that is,
+    # for example: map 'methfessel-paxton', or 'm-p', or 'mp' --> 'methfessel-paxton'
+    # EXAMPLE
+    #  readFilter::replaceFlag $line methfessel-paxton m-p mp 
+    # ARGUMENTS
+    # * line -- line of input to replace the flag to a reference value
+    # * reference -- reference value for flag (i.e. 'methfessel-paxton')
+    # * args -- possible other value of flag with the same meaning ('m-p' and 'mp')
+    # SOURCE
+
+    set _line $line
+    foreach flag $args {
+        if { [regexp \[\"'\]${flag}\[\"'\] $line] } {
+	    regsub $flag $line $reference _line
+	    break
+	}
+    }
+    return $_line
+}
+#******
+
+
+#****f* module/Functions
+# SYNOPSIS
+proc ::pwscf::readFilter::replaceVarFlag {line var optsList} {
+    # PURPOSE
+    # Handle properly multiple flags with the same meaning, that is,
+    # for example: map 'methfessel-paxton', or 'm-p', or 'mp' --> 'methfessel-paxton'
+    # EXAMPLE
+    #  readFilter::replaceVarFlag $line $var optList
+    # ARGUMENTS
+    # * line -- line of input to replace the flag to a reference value
+    # * var  -- name of the variable for which to replace a flag to a reference flag
+    # * optList -- kind of double-list of options (the first option-value is taken as a reference), i.e.:
+    #              set optList {
+    #		           {'gaussian' 'gauss'}
+    #		           {'methfessel-paxton' 'm-p' 'mp'}
+    #		           {'marzari-vanderbilt' 'cold' 'm-v' 'mv'}
+    #		           {'fermi-dirac' 'f-d' 'fd'}
+    #		   }
+    # SOURCE
+
+    if { ! [string match *${var}* $line] } { return $line }
+
+    set substituted 0
+
+    set spl [split $line =] 
+    set nl  [llength $spl]
+    
+    set new_spl [lindex $spl 0]
+    
+    for {set i 1} {$i < $nl} {incr i} {
+
+	set var_   [string trim [lindex [lindex $spl [expr $i - 1]] end] ,]
+	set value_ [lindex $spl  $i]
+	
+	if { $var_ == $var } {
+
+	    # ok we find the proper variable; replace its flag with the reference value
+
+	    foreach opts $optsList {
+		#
+		set reference [lindex $opts 0]
+		set flags     [lrange $opts 1 end]
+		    
+		foreach flag $flags {
+		    #
+		    if { [regexp ${flag} $value_] } {
+			#
+			set value_ [regsub $flag $value_ $reference]
+			set substituted 1
+			break
+		    }
+		}
+	    }
+	}	
+	lappend new_spl $value_
+    }
+    
+    if { $substituted } {
+	set line [join $new_spl =]
+    }
+
+    return $line
+}
+#******
+
+
+proc ::pwscf::readFilter::logicalFlag {line} {
+    # PURPOSE
+    # Convert all variants of .TRUE. .true. .T. .t. ---> .true.
+    # and all variants of .FALSE. .false. .F. .f. ---> .false.
+    foreach true {true t} {
+	set regexp "= {0,}\[.\]${true}\[.\]"
+	if { [regexp -nocase -- $regexp $line] } {
+	    regsub -all -nocase -- $regexp $line {= .true.} line
+	}
+    }
+    foreach false {false f} {
+	set regexp "= {0,}\[.\]${false}\[.\]"
+	if { [regexp -nocase -- $regexp $line] } {
+	    regsub -all -nocase -- $regexp $line {= .false.} line
+	}
+    }
+    return $line
+}
+
+proc ::pwscf::readFilter::verbosityFlag {line} {
+    # PURPOSE
+    # Convert all variants of ph.x's verbosity flag to either 'low' or 'high'
+    set optList {
+	{'high', 'debug', 'medium'}
+	{'low', 'default', 'minimal'}
+    }
+
+    return [replaceVarFlag $line verbosity $optList]
+}
+
+proc ::pwscf::readFilter::purifyCardLine {cardLine} {
+    # PURPOSE
+    # Purify the card-line, which can hold something like: "ATOMIC_POSITIONS { alat }",
+    # but we want: ""ATOMIC_POSITIONS alat"
+    set _part1 [lindex $cardLine 0]
+    set _part2 [string tolower [string trim [lrange $cardLine 1 end] "{}()"]]
+    return "${_part1} ${_part2}"
+}
+
+
+proc ::pwscf::readFilter::amassIndex {line {maxIndex 0}} { 
+    # PURPOSE
+    # search for the largest index of amass()-dimension in $line and
+    # return the largest index found; $line is a line of input
+    foreach field [split $line =] {
+	if { [regexp -nocase {amass\([0-9]+\)} $field matchVar] } {
+	    regexp {[0-9]+} $matchVar index
+	    if { $index > $maxIndex } { 
+		set maxIndex $index 
+	    }
+	}
+    }    
+    return $maxIndex
+}
+
+
+# consider these variables:
+# Variable: exist_namelist -- namelists that must exist
+# Variable: exist_cards    -- cards that must exist
+
+proc ::pwscf::readFilter::default {moduleObj channel {filterMode logical} {replList {}}} {
+    # PURPOSE
+    # Default readfilter, which can have several possible modes:    
+    #
+    # Variable: filterMode
+    # Description:
+    # mode=amass   search for largest amass(*) index and assign the
+    #              ntyp variables
+    #
+    # mode=logical repleace all possible values of Fortran logical
+    #              variables with .true. or .false.
+    #
+    # mode=verbosity  replace all possible values of ph.x's verbosity flags with either
+    #                 'low' or 'high'
+    #
+    # The value of filterMode is cumulative, i.e., "amass logical" is
+    # allowed
+    #    
+    # Variable: replList
+    # Description: replList are double list of the form
+    # { {replaceFromList1  replaceToItem1} {replaceFromList2  replaceToItem2} ... }
+    # 
+    set amass   0
+    set logical 0
+    set verbosity 0
+    if { [string match "*amass*"   $filterMode] } { set amass   1 }
+    if { [string match "*logical*" $filterMode] } { set logical 1 }
+    if { [string match "*verbosity*" $filterMode] } { set verbosity 1 }
+
+    set maxIndex 0
+    set output   {}
+    while { ! [eof $channel] } {
+	gets $channel _line
+	if { $amass } {
+	    set maxIndex [amassIndex $_line $maxIndex]
+	}
+	if { $logical } {
+	    set _line    [logicalFlag $_line]       
+	}
+	if { $verbosity } {
+	    set _line    [verbosityFlag $_line]
+	}
+	if { $replList != "" } {
+	    foreach repl $replList {
+		set replFromList [lindex $repl 0]
+		set replToItem   [lindex $repl 1]
+		set _line [eval {replaceFlag $_line $replToItem} $replFromList]
+		#foreach replItem $replFromList {
+		#    set _line [replaceFlag $_line $replToItem $replItem]
+		#}
+	    }
+	}
+	append output $_line\n
+    }
+    if { $maxIndex > 0 && $amass } {
+	$moduleObj varset ntyp -value $maxIndex
+    }
+    # close the old channel
+    close $channel
+
+    # open a new channel (i.e. temporary file) and write the 
+    # $output to it
+    set tmpfile    [::tclu::tempFile name input]
+    set newChannel [open $tmpfile w+]
+    puts  $newChannel $output
+    flush $newChannel
+
+    # rewind the newChannel
+    seek $newChannel 0 start
+    return $newChannel
+}
+
+
+proc ::pwscf::readFilter::findNamelists {moduleObj channel namelists errMsgVar} {
+    upvar $errMsgVar errMsg
+    # PURPOSE: 
+    # Find if given namelists exist in the input file.
+    #
+    # Variable: namelists -- list of namelist (namelists names should be without "&" prefix)
+    #
+    #           errMsgVar -- contain the error message on output
+    #
+    # Returns:
+    #          1 -- if namelist is present
+    #          0 -- if namelist is not present
+
+    # init ...
+    set _errMsg "- the following namelists are missing:\n"
+    foreach name $namelists {
+	set exist($name) 0
+    }
+
+    # start from the beginning of input file
+    seek $channel 0 start
+
+    # search the file 
+    while { ! [eof $channel] } {
+	gets $channel _line
+	foreach name $namelists {
+	    if { [string match -nocase "*&${name}*" $_line] } {		
+		set exist($name) 1
+	    }
+	}
+    }
+    
+    # file position back to the start of file
+    seek $channel 0 start
+
+    # post-processing ...
+    set result 1
+    foreach name $namelists {
+	if { $exist($name) == 0 } {
+	    # should we make some info about the missing namelists	    
+	    append _errMsg "    &${name}\n"
+	    #lappend pwscf($moduleObj,missing.namelists) "&$name"
+	    set result 0
+	}
+    }
+    if { ! $result } {
+	set errMsg $_errMsg
+    }
+    return $result
+}
+
+
+proc ::pwscf::readFilter::findCards {moduleObj channel cardlists errMsgVar {nocase 0}} {
+    upvar $errMsgVar errMsg
+    # PURPOSE
+    # Find if given cards exist in the input file.
+    #
+    # Variable: cardlist  -- list of cards to search for
+    #
+    #           errMsgVar -- contain the error message on output
+    #
+    # Returns:
+    #          1 -- if namelist is present
+    #          0 -- if namelist is not present
+
+    # init ...
+    set _errMsg "- the following cards are missing:\n"
+    foreach name $cardlists {
+	set exist($name) 0
+    }
+
+    # start from the beginning of input file
+    seek $channel 0 start
+
+    # search the file 
+    while { ! [eof $channel] } {
+	gets $channel _line
+	foreach name $cardlists {
+	    if { [::tclu::stringMatch "*${name}*" $_line $nocase] } {
+		set exist($name) 1
+	    }
+	}
+    }
+    
+    # file position back to the start of file
+    seek $channel 0 start
+
+    # post-processing ...
+    set result 1
+    foreach name $cardlists {
+	if { $exist($name) == 0 } {
+	    # should we make some info about the missing cardlists
+	    append _errMsg "    ${name}\n"
+	    #lappend pwscf($moduleObj,missing.cards) "$name"
+	    set result 0
+	}
+    }
+    if { ! $result } {
+	set errMsg $_errMsg
+    }
+    return $result
+}
+
+
+proc ::pwscf::readFilter::findNamelistsAndCards {moduleObj channel formatName namelists cards errMsgVar {cards_nocase 0}} {
+    upvar $errMsgVar errMsg
+    #
+    # Purpose: find if given namelists and cards exist in the input file
+
+    set nml_status  [::pwscf::readFilter::findNamelists $moduleObj $channel $namelists nml_errMsg]
+    set card_status [::pwscf::readFilter::findCards $moduleObj $channel $cards card_errMsg $cards_nocase]    
+
+    if { $nml_status == 0 || $card_status == 0 } {
+	#set errMsg "selected file is not a pw.x formatted or contains severe syntax errors.\n\nDiagnosis:\n"
+	if { $nml_status == 0  } { 
+	    append errMsg "  $nml_errMsg\n" 
+	}
+	if { $card_status == 0 } { 
+	    append errMsg "  $card_errMsg" 
+	}
+	return 0
+    }
+    return 1
+}
+
+
+proc ::pwscf::selectFileRoot {moduleObj variable} {
+    # PURPOSE
+    # Select the root of a filename and quote it.
+    # Example: file.ext --> 'file'
+    variable pwscf
+
+    set _dir [string trim [$moduleObj varvalue outdir] "'"]
+    
+    if { [file isdirectory $_dir] } {
+	set dir $_dir
+    } elseif { [info exists pwscf($moduleObj,LASTDIR,punchfile)] } {
+	set dir $pwscf($moduleObj,LASTDIR,punchfile)
+    } else {
+	set dir $pwscf(PWD)
+    }        
+    
+    set file [tk_getOpenFile \
+		  -initialdir $dir \
+		  -title      "Select a Punch File"]
+    if { $file == "" } {
+	return
+    }
+    set pwscf($moduleObj,LASTDIR,punchfile) [file dirname $file]
+    
+    set file '[file tail [file rootname $file]]'
+    $moduleObj varset $variable -value $file    
+}

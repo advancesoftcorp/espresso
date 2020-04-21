@@ -1,0 +1,69 @@
+--
+&inputepw
+  prefix      = 'diam'
+  amass(1)    = 12.01078
+  outdir      = './'
+
+  iverbosity  = 0
+
+  elph        = .true.
+  epbwrite    = .true.
+  epbread     = .false.
+
+  epwwrite    =  .true.
+  epwread     =  .false.
+
+  efermi_read = .true. 
+  fermi_energy = 13.209862
+
+  nbndsub     =  4
+  nbndskip    =  0
+
+  wannierize  = .true.
+  num_iter    = 300
+  iprint      = 2
+  dis_win_max = 12
+  dis_froz_max= 7
+  proj(1)     = 'f=0,0,0:l=-3'   
+
+  elecselfen  = .true. 
+  phonselfen  = .false. 
+  a2f         = .false.
+
+
+  fsthick     = 1.36056981 ! eV 
+  eptemp      = 300 ! K (same as PRB 76, 165108)
+  degaussw    = 0.1 ! eV
+
+  dvscf_dir   = '../phonons/save'
+  filukk      = './diam.ukk'
+  filkf       = 'meshes/path.dat'
+  nqf1        = 50
+  nqf2        = 50
+  nqf3        = 50
+  
+  nk1         = 6
+  nk2         = 6
+  nk3         = 6
+
+  nq1         = 6
+  nq2         = 6
+  nq3         = 6
+ /
+      16 cartesian
+   0.0000000   0.0000000   0.0000000  
+  -0.1666667   0.1666667  -0.1666667  
+  -0.3333333   0.3333333  -0.3333333  
+   0.5000000  -0.5000000   0.5000000  
+   0.0000000   0.3333333   0.0000000  
+  -0.1666667   0.5000000  -0.1666667  
+   0.6666667  -0.3333333   0.6666667  
+   0.5000000  -0.1666667   0.5000000  
+   0.3333333   0.0000000   0.3333333  
+   0.0000000   0.6666667   0.0000000  
+   0.8333333  -0.1666667   0.8333333  
+   0.6666667   0.0000000   0.6666667  
+   0.0000000  -1.0000000   0.0000000  
+   0.6666667  -0.3333333   1.0000000  
+   0.5000000  -0.1666667   0.8333333  
+  -0.3333333  -1.0000000   0.0000000  

@@ -1,0 +1,40 @@
+# ------------------------------------------------------------------------
+#
+# EDIT to suit your needs ...
+#
+# ------------------------------------------------------------------------
+
+# sdx and tclkit programs are required, set the SDX and TCLKIT vars accordingly !!!
+SDX    = $(HOME)/bin/sdx
+TCLKIT = $(HOME)/bin/tclkit
+
+# see the main.tcl.sh script for meaning of ITCL_EXACT
+TK_VERSION = 8.5
+
+ITCL_EXACT = -exact
+
+ITCL_VERSION     = 3.4
+ITK_VERSION      = 3.4
+IWIDGETS_VERSION = 4.0.1
+
+# define the library-directories to be copied
+prefix=/usr/share/tcltk
+ITCL_LIBDIR     = $(prefix)/itcl$(ITCL_VERSION)
+ITK_LIBDIR      = $(prefix)/itk$(ITK_VERSION)
+IWIDGETS_LIBDIR = $(prefix)/iwidgets$(IWIDGETS_VERSION)
+
+# define the following four vars if libitcl.so and libitk.so needs to
+# be copied separately
+libdir=/usr/lib/x86_64-linux-gnu
+LIBITCL_SO = $(libdir)/libitcl$(ITCL_VERSION).so.1
+LIBITK_SO  = $(libdir)/libitk$(ITK_VERSION).so.1
+
+pkgdir=/usr/lib/tcltk/x86_64-linux-gnu
+ITCL_pkg = $(pkgdir)/itcl$(ITCL_VERSION)/pkgIndex.tcl
+ITK_pkg  = $(pkgdir)/itk$(ITK_VERSION)/pkgIndex.tcl
+
+# if we have some dangling links or some files that are not really
+# needed we should delete them ...
+xdir = pwgui.vfs/lib
+DELETE_LINKS = \
+	$(xdir)/iwidgets$(IWIDGETS_VERSION)/demos

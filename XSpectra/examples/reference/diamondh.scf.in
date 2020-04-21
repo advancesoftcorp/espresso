@@ -1,0 +1,32 @@
+ &control
+    calculation='scf',
+    pseudo_dir = '/Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/pseudo/',
+    outdir='/Users/calandra/Pw/SVN_9_7_2015/espresso/XSpectra/examples/results/tmp/',
+    prefix='diamondh',
+ /
+ &system
+    ibrav = 1,
+    celldm(1) = 6.740256,
+    nat=8,
+    ntyp=2,
+    nbnd=16,
+    tot_charge=+1.0,
+    ecutwfc=40.0,
+ /
+ &electrons
+    mixing_beta = 0.3,
+ /
+ATOMIC_SPECIES
+C_h 12.0 Ch_PBE_TM_2pj.UPF
+C 12.0 C_PBE_TM_2pj.UPF
+ATOMIC_POSITIONS crystal
+C_h 0.0 0.0 0.0
+C 0.0 0.5 0.5
+C 0.5 0.0 0.5
+C 0.5 0.5 0.0
+C 0.75 0.75 0.25
+C 0.75 0.25 0.75
+C 0.25 0.75 0.75
+C 0.25 0.25 0.25
+K_POINTS automatic
+4 4 4 0 0 0

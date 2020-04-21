@@ -1,0 +1,128 @@
+#!/bin/sh
+# the next line restarts using tclsh \
+exec tclsh "$0" "$@"
+
+#
+# Usage:   check_gui module
+#          ( module = pw, ph, pp, projwfc, atomic, or d3 )
+#
+# Purpose: check the PWgui modules wrt corresponding INPUT_*.def
+#          files and create a PWgui help files.
+#
+
+if { ! [info exists env(PWGUI)] } {
+    # try with: ../GUI/PWgui
+    set env(PWGUI) [file normalize [file join .. GUI PWgui]]
+}
+if { ! [info exists env(GUIB)] } {
+    # try with: ../GUI/Guib
+    set env(GUIB) [file normalize [file join .. GUI Guib]]
+}
+
+set basedir [file normalize [file dirname [info script]]]
+set topdir  [file normalize [file join $basedir ..]]
+set helpdocdir [file join $basedir helpdoc.d]
+
+source [file join $helpdocdir modules.tcl]; # load which modules do we support
+
+if { $argc != 1 } {
+    helpdoc::prog_module_usage
+}
+
+set module [lindex $argv 0]
+
+# load helpdoc
+
+source [file join $helpdocdir helpdoc.tcl]
+
+# load Guib
+
+set guibdir [file join $topdir GUI Guib]
+lappend auto_path $guibdir
+package require Guib
+wm withdraw .
+
+
+# PWgui's modules dir 
+
+set pwguidir  [file join $topdir GUI PWgui]
+set moduledir [file join $pwguidir modules]
+source [file join $pwguidir init.tcl]
+
+
+# map from module to def- and module-file
+
+set deffile    [helpdoc::get_def_filename $module]
+set modulefile [helpdoc::get_gui_module_filename $module]
+
+# compile the $deffile
+
+cd [file dirname $deffile]
+catch {exec make [file rootname [file tail $deffile]].html}
+cd $basedir
+	
+# output info
+
+puts "
+Checking PWgui module: $module
+
+    *     module file: $modulefile
+    * definition file: $deffile
+"
+
+# the current $module-help.tcl file will interfere the process, rename it:	
+
+if { [file exists [file join $moduledir $module $module-help.tcl]] } {
+    puts "Renaming the current $module-help.tcl file to $module-help.tcl.bak"
+    file rename -force [file join $moduledir $module $module-help.tcl] [file join $moduledir $module $module-help.tcl.bak]
+}
+
+# make a blanck $module-help.tcl file
+
+close [open [file join $moduledir $module $module-help.tcl] w]
+
+
+# read & load both the def & module file
+
+set def [::helpdoc::def_loadDef $deffile]
+set obj [::guib::loadModule $modulefile]; $obj storeModuleItems
+
+
+#
+# check DEF vs. MODULE file
+#
+
+::helpdoc::checkGui_def_vs_module
+
+#
+# check MODULE vs. DEF file
+#
+
+::helpdoc::checkGui_module_vs_def
+
+#
+# Create a HELP file
+#
+
+::helpdoc::checkGui_makeHelpFile $deffile $modulefile
+
+if { [file exists [file join $moduledir $module $module-help.tcl.bak]] } {
+    puts "Renaming back the $module-help.tcl.bak file to $module-help.tcl"
+    file rename -force [file join $moduledir $module $module-help.tcl.bak] [file join $moduledir $module $module-help.tcl]
+}
+
+if { [info exists ::helpdoc::moduleNewCode] } {
+    puts "
+###
+### Tentative new code for the missing DEF variables:
+###
+"
+    puts $::helpdoc::moduleNewCode
+
+    puts "### end-of-tentative-new-code
+"
+}
+	  
+# ok, we are done; since we loaded Tk, we need an explicit exit !!!
+
+exit 0

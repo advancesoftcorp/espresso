@@ -1,0 +1,350 @@
+XSPECTRA
+---------
+2009: First version of XSpectra
+ by Christos Gougoussis, Matteo Calandra, Ari P. Seitsonen and Francesco Mauri
+
+2014: Restyling of I/O, 
+ by Delphine Cabaret and Nadejda Mas
+
+2015: L23 edge XAS calculation by O. Bunau and M. Calandra
+-----------------------------------------------------------------------
+
+The theoretical approach on which XSpectra is based was
+described in: 
+
+L23 edges,
+
+O. Bunau and M. Calandra
+Projector augmented wave calculation of x-ray absorption spectra at the L2,3 edges
+Phys. Rev. B 87, 205105 (2013) 
+
+K/L1-edge,
+
+C. Gougoussis, M. Calandra, A. P. Seitsonen, F. Mauri,
+"First principles calculations of X-ray absorption in an ultrasoft 
+pseudopotentials scheme: from $\alpha$-quartz to high-T$_c$ compounds",
+Phys. Rev. B 80, 075102 (2009) 
+
+M. Taillefumier, D. Cabaret, A. M. Flank, and F. Mauri
+"X-ray absorption near-edge structure calculations with the pseudopotentials:
+Application to the K edge in diamond and αalpha-quartz"
+Phys. Rev. B 66, 195107 (2002)
+
+You should cite these three works in all publications using this software.
+
+The implementation of the DFT+U approximation and its application to
+K-edge XAS in NiO was performed in:
+
+C. Gougoussis, M. Calandra, A. Seitsonen, Ch. Brouder, A. Shukla, F. Mauri
+" Intrinsic charge transfer gap in NiO from  Ni K -edge x-ray absorption spectroscopy",
+Phys. Rev. B 79, 045118 (2009)
+
+If you use DFT+U, you should cite this work too.
+
+Finally you should cite properly the Quantum ESPRESSO distribution.
+
+-----------------------------------------------------------------------
+XSpectra is a post-processing tools that relies on the output 
+(the charge density) of the PWscf code (pw.x). 
+Thus a scf calculation needs to be done before running 
+xspectra.x.
+
+To simulate core-hole effects, a pseudopotential with a hole in the s
+state (1s for K-edges, 2s for L1-edges, 2p1/2 for L2-edges, 2p3/2 for
+L3-edges) needs to be generated for the absorbing atom. 
+Some of these pseudopotentials are available 
+in the XSpectra examples directory, some others are available on 
+the pseudopotential web-page at www.quantum-espresso.org/ with the
+label "*star1s*_gipaw*" for K-edges, "*star2s*_gipaw*" for L1-edges and so on. 
+
+The self-consistent calculation is then performed on a supercell including
+the absorbing atom. The size of the supercell needs to be verified from
+system to system, since fairly large supercells are necessary for convergence.
+If core-hole effects need not to be taken into account then a calculation on
+a single cell with a standard pseudopotential (i.e. without the core-hole) 
+is enough. 
+
+Since xspectra.x uses GIPAW reconstruction of the all electron wavefunction
+the pseudopotential needs to contain information about GIPAW reconstruction.
+There is no limit to the number of GIPAW projector that can be included. 
+Note however that at least two projectors are needed to obtain XAS spectra
+converged up to 30-40 eV from the Fermi level.
+The use of a single projector is discouraged, particularly when semicore
+states are present. If more than two projectors are used, linear independence
+of the projectors should be explicitly verified (verbosity='high'). 
+
+Once the scf charge density has been obtained, the xspectra.x code can be 
+used as a post-processing tool. Note that the X-ray absorption spectra
+can be calculated on a larger mesh, different from that used in the 
+PWscf scf run. Convergence need to be tested also for this second mesh.
+XSpectra calculates then the XAS electric dipole (for K and L edges)
+or electric quadrupole contributions (for K and L1 edges only),
+using the Lanczos method and the continued fraction.
+This approach does not require the explicit calculation of empty states
+and it is consequently very fast (only the charge density is needed).
+The code needs the radial core wavefunction of the initial core state
+in input. This wavefunction is included in the pseudo
+and can be extracted using the script upf2plotcore.sh
+in the directory ~/espresso/XSpectra/tools/ .
+Note that this script works only for UPF version 1.
+This is necessary to calculate the XAS matrix element.
+
+The output spectrum can be separated in its spin-up and 
+spin-down polarizations.
+DFT+U calculations  and collinear magnetism are possible.
+Ultrasoft pseudopotentials are allowed.
+Hybrid functionals not yet allowed.
+
+ 
+
+--------------------------------------------------------------------------
+
+=======================================================================
+NAMELIST / input_xspectra /
+
+
+calculation  	 character (len=8)				  DEFAULT=''
+               	 'xanes_dipole', Perform dipolar calculation
+               	 'xanes_quadrupole', Perform quadrupolar 
+		       		      calculation
+                 'hpsi', Perform the test H*psi=E*Psi (debug option)
+
+edge             character (len=16)                                 DEFAULT='K',
+                 specifiy the edge to be calculated. 
+                 'K' specify the standard K-edge calculation
+                 'L2' calculates the L2 edge, 
+                 'L3' calculates the L3 edge,
+                 'L23' calculates both.
+                 However, it should be noted that in the single particle
+                 approximation the L3/L2 branching ration is exactly equal two 2.
+                 Thus a calculation of one of the edges is enough.
+
+lplus            logical                                           DEFAULT=.false.
+                 if lpus=.true. only transition 2p ---> d are allowed
+                 in the dipolar cross section for L23 edges.
+                  
+lminus           logical                                           DEFAULT=.false.
+                 if lminus=.true. only transition 2p ---> s are allowed
+                 in the dipolar cross section for L23 edges.
+
+prefix		 character (len=256) 
+               	 prefix of the pwscf output files
+
+outdir		 character (len=256)				   DEFAULT='./'
+               	 directory tmp_dir or where the pwscf output files are stored
+
+verbosity    	 character (len=4)				  DEFAULT='low'
+               	 'high',it checks linear dependence of PAW projectors 
+                        and write details about the projectors. 
+                 Note that GIPAW already perform a check on the linear 
+                  dependence of the projectors even without this option.
+
+xiabs        	 integer				              DEFAULT=1
+               	 type of the absorbing atom:
+                 position within the ATOMIC_SPECIES in pwscf input
+
+xkvec(1:3)       real(DP)				  DEFAULT=(1.0,0.0,0.0)
+		 coordinates of the X-ray wave-vector k		  
+
+xepsilon(1:3)	 real(DP)    	     	                  DEFAULT=(0.0,0.0,1.0)
+                 coordinates of the incident X-ray polarization vector	  
+
+xcoordcrys	 logical				         DEFAULT=.true.
+		 .true. to use crystal coordinates for xkvec and xepsilon
+
+xonly_plot	 logical					DEFAULT=.false.
+		 .false. the continued fraction is calculated
+		         for each k-point and at the end written
+                         on the save file
+		 .true.  uses a previously calculated continued
+                         fraction (x_save_file) to re-plot the
+		         spectrum with different parameters
+		         (gamma broadening parameter,with occupied state,etc.)	  
+
+x_save_file      character (len=256)                          DEFAULT=xanes.sav
+                 save file where results of the Lanczos 
+                 calculation (a,b coefficients, etc.) are written
+		 If xonly_plot=.true., the x_save_file is read (read only) 
+                 to get the Lanczos parameters calculated in a previous run
+                 Current version number is 2
+
+ef_r             (obsolete use xe0)
+                 The Fermi energy is determined from the SCF save directory.
+                 For an insulator, it is set to the energy of the highest occupied level.
+                 If the calculation is spin polarized, the largest
+                 of the Fermi energies corresponding to spin up and down is kept.
+                 If the zero of the spectrum needs to be changed, use xe0 (see below).
+
+
+xe0		 real(DP)				           DEFAULT=1.d4
+                 energy-zero for the spectrum in eV 
+                 - must be set to the Fermi level if xonly_plot is .true. 
+		   and the version of x_save_file is 1
+                   (written with a previous version of the code).
+                   If x_save_file is 2 and xe0 is not specified then the zero 
+                   energy of the spectrum is set at the Fermi level.
+                 - can also be used to set the zero energy for the calculation
+                   of the spectrum at an other value than the Fermi energy
+                   (for example, for an insulator, in the middle of the gap) 
+
+xniter		 integer					   DEFAULT=2000
+                 maximum number of iterations for Lanczos.
+		 The maximum number of iterations allowed must be lower 
+                 than the number of vectors in the Hilbert space
+                 (i.e. the number of plane waves).
+
+xcheck_conv   	 integer					      DEFAULT=5
+               	 number of iterations between 2 convergence tests:
+                 Xspectra checks convergency of the spectrum every 
+                 xcheck_conv iterations of the Lanczos-basis construction.
+
+xerror           real(DP)                                          DEFAULT=0.01
+                 convergence threshold for Lanczos calculation (eV)
+                 If the difference of two successive spectra 
+                 (for a given k-point) is smaller than xerror, 
+                 the convergence is achieved.
+
+
+show_status      logical			                DEFAULT=.false.
+                 flag to show the status of the code
+
+U_projection_type character(len=16)			       DEFAULT='atomic'
+		  type of projection for DFT+U calculations
+		  (see the PWscf input file for more info)
+
+time_limit       integer                                          DEFAULT=1.d8
+                 time in seconds before stopping the calculation.
+                 If XSpectra stops because of the time limit, 
+                 a and b coefficients of the incomplete continued fraction 
+                 are stored in the .sav file. 
+                  
+
+restart_mode     character (len=32)                     DEFAULT='from_scratch'
+                 'restart' if you want to restart from a .sav file 
+                           where a and b coefficients of an incomplete 
+                           continued fraction are stored.
+
+
+===============================================================================
+
+NAMELIST / plot /
+
+xnepoint         integer					    DEFAULT=100
+                 number of energy points in the plot of the XAS spectrum
+		 
+xemax            real(DP)     	 				   DEFAULT=10.0
+                 maximum energy in eV for the plot of the XAS spectrum
+		 
+
+xemin            real(DP)			                    DEFAULT=0.0
+                 minimum energy in eV for the plot of the 
+		 XAS spectrum
+
+cut_occ_states   logical				         DEFAULT=.false.
+                 .false. the occupied states are visualized
+                 .true.  the occupied states are smoothly cut
+			from the plot
+
+terminator       logical					DEFAULT=.false.
+                 .true. to use the terminator function for the
+		               continued fraction
+                 .false. no terminator is used.
+
+gamma_mode       character (len=256)		             DEFAULT='constant'
+                 'constant': a constant broadening parameter (xgamma) 
+                                is used for the XAS spectrum.
+                 'variable': an energy-dependent broadening parameter 
+                                  is used: constant and equal to gamma_value(1)
+                                  from xemin to gamma_energy(1), 
+                                  constant and equal to gamma_value(2)
+                                  from gamma_energy(2) to xemax and linear 
+                                  from gamma_energy(1) to gamma_energy(2).
+	         'file': the continued fraction uses an energy-dependent
+                              broadening parameter stored in file gamma_file.
+
+                 The broadening parameter (gamma of the continued fraction)
+                 is equivalent to the half width at half maximum
+                 of a Lorentzian used for a convolution
+
+
+xgamma	       real(DP)                                             DEFAULT=0.1
+               constant broadening parameter to be used in the spectrum (eV)
+               used for convergence and if gamma_mode='constant'
+               
+gamma_energy(1:2) real(DP)
+                  energy values in eV of the 2 points of reference for variable gamma
+                  used if gamma_mode='variable'
+
+gamma_value(1:2) real(DP)
+                 gamma values in eV of the 2 points of reference
+                 used if gamma_mode='variable'
+
+gamma_file     character (LEN=256)			    DEFAULT='gamma.dat'
+               The file has to be formatted in two columns :
+                            energy1  gamma1
+	       		    energy2  gamma2
+	       where at energy1 the broadening parameter is gamma1.
+               used if gamma_mode='file'
+
+==============================================================================
+NAMELIST / pseudos /
+
+filecore,      character (len=256)                           DEFAULT='Core.wfc'
+               core wavefunction file
+
+r_paw(1:...)   real(DP)		                                 DEFAULT=1.5*rc
+               paw radii to be used in paw reconstruction.
+               rpaw(1) corresponds to l quantum number=1 (electric dipole)
+               rpaw(2) corresponds to l quantum number=2 (electric quadrupole)
+               
+	       
+==============================================================================
+
+ In order to cut the occupied states, the program performs an integration
+ over the variable t in ] 0, infinity [. 
+ For more details see ref. 
+  Ch. Brouder, M. Alouani, K. H. Bennemann, Phys. Rev. B 54 (1996) p.7334-49.
+ The integration is done with t going in two opposite directions, 
+ from the start value cut_startt. So, the integration
+ is done over ]cut_tinf,cut_startt] at least with step cut_stepl, and
+ over [cut_startt,cut_tsup[ at least with step cut_stepu. 
+ There are two arrays of size cut_nmeml and cut_nmemu 
+ in order to save Green functions values. There is an area near
+ the Fermi level of size cut_desmooth (in eV) where the cross section 
+ is interpolated in order to avoid a divergence.
+
+NAMELIST / cut_occ /
+
+cut_ierror     real(DP)						 DEFAULT=1.d-7
+               convergence tolerance for one step in the integral
+
+cut_stepu      real(DP)  					 DEFAULT=1.d-2
+               integration initial step, upper side
+
+cut_stepl      real(DP)						 DEFAULT=1.d-3
+               integration initial step, lower side
+
+cut_startt     real(DP)						 DEFAULT=1.d0
+               integration start value of the t variable
+
+cut_tinf       real(DP)						 DEFAULT=1.d-6
+               maximum value of the lower integration boundary
+
+cut_tsup       real(DP)						 DEFAULT=100.d0
+               minimum value of the upper integration boundary
+
+cut_desmooth   real(DP)						 DEFAULT=1.d-2
+               size of the interval near the fermi energy
+               in which cross section is smoothed
+
+cut_nmemu      integer						 DEFAULT=100000
+               size of the memory of the values of the
+               green function, upper side
+
+cut_nmeml      integer						 DEFAULT=100000
+               size of the memory of the values of the
+               green function, lower side
+
+
+
+=================================================================================

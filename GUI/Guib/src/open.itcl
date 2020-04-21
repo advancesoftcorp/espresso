@@ -1,0 +1,657 @@
+#
+# $RCSfile: open.itcl,v $ --
+#
+#     This file contains the implementation for reading/parsing the
+# input file according to definition of input syntax as specified in
+# guib-definition file.
+#
+# Copyright (c) 2003--2004  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: open.itcl,v 1.6 2008-05-08 18:44:37 kokalj Exp $ 
+#
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/openFile
+#  NAME
+#    ::guib::moduleObj::openFile -- open an input-file and calls readFile
+#
+#  USAGE
+#    openFile fileName
+#
+#  RETURN VALUE
+#    Returns opened filename.
+#  EXAMPLE
+#    $moduleObj openFile myFile.inp
+#******
+# ------------------------------------------------------------------------
+
+itcl::body ::guib::moduleObj::openFile {fileName} {
+    if { ! [file exists $fileName] } {
+    	::tclu::errorDialog "file \"$fileName\" does not exists"
+	return
+    }
+    set fileChannel [open $fileName r]
+    readFile $fileChannel $fileName
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/readFile
+#  NAME
+#    ::guib::moduleObj::readFile -- reads and input-file
+#
+#  USAGE
+#    readFile fileChannel ?fileName?
+#
+#  DESCRIPTION
+#     This method reads the content of file-channel of a given input
+# file. An example of the usage of the method is in ::guib::menuOpen
+# proc, i.e., upon the user selection of an input file this method is
+# called.
+#
+#  RETURN VALUE
+#    OK           -- input file is OK
+#    SYNTAX_ERROR -- input file contains syntax errors
+#    WRONG_FORMAT -- input file is not in appropriate format
+#
+#  EXAMPLE
+#    $moduleObj readFile $fID myFile.inp
+#******
+# ------------------------------------------------------------------------
+
+itcl::body ::guib::moduleObj::readFile {fileChannel {fileName {}}} {
+    variable ::guib::status
+
+    set readNewLine  1
+    set readError    0
+
+    if { $readFilter != "" } {
+	set fileChannel [$readFilter $this $fileChannel]
+    }
+
+    if { $readError == 1 } { 
+	# a fatal syntax error in input file was detected in
+	# readfilter routine. Skip reading the file.
+	return WRONG_FORMAT
+    }
+
+    ::tku::watchExec {_open $this $fileChannel}
+    
+    if { [winfo exists $toplevel] } {
+	# a moduleObj has its own toplevel (i.e. ::guib::simpleTplwGUI mechanism)
+	set title   [$this cget -title]    
+	set postfix "(File: [file tail $fileName]) (No.$::guib::module($title))"
+	set toplevelTitle "$title $postfix"
+	$toplevel configure -title $toplevelTitle    
+    }
+
+    if { $readError } {
+	return SYNTAX_ERROR
+    }
+
+    return OK  
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/readFileError
+#  NAME
+#    ::guib::moduleObj::readFileError --  method for dealing with file-read errors
+#
+#  USAGE
+#    readFileError errMsg
+#
+#  DESCRIPTION
+#    When an error occurs while reading an input file, this method
+# should be called to display an error and skip the reading of the
+# input file. This method is supposed to be used from readfilter routines.
+# 
+#  ARGUMENTS
+#     errMsg     -- error message to display when syntax error is encountered
+#******
+# ------------------------------------------------------------------------
+
+itcl::body ::guib::moduleObj::readFileError {errMsg} {
+    set readError 1
+    ::tclu::errorDialog "while reading input file: $errMsg"
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/readFileWrongFormat
+#  NAME
+#    ::guib::moduleObj::readFileWrongFormat --  method for dealing with wrong-formatted input file
+#
+#  USAGE
+#    readFileWrongFormat formatName ?diagnosisText?
+# DESCRIPTION 
+# When an input-file is not in a proper format, this method should be
+# called to display an appropriate error-message and skip the reading
+# of the input file. This method is supposed to be used from
+# readfilter routines.
+# 
+#  ARGUMENTS
+#     formatName     -- name of the format (i.e. an arbitrary string)
+#     diagnosisText  -- a text containing a diagnose of the syntax errors [OPTIONAL]
+#******
+# ------------------------------------------------------------------------
+
+itcl::body ::guib::moduleObj::readFileWrongFormat {formatName {diagnosisText {}}} {
+    set readError 1
+    set errMsg "selected file is not a ${formatName}-formatted or contains severe syntax errors."
+    if { $diagnosisText != "" } {
+	append errMsg "\n\nDiagnosis:\n$diagnosisText"
+    }
+    tk_messageBox -title ERROR -message "Read ERROR: $errMsg" -type ok -icon error
+    #::tclu::errorDialog $errMsg
+}
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_openSyntaxError
+#  NAME
+#    ::guib::moduleObj::_open --  method for dealing with file-read errors
+#
+#  USAGE
+#    _openSyntaxError errMsg ?addSkipMsg?
+#
+#  DESCRIPTION
+#    When an error occurs while reading an input file, this method
+# should be called to correctly handle the error. When a syntax error
+# is encountered the reading should be skippe immediately, otherwise
+# the GUI might trap in an infinite loop!!!
+# 
+#  ARGUMENTS
+#     errMsg     -- error message to display when syntax error is encountered
+#     addSkipMsg -- do we add "Skipping the rest of the input file" text
+#******
+# ------------------------------------------------------------------------
+
+itcl::body ::guib::moduleObj::_openSyntaxError {errMsg {addSkipMsg 1}} {
+    
+    set readError 1
+    
+    if { $addSkipMsg == 1 } {
+	::tclu::errorDialog "Syntax error in the input file:\n\n${errMsg}\n\nSkipping the rest of the input file !!!"
+    } else {
+	::tclu::errorDialog "Syntax error in the input file:\n\n$errMsg"
+    }
+}
+
+
+# ------------------------------------------------------------------------
+#****im* moduleObj/_open
+#  NAME
+#    ::guib::moduleObj::_open -- reads the content of file-channel of a given input-file recursively
+#
+#  USAGE
+#    _open keywordObj fileChannel
+#
+#  DESCRIPTION
+#    This method reads the content of file-channel of a given
+# input-file recursively. Hence, it makes all the work for readFile
+# method.
+#
+#  ARGUMENTS
+#    obj         -- the keywordObj object where the read content will be stored
+#    fileChannel -- file-channel of a given input file
+#  RETURN VALUE
+#    None.
+#
+#  EXAMPLE
+#    _open $keywordObj $fID
+#******
+# ------------------------------------------------------------------------
+
+itcl::body ::guib::moduleObj::_open {obj fileChannel} {
+    
+    if { $readError == 1 } {
+	# skip reading of the input file immediately ...
+	return
+    }
+
+    set NItem [$obj getID]    
+    for {set id 0} {$id <= $NItem} {incr id} {
+
+	if { $readError == 1 } {
+	    # skip reading of the input file immediately ...
+	    return
+	}
+
+	update;	update idletask
+
+	set key      [$obj getKey   $id]
+	set childObj [$obj getChild $id]
+	
+	if { $childObj != {} } {
+	    #------------------------------------------------------------
+	    #
+	    # we have new child object
+	    #
+	    #------------------------------------------------------------
+	    # object types are: "page", "namelist", "optional", 
+	    # "required", "line", "group"
+	    #------------------------------------------------------------
+	    
+	    if { [::tclu::lpresent $disabledNameObjList $childObj] } {
+		# object is disabled --> skip-it
+		continue
+	    }
+
+	    if { $key == "namelist" } {
+
+		# --------------------------------------------------
+		#  INSIDE namelist
+		# --------------------------------------------------
+		# namelist can have dimensions and tables, and since some 
+		# variables might be optional, we do not know the length
+		# of the namelist, therefore read until end-of-namelist is 
+		# encountered
+
+		set name [$obj getOptionValue $id name]
+
+		if { [catch {set nmlContent [::fnml::getContent $name $fileChannel]} errMsg] } {
+		    if { $::errorCode eq "PARSE_ERROR" } {
+			_openSyntaxError $errMsg
+			return
+		    } else {
+			error $::errorInfo
+		    }
+		}
+		if { [catch {array set nml [::fnml::parseContent $name $nmlContent]} errMsg] }  {
+		    if { $::errorCode eq "PARSE_ERROR" } {
+			_openSyntaxError $errMsg
+			return
+		    } else {
+			error $::errorInfo
+		    }
+		}
+		
+		_openNamelistAssignVars $obj $name nml
+		
+	    } else {
+		set _line 0
+		if { $key == "line" } {
+		    set _line 1
+		}
+		#----
+		_open $childObj $fileChannel 
+		#----
+		if { $_line } {
+		    set readNewLine 1
+		}
+	    }
+	} else {
+	    #------------------------------------------------------------
+	    #
+	    # we have a new key 
+	    #
+	    #------------------------------------------------------------
+	    # input-content keys are: var, dimension, table, keyword
+	    #------------------------------------------------------------
+
+	    # check if the key is disabled ...
+	    _isDisabledKey $obj $id [$obj getOptionValue $id ident]
+
+	    #set ident  [$obj getOptionValue $id ident]
+	    #if { $ident != "" } {
+	    #	set widget [getWidgetFromVarident $ident]
+	    #	if { [::tclu::lpresent $disabledWidList $widget] } {
+	    #	    continue
+	    #	}
+	    #	# maybe it is a keyword ...
+	    #	if { [$obj getOptionValue $id keyword] != "" } {
+	    #	    if { [::tclu::lpresent $disabledKeywordidentList $ident] } {
+	    #		continue
+	    #	    }
+	    #	}
+	    #}		
+	    
+	    if { $readNewLine } {
+		set readline [_openGets $fileChannel]
+	    }
+
+	    set varIdentList {}
+	    set fmt          {}
+	    set makeFmt      0	    
+	    
+	    #"dimension" {
+	    #    #------------------------------------------------------
+	    #    #--> INSIDE namelist 
+	    #    #------------------------------------------------------
+	    #    # one gets here, since usually one does not specify all
+	    #    # namelist variables. Hence we should proceed to next 
+	    #    # iteration, but new readline should not be read !!!!
+	    #    set readNewLine 0
+	    #}		
+
+	    # --------------------------------------------------
+	    #    If we came here, we are OUTSIDE namelist !!!
+	    # --------------------------------------------------
+	    switch -exact -- [$obj getKey $id] {
+		"keyword" {
+		    set keyword [$obj getOptionValue $id keyword]
+
+		    # NOTE: check if keyword contain the newline
+		    # character; if it does then it is OK as next iteration
+		    # new-line will be read. However if it doesn't than
+		    # we should scan forward ...
+		    #
+		    # -->one solution is to  use readNewLine variable !!!
+			
+		    ::tclu::DEBUG --keyword-- Keyword:  \"$keyword\"
+		    ::tclu::DEBUG --keyword-- Readline: \"$readline\"
+
+		    _openReadKeyword $keyword
+		    
+		    if { [string match "*\n" $keyword] } {
+			# read forward the line
+			set readNewLine 1
+		    } else {
+			set readNewLine 0
+			::tclu::DEBUG --keyword-- readline=0
+			::tclu::DEBUG --keyword-- New.readline: $readline
+		    }
+		}
+		    		
+		"var" {
+		    set fmt [$obj getInFmt $id]
+		    if { $fmt == {} } {
+			set fmt "%s" ; # ????
+		    }
+
+		    set varIdent [$obj getOptionValue $id ident]
+		    set widget   [getWidgetFromVarident $varIdent]
+		    set varValue ""
+
+		    eval {::tclu::scan $readline $fmt} varValue		    
+
+		    if { $varValue != "" } {
+			regsub -- $varValue $readline {} readline
+		    }
+		    #t.k.: check if it is allowed for varValue not
+		    # to be set in above line
+		    if { [info exists varValue] } {
+			varset $varIdent -value $varValue
+		    }
+		    
+		    set readNewLine 0
+		}
+		
+		"text" {
+		    set varIdent [$obj getOptionValue $id ident]
+		    set readVar  [$obj getOptionValue $id readvar]
+		    set widget   [getWidgetFromVarident $varIdent]
+		    
+		    tclu::DEBUG +++ readvar == $readVar
+		    tclu::DEBUG +++ readvar exists: [info exists $readVar]
+
+		    if { [info exists $readVar] } {
+			upvar \#0 $readVar readValue
+			varset $varIdent -textvalue $readValue
+			$widget setText $readValue
+		    }
+		    
+		    set readNewLine 0
+		}
+			
+		"table" { 
+		    #------------------------------------------------------
+		    # -->here only OUTSIDE namelist 
+
+		    set _fmt [$obj getInFmt $id]
+		    if { $_fmt == {} } {
+			set makeFmt 1 
+		    }
+
+		    set tableIdent [$obj getOptionValue  $id ident]
+		    set tableWid   [$this getWidgetFromVarident $tableIdent]
+		    set nrow       [$tableWid cget -rows]
+		    set ncol       [$tableWid cget -cols]
+
+		    for {set ir 1} {$ir <= $nrow} {incr ir} {
+			set varIdentList  {}	
+			set fmt          {}
+			for {set ic 1} {$ic <= $ncol} {incr ic} {
+			    # format
+			    set varIdent  ${tableIdent}($ir,$ic)
+			    if { $makeFmt } {
+				append fmt "%s "
+			    } else {
+				append fmt "[lindex $_fmt [expr $ic - 1]] "
+			    }
+			    lappend varIdentList  $varIdent
+			}
+			
+			eval {::tclu::scan $readline $fmt} $varIdentList
+			foreach varident $varIdentList {
+			    upvar 0 $varident varvalue
+			    if { [info exists varvalue] } {
+				#t.k.: check if it is allowed for varvalue not
+				# to exists
+				varset $varident -value $varvalue
+			    }
+			}
+			if {$ir < $nrow} {
+			    ::tclu::DEBUG table: readline
+			    set readline [_openGets $fileChannel]
+			}
+			set readNewLine 1		     
+		    }
+		}
+		
+		default {
+		    # other keys like packwidgets; do not read a new line ...
+		    set readNewLine 0
+		}
+	    } ; # switch
+	} ; # if-else
+    } ; # for
+    
+    # t.k.: Tue Sep 30 15:35:50 CEST 2003--2004below lines were OK for
+    # most cases, but failed when objects where found inside the "line
+    # { ... }" object, i.e., line { group {...}; group {...}} has
+    # failed !!!
+    #---
+    #if { $line } {
+    #	set readNewLine 1
+    #	set line 0
+    #}
+    #---
+    #/t.k.
+}
+
+
+itcl::body ::guib::moduleObj::_openCompareStr {args} {		
+
+    set argc [llength $args]    
+    if { $argc == 2 } {
+	set nocase  0
+	set lineStr [lindex $args 0]
+	set str     [lindex $args 1]
+    } elseif { $argc == 3 && [lindex $args 0] == "-nocase" } { 
+	set nocase  1
+	set lineStr [lindex $args 1]
+	set str     [lindex $args 2]
+    } else {
+	::tclu::ERROR "usage: _openCompareStr ?-nocase? lineStr str"
+    }
+    
+    set readStr {}
+    if { [scan $lineStr %s readStr] != 1 } {
+	#-->EOF
+	_openSyntaxError "end of file while reading input" eof
+	return -code return
+    }
+
+    if { $nocase } {
+	set result [string compare -nocase $readStr $str]
+    } else {
+	set result [string compare $readStr $str]
+    }
+    if { $result != 0 } {
+	#-->READ ERROR
+	_openSyntaxError "expected to read \"$str\", but got \"$readStr\""
+	return -code return
+    }
+}
+
+itcl::body ::guib::moduleObj::_openGets {fileChannel} {
+
+    set readNewLine 1
+
+    # check for empty line: read as long as to skip all the empty lines
+    while {1} {
+	set i [gets $fileChannel _line]
+	
+	# we might have a string such as: "string what ever";
+	# replace double-quotes with single-quotes
+		
+	regsub -all -- \" $_line ' line
+
+	# the regular expresion for empty line is: {^[[:space:]]+$|^$}
+	
+	if { [llength $line] != 0 || $i == -1 } { break }
+    }
+    ::tclu::DEBUG --readline-- $line
+    return $line
+}
+
+
+
+itcl::body ::guib::moduleObj::_openNamelistAssignVars {obj nmlName varValueArray} {
+    # varValueArray is the array that holds the var value pairs as returned by ::fnml::parseContent
+    upvar $varValueArray nml
+    
+    foreach {var value} [array get nml] {
+		    
+	# is variable is of scalar-type ?
+	
+	set ident [varnameToVarident $obj $var $::guib::settings(NAMELIST.varname_nocase)]
+		    
+	if { $ident == "" } {
+
+	    # is var of type varName(elem) ?
+	    
+	    set varName [lindex [split $var ()] 0]
+	    set elem    [string trim [lindex [split $var ()] 1] " "]
+	    
+	    set ident [varnameToVarident $obj $varName $::guib::settings(NAMELIST.varname_nocase)]
+	    
+	    if { $ident != "" } {
+		
+		set ident ${ident}($elem)
+		
+	    } else {
+		
+		# if we came here, we have undefined variable
+		
+		if { $::guib::settings(NAMELIST.variable_support_undefined) } {
+		    
+		    # undefined variables are supported
+		    
+		    if { ! [info exists objWidgetArray(UNDEFINED_VAR,$obj)] } {
+			# make the container for the "Undefined variables" in the GUI
+			set objWidgetArray(UNDEFINED_VAR,$obj) 1
+			_separator $obj {-label "--- The following undefined variables were found in the namelist $nmlName:"}
+			_buildGUI_constructItem [$obj getID] $obj $objWidgetArray(CHILDSITEWIDGET,$obj) separator
+		    }
+		    # make the entry for this undefined variable
+		    set ident [_makeIdent $var]
+		    _manageKeyword $obj var $ident [list -label "Undefined variable ($var):" -variable $var]	
+		    _buildGUI_constructItem [$obj getID] $obj $objWidgetArray(CHILDSITEWIDGET,$obj) var
+		} else {
+		    # undefined variables are not supported: add $var to undef_vars list
+		    lappend undef_vars $var
+		}
+	    }
+	}
+	if { $ident != "" } {
+	    varset $ident -value $value
+	}
+    }
+
+    if { [info exists undef_vars] } {
+	_openSyntaxError "undefined variables not allowed: the following undefined variables were found in the namelist $nmlName: $undef_vars"
+    }
+}
+		    
+
+
+itcl::body ::guib::moduleObj::_openReadKeyword {keyword} {
+    set keyword [string trim $keyword \n]
+    if { $::guib::settings(INPUT.nocase) } {
+	set _count [regsub -nocase -- $keyword $readline {} readline]
+    } else {
+	set _count [regsub -- $keyword $readline {} readline]
+    }
+    ::tclu::DEBUG --count $_count $keyword $readline
+    if { $_count == 0 } {
+	set keyword [string trim $keyword "\n"]
+	_openSyntaxError "expecting keyword \"$keyword\", but read \"$readline\" instead."
+	return -code return
+    }
+}
+
+
+itcl::body ::guib::moduleObj::_isDisabledKey {obj id ident} {
+    set ident  [$obj getOptionValue $id ident]
+    if { $ident != "" } {
+	set widget [getWidgetFromVarident $ident]
+	if { [::tclu::lpresent $disabledWidList $widget] } {
+	    return -code continue
+	}
+	# maybe it is a keyword ...
+	if { [$obj getOptionValue $id keyword] != "" } {
+	    if { [::tclu::lpresent $disabledKeywordidentList $ident] } {
+		return -code continue
+	    }
+	}
+    }		
+    return ""
+}
+
+#body ::guib::moduleObj::_openReadNamelistValue {} {    
+#    
+#    foreach elem [split $readline {=, }] {
+#	# get rid of empty elements
+#	if { $elem != "" } {
+#	    lappend List $elem
+#	}
+#    }
+#
+#    # a namelist variable value can contain { =,} characters, which means
+#    # we have split that. But of this occurs than the value must be bracketed
+#    # in ', and should not be double ' (i.e '') !!!
+#    #
+#    # ...check for this here...
+#
+#    set Len [llength $List]
+#    if { $Len > 2 } {
+#	# there is more than one variable on the line; shorten the
+#	# readline
+#	set readline {}
+#	for {set i 2} {$i < $Len} {incr i 2} {
+#	    append readline "[lindex $List $i] = [lindex $List [expr $i + 1]] "
+#	}
+#    } else {
+#	set readline {}
+#    }
+#    ::tclu::DEBUG --namelist-- readline: $readline
+#    return [string trimright [lindex $List 1] ,]
+#}
+

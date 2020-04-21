@@ -1,0 +1,170 @@
+Thu Jan 26 2017  Anton Kokalj (tone.kokalj@ijs.si)
+	* much improved parser of Fortran namelists.  Implicit assigments
+	of one-dimensional arrays is supported, whereas implicit
+	assignment for multi-dimensional arrays is not supported and
+	results in parsing error. Files affected: fnml.tcl, open.itcl,
+	etc.
+
+Tue Apr 22 2014  Anton Kokalj (tone.kokalj@ijs.si)
+	* open.itcl: improving the parsing of Fortran namelist (the
+	parsing was incorrect if the comment character was present in the
+	last line before the end-of-namelist character)
+
+Tue Dec  2 2008  Anton Kokalj (tone.kokalj@ijs.si)
+	* gui.itcl: adding kind of limited-support for mouse-wheel to
+		scrolled notebook's pages
+
+Thu May  8 2008 Anton Kokalj (tone.kokalj@ijs.si)
+	* store.itcl: adding storeModuleItems public method to moduleObj
+		(for more info see file: store.itcl)
+	* gui.itcl: adding -wrap "option" to addHelp method.
+	* guibKeywords.tcl: adding grouphelp guib keyoword for specifying
+		a common help to a set of "grouped" variables.
+	* guib.tcl: modifying module guib's keyword: instead of object
+		name an object prefix is passed to routine and a unique
+		object name is then generated and returned (i.e. #auto no
+		more require).
+	* help.itcl: adding "helpdoc" format for help.
+	* making code compatible with Itcl namespace awareness (i.e. class
+		--> itcl::class, ...)
+
+Fri Feb 15 2008 Anton Kokalj (tone.kokalj@ijs.si)
+	* adding forget&create states to groupwidget GUIB keyword. For
+		this purpose, the objWidgetArray(WIDGET,$obj) arrays
+		elements have been rename to objWidgetArray(CHILDSITEWIDGET,$obj)
+		(hold's childsite widget-name for $obj), while the
+		objWidgetArray(WIDGET,$obj) holds the $obj's (master)
+		widget-name.
+	* tclUtils.tcl: fixing bug in ::tclu::lremove (didn't work
+		properly for single element list)
+	* keywidgets.itcl: fixing bug in ::guib::keywidgets::Dimension
+		class: postConfigure method should be called whenever the
+		number of dimension widgets (i.e. -start/-end) changes,
+		hence it's now called in _manageDims method and not in
+		constructor.
+
+Thu Feb 14 2008 Anton Kokalj (tone.kokalj@ijs.si)
+	* build.itcl: proc ::guib::moduleObj::_configurePage: first
+		updating the state and only then querying the existance of
+		page widgets and if the page is viewable.
+	* table.itcl: fixing severe bug in _addCol and _deleteCol: loop
+		condition was false (wrong index used).
+	* moduleObj.itcl: common private proc _validateFmtString uses the
+		::tclu::format (instead of Tcl-format) now.
+
+Wed Feb 13 2008 Anton Kokalj (tone.kokalj@ijs.si)
+	* gui.itcl: splitting teh file into gui.itcl (which holds the
+		::guib::GUI class) and simpleGui.itcl (for the
+		simple-standalone gui).
+	* gui.itcl: fixing subtle bug: when a tab/page has been deleted
+		the remaining pages were not treated correctly, because the
+		variables associated with remaining pages were not
+		updated/re-indexed. Adding tabsCounter variable, which
+		counts all tab/pages that are created, and arrays are
+		indexed according to it with index2tabsCounter($index)
+		array, where $index is the current index of the tab.
+
+Mon Feb 11 2008 Anton Kokalj (tone.kokalj@ijs.si)
+	* table.itcl: table's cells can contain the optionemu widget.
+	* optionmenuhelp.itcl: adding -nohelp option to optionmenuhelp widget.
+
+Thu Feb  7 2008 Anton Kokalj (tone.kokalj@ijs.si)
+	* namelist's variables of string type are automatically quoted
+		when saving the input file. The
+		settings(NAMELIST.quote_strings) and set
+		settings(NAMELIST.quote_char) variables control the
+		quiting behaviour.
+	* improving the parsing of definition files: the values of options
+		-widget and -validate are checked for correctness
+	* adding -optionalcols option to table GUIB keyword, which
+		specifies the optional columns, i.e., if optionalcols > 0
+		then columns >= optionalcols are optional
+	* table.itcl: fixing bug in ::guib::keywidgets::Table::_addCol:
+		using _widget method intead of calling entry Tk-command.
+
+Mon Sep 26 13:25:34 CEST 2005
+	* moduleObj.itcl: adding optionSetDefault and _scopedName
+		methods. Making all necessary for the -validate module's
+		option.	
+	* table.itcl: table's -validate option is working now
+	* guib-keywords-def.tcl: adding -varscope option to "module" guib 
+		keyword.
+	* validate.itcl: adding a few new validators: string, int, real
+	* gui.itcl: adding "::guib::GUI::addHelp cascade" passibility. Few
+		other minor improvements.
+	* tclUtils.tcl: adding dummy and several functions for arguments
+		manipulation
+	* tkUtils.tcl: improving widgetName, toplevelName
+		functions. tku::errorDialog and tku::warningDialog
+		deprecated, use tclu::errorDialog and
+		tclu::warningDialog instead. Adding tku::exitApp function.
+
+Mon Aug 25 2005  Anton Kokalj (tone.kokalj@ijs.si)
+	* validate.itcl: adding int and real validators
+
+Mon Aug 08 2005  Anton Kokalj (tone.kokalj@ijs.si)
+	* gui.itcl, spininthelp.itcl: adding the "addHelp help cascade"
+		possibility, i.e., the help menu can have cascades.
+
+Tue Feb 01 2005  Anton Kokalj (tone.kokalj@ijs.si)
+	* validate.itcl, spininthelp.itcl: adding the "binary" (i.e. 0/1)
+		validator
+	* lib/tclUtils.tcl: fixing a small bug in ::tclu::warningDialog.
+
+Sat Jan 29 2005 Anton Kokalj (tone.kokalj@ijs.si)
+	* lib/tclUtils.tcl: fixing typo in
+		::tclu::_error_or_warning_dialog routine
+
+Mon Sep 20 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* gui.itcl: adding "getSelected saveFile" query. Making "save" and
+		"saveAs" methods public
+	* help.itcl: setting the width of help console to 
+		700 pixels (temporarily)
+	* widgets.itcl: making $nev(PWD) as default dir for Entrydirselect
+	* lib/tclUtils.tcl: improving nonblocking mechanism (adding "stdout"
+		and "save" subcommands of nonblocking command)
+
+Mon Sep 13 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* table.itcl: table's checkbutton didn't display updated text upon
+		variable's value change. Fixed by using -textvariable
+		option. The method _checkbuttonText not used anymore.
+
+Sat Sep 04 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* adding a "scriptvar" Guib keywords (=script variables used inside
+		the module definition files)
+
+Tue Apr 06 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* open.itcl: adding ::guib::moduleObj::readFileError and
+		::guib::moduleObj::readFileWrongFormat for dealing with
+		wrong-formatted input files
+
+Mon Apr 05 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* guibKeywords.itcl: adding a check if help's $ident is valid
+
+Fri Apr 02 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* improving error handling mechanism for
+		::guib::moduleObj::readFile method (i.e. reading an input
+		file). Adding _openSyntaxError private method for the
+		purpose. The problem was that when a syntax error was
+		present in the input file, this could cause Guib to enter
+		into an invinite loop (spotted by Mickael Profeta)
+
+Mon Feb 24 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* updating doc/usage.tex file and doc/usage/diagrams
+	* adding doc/usage/diagrams/Makefile
+	* renaming doc/usage/diagrams/TkPWscf.* to PWgui.*
+
+Mon Feb 23 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* tclUtils.tcl: fixing tempFile routine to work also for MS-Windows
+	* guib.bat: adding a batch file for MS-DOS/Windows
+
+Fri Feb 20 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* addapting the package to work with Tcl/Tk8.4, Itcl/Itk 3.2, and
+		Iwidgets 4.0 
+	* porting the package to MS-Windows
+
+Tue Feb 17 2004 Anton Kokalj (tone.kokalj@ijs.si)
+	* adding help button component to table widget
+	* ChangeLog: the beginning of the ChangeLog
+
+ChangeLog ends here

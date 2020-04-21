@@ -1,0 +1,39 @@
+#!/bin/sh
+# the next line restarts using tclsh \
+exec tclsh "$0" "$@"
+
+#
+# Usage:   diff_gui_help module
+#          ( module = pw, ph, pp, neb,  projwfc, bands, dos, atomic, or d3 )
+#
+# Requirements: execute the check_gui first !!!
+#             
+# Purpose: compares the current PWgui help file with the one in $topdir/GUI/PWgui/modules/$module/
+#
+
+set basedir [file normalize [file dirname [info script]]]
+set topdir  [file normalize [file join $basedir ..]]
+
+set helpdocdir [file join $basedir helpdoc.d]
+source [file join $helpdocdir modules.tcl]; # load which modules do we support
+
+if { $argc != 1 } {
+    helpdoc::prog_module_usage
+}
+
+set module  [lindex $argv 0]
+
+# PWgui's modules dir 
+
+set pwguidir  [file join $topdir GUI PWgui]
+set moduledir [file join $pwguidir modules]
+
+if { ! [file exists $module-help.tcl] } {
+    puts stderr "
+ERROR: run the \"check_gui $module\" first ...
+"
+    exit 1
+}
+
+catch {exec tkdiff $module-help.tcl [file join $moduledir $module $module-help.tcl]}
+

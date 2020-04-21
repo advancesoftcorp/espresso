@@ -1,0 +1,64 @@
+Version: 6.2
+        * d3.x module disabled
+	
+Version: 5.0svn
+        * adding bands.x and dos.x modules
+        * note the syntax change for projwfc.x, bands.x, and dos.x,
+          where the &INPUTPP namelist was changed to &PROJWFC, &BANDS,
+          and &DOS, respectively
+
+Version: 4.2
+        * PWgui pages can be scrolled up and down with the mouse-bar
+        * PWgui runs with Tcl/Tk 8.5
+	* syntax (variables) and help files completely updated 
+	* new "welcome" image
+
+Version: 4.0
+	* help files updated (completely)
+	* LD1.X module fully completed
+	* PH.X module reorganized into new pages
+	* namelist string variables are automatically quoted (to tell
+		to Guib that the variable is of string type, add the
+		option: -validate string
+	* no more error message when saving pw.x input file if
+		if_pos() flags are not specified.
+	* PWGUI enviromental variable is not mandatory anymore for
+		source package
+
+Version: 3.0
+	* LD1.X module added, i.e., GUI for pseudo-potential generation
+	* CHDENS.X module was removed: the chdens.x is now merged in pp.x
+	* the PW.X module was updated to reflect new pw.x input
+
+Version: 2.1
+	* A "Run" menubutton was added. PWgui is now a complete PWscf
+		GUI, and not only input manager. Features:
+		- management of input files
+		- display of atomic structures for pw.x input files with XCRYSDEN
+		- running the calculations and display of atomic
+		  structures from pw.x output files with XCRYSDEN
+		- display of properties from XSF files as calculated
+                  with chdens.x by XCRYSDEN
+	* PWgui version was set equal to version of PWscf so that the
+		compatibility of the two codes can be ascertained from
+		the version number. The structure of the PWgui version
+		number is now the following: X.Y.Z, where X.Y is PWscf
+		version, and Z is the PWgui patch number (when Z=0, it
+		is omitted).
+	* PWgui updated: now compatible with PWscf version 2.1
+
+Version: 0.6.2
+	* PWgui is available as self-contained, installation-free standalone
+		executable which run out of the box
+	* a few small bug fixes
+
+Version: 0.6.1 
+	* adding internal EDITOR and PAGER to PWgui (better porting to
+		non-unix systems)
+
+Version: 0.6.0
+	* PWgui compatible with PWscf 2.0
+	* D3.X module added
+	* PWgui is avaiable via anonymous CVS
+	* There is now a `NEWS' file (this one), giving a history of
+		user-visible changes.
