@@ -377,7 +377,7 @@ CONTAINS
 #if defined __MPI
                ! ... parallel sum TAU
 #if defined (_WIN32)
-               TAU_sendbuf = TAU
+               TAU_sendbuf(1:2*N) = TAU(1:2*N)
                CALL MPI_ALLREDUCE( TAU_sendbuf( i ), tau( i ), 2*(n - i + 1), MPI_DOUBLE_PRECISION, MPI_SUM, comm, ierr )
 #else
                CALL MPI_ALLREDUCE( MPI_IN_PLACE, tau( i ), 2*(n - i + 1), MPI_DOUBLE_PRECISION, MPI_SUM, comm, ierr )
