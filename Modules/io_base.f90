@@ -65,6 +65,11 @@ MODULE io_base
       INTEGER, ALLOCATABLE     :: itmp(:,:)
       COMPLEX(DP), ALLOCATABLE, TARGET :: wtmp(:)
       COMPLEX(DP), POINTER             :: wtmp2(:)
+#if defined(__ALT_IO_WFC) 
+      INTEGER                  :: ig
+      REAL(DP), ALLOCATABLE    :: wtmpr(:)
+      REAL(DP), ALLOCATABLE    :: wtmpi(:)
+#endif 
       !
 #if defined(__HDF5) 
       TYPE (qeh5_file)         :: h5file
@@ -183,7 +188,23 @@ MODULE io_base
             CALL qeh5_set_file_hyperslab ( evc_dset,  OFFSET = [0,j-1], COUNT = [2*npol*igwx,1] ) 
             CALL qeh5_write_dataset ( wtmp, evc_dset)   
 #else
+#if defined(__ALT_IO_WFC) 
+            ALLOCATE(wtmpr(npol*igwx))
+            ALLOCATE(wtmpi(npol*igwx))
+            !
+            DO ig = 1, npol*igwx
+               wtmpr(ig) =  DBLE(wtmp(ig))
+               wtmpi(ig) = AIMAG(wtmp(ig))
+            END DO
+            !
+            WRITE(iuni) wtmpr(1:npol*igwx)
+            WRITE(iuni) wtmpi(1:npol*igwx)
+            !
+            DEALLOCATE(wtmpr)
+            DEALLOCATE(wtmpi)
+#else
             WRITE(iuni) wtmp(1:npol*igwx)
+#endif
 #endif
          END IF
          !
@@ -247,6 +268,12 @@ MODULE io_base
       INTEGER                           :: igwx, igwx_, npwx, ik_, nbnd_
       INTEGER                           :: me_in_group, nproc_in_group
       LOGICAL                           :: ionode_in_group
+#if defined(__ALT_IO_WFC) 
+      INTEGER                           :: ig
+      REAL(DP), ALLOCATABLE             :: wtmpr(:)
+      REAL(DP), ALLOCATABLE             :: wtmpi(:)
+#endif 
+      !
 #if defined(__HDF5)
       TYPE (qeh5_file)    ::   h5file
       TYPE (qeh5_dataset) ::   h5dset_wfc, h5dset_mill
@@ -354,7 +381,22 @@ MODULE io_base
                CALL qeh5_set_file_hyperslab (h5dset_wfc, OFFSET = [0,j-1], COUNT = [2*npol*igwx_,1] )
                CALL qeh5_read_dataset (wtmp, h5dset_wfc )
 #else
+#if defined(__ALT_IO_WFC) 
+               ALLOCATE(wtmpr(npol*igwx_))
+               ALLOCATE(wtmpi(npol*igwx_))
+               !
+               READ (iuni) wtmpr(1:npol*igwx_) 
+               READ (iuni) wtmpi(1:npol*igwx_) 
+               !
+               DO ig = 1, npol*igwx_
+                  wtmp(ig) = CMPLX(wtmpr(ig), wtmpi(ig), kind=DP)
+               END DO
+               !
+               DEALLOCATE(wtmpr)
+               DEALLOCATE(wtmpi)
+#else
                READ (iuni) wtmp(1:npol*igwx_) 
+#endif
 #endif
                IF ( igwx > igwx_ ) wtmp((npol*igwx_+1):npol*igwx) = 0.0_DP
                !

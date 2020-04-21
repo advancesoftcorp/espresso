@@ -42,7 +42,7 @@ TOPDIR = $(dir $(abspath $(filter %make.inc,$(MAKEFILE_LIST))))
 # MANUAL_DFLAGS  = additional precompilation option(s), if desired
 #                  BEWARE: it does not work for IBM xlf! Manually edit FDFLAGS
 MANUAL_DFLAGS  =
-DFLAGS         =  -D__DFTI -D__MPI -D__OPENMP -D__SCALAPACK
+DFLAGS         =  -D__DFTI -D__MPI -D_OPENMP -D__SCALAPACK -D__ALT_IO_WFC
 FDFLAGS        = $(DFLAGS) $(MANUAL_DFLAGS)
 
 # IFLAGS = how to locate directories with *.h or *.f90 file to be included
@@ -141,7 +141,7 @@ BLAS_LIBS_SWITCH = external
 # For IBM machines with essl (-D__ESSL): load essl BEFORE lapack !
 # remember that LAPACK_LIBS precedes BLAS_LIBS in loading order
 
-LAPACK_LIBS    = 
+LAPACK_LIBS    =
 LAPACK_LIBS_SWITCH = external
 
 SCALAPACK_LIBS = -Wl,--start-group \
@@ -152,25 +152,25 @@ SCALAPACK_LIBS = -Wl,--start-group \
 # nothing needed here if the the internal copy of FFTW is compiled
 # (needs -D__FFTW in DFLAGS)
 
-FFT_LIBS       = 
+FFT_LIBS       =
 
 # HDF5
-HDF5_LIB = 
+HDF5_LIB =
 FOX_LIB  = -L$(TOPDIR)/FoX/lib  -lFoX_dom -lFoX_sax -lFoX_wxml -lFoX_common\
-            -lFoX_utils -lFoX_fsys 
-FOX_FLAGS = 
+            -lFoX_utils -lFoX_fsys
+FOX_FLAGS =
 # For parallel execution, the correct path to MPI libraries must
 # be specified in MPI_LIBS (except for IBM if you use mpxlf)
 
-MPI_LIBS       = 
+MPI_LIBS       =
 
 # IBM-specific: MASS libraries, if available and if -D__MASS is defined in FDFLAGS
 
-MASS_LIBS      = 
+MASS_LIBS      =
 
 # CUDA libraries
 CUDA_LIBS=
-CUDA_EXTLIBS = 
+CUDA_EXTLIBS =
 
 # ar command and flags - for most architectures: AR = ar, ARFLAGS = ruv
 
@@ -187,7 +187,7 @@ RANLIB         = ranlib
 FLIB_TARGETS   = all
 
 LIBOBJS        = $(TOPDIR)/clib/clib.a  $(TOPDIR)/iotk/src/libiotk.a
-LIBXC_LIBS     = 
+LIBXC_LIBS     =
 QELIBS         = $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIB) $(LIBXC_LIBS) $(LD_LIBS)
 
 # wget or curl - useful to download from network

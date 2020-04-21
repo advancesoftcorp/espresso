@@ -43,7 +43,7 @@ TOPDIR = $(dir $(abspath $(filter %make.inc,$(MAKEFILE_LIST))))
 # MANUAL_DFLAGS  = additional precompilation option(s), if desired
 #                  BEWARE: it does not work for IBM xlf! Manually edit FDFLAGS
 MANUAL_DFLAGS  =
-DFLAGS         = -D_WIN32 -D__MPI -D__DFTI -D_OPENMP
+DFLAGS         = -D_WIN32 -D__MPI -D__DFTI -D_OPENMP -D__ALT_IO_WFC
 FDFLAGS        = $(DFLAGS) $(MANUAL_DFLAGS)
 
 # IFLAGS = how to locate directories with *.h or *.f90 file to be included
@@ -114,7 +114,7 @@ FFLAGS_NOOPT   = -O0 -g
 # compiler flag needed by some compilers when the main program is not fortran
 # Currently used for Yambo
 
-FFLAGS_NOMAIN   = 
+FFLAGS_NOMAIN   =
 
 # Linker, linker-specific flags (if any)
 # Typically LD coincides with F90 or MPIF90, LD_LIBS is empty
@@ -142,7 +142,7 @@ BLAS_LIBS_SWITCH = external
 LAPACK_LIBS    = -L/c/ProgramFilesx86/IntelSWTools/compilers_and_libraries/windows/mkl/lib/intel64 -lmkl_rt
 LAPACK_LIBS_SWITCH = external
 
-SCALAPACK_LIBS = 
+SCALAPACK_LIBS =
 
 # nothing needed here if the the internal copy of FFTW is compiled
 # (needs -D__FFTW in DFLAGS)
@@ -150,10 +150,10 @@ SCALAPACK_LIBS =
 FFT_LIBS       = -L/c/ProgramFilesx86/IntelSWTools/compilers_and_libraries/windows/mkl/lib/intel64 -lmkl_rt
 
 # HDF5
-HDF5_LIB = 
+HDF5_LIB =
 FOX_LIB  = -L$(TOPDIR)/FoX/lib  -lFoX_dom -lFoX_sax -lFoX_wxml -lFoX_common\
-            -lFoX_utils -lFoX_fsys 
-FOX_FLAGS = 
+            -lFoX_utils -lFoX_fsys
+FOX_FLAGS =
 # For parallel execution, the correct path to MPI libraries must
 # be specified in MPI_LIBS (except for IBM if you use mpxlf)
 
@@ -161,11 +161,11 @@ MPI_LIBS       = -L/home/nakayama/msmpi/Lib -lmsmpi
 
 # IBM-specific: MASS libraries, if available and if -D__MASS is defined in FDFLAGS
 
-MASS_LIBS      = 
+MASS_LIBS      =
 
 # CUDA libraries
 CUDA_LIBS=
-CUDA_EXTLIBS = 
+CUDA_EXTLIBS =
 
 # ar command and flags - for most architectures: AR = ar, ARFLAGS = ruv
 
@@ -182,7 +182,7 @@ RANLIB         = ranlib
 FLIB_TARGETS   = all
 
 LIBOBJS        = $(TOPDIR)/clib/clib.a  $(TOPDIR)/iotk/src/libiotk.a
-LIBXC_LIBS     = 
+LIBXC_LIBS     =
 QELIBS         = $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIB) $(LIBXC_LIBS) $(LD_LIBS)
 
 # wget or curl - useful to download from network
