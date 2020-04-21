@@ -49,6 +49,12 @@ program lax_test
   REAL*8, allocatable :: perf_matrix(:,:)
   REAL*8, allocatable :: latency_matrix(:,:)
   integer, allocatable :: perf_count(:,:)
+#if defined (_WIN32)
+  REAL*8, allocatable :: tempo_tutti_sendbuf(:)
+  REAL*8, allocatable :: perf_matrix_sendbuf(:,:)
+  REAL*8, allocatable :: latency_matrix_sendbuf(:,:)
+  integer, allocatable :: perf_count_sendbuf(:,:)
+#endif
   REAL*8  :: tempo_mio(100)
   REAL*8  :: tempo_min(100)
   REAL*8  :: tempo_max(100)
@@ -228,7 +234,14 @@ program lax_test
   DEALLOCATE( c )
   tempo_tutti(mype+1) = tempo(2)-tempo(1)
 #if defined(__MPI)
+#if defined (_WIN32)
+  ALLOCATE(tempo_tutti_sendbuf(npes))
+  tempo_tutti_sendbuf = tempo_tutti
+  CALL MPI_ALLREDUCE( tempo_tutti_sendbuf, tempo_tutti, npes, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
+  DEALLOCATE(tempo_tutti_sendbuf)
+#else
   CALL MPI_ALLREDUCE( MPI_IN_PLACE, tempo_tutti, npes, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
+#endif
 #endif
   if( mype == 0 ) then
      write(6,*)
@@ -288,9 +301,24 @@ program lax_test
   end do
   end do
 #if defined(__MPI)
+#if defined (_WIN32)
+  ALLOCATE(perf_matrix_sendbuf(nnodes, nnodes))
+  ALLOCATE(latency_matrix_sendbuf(nnodes, nnodes))
+  ALLOCATE(perf_count_sendbuf(nnodes, nnodes))
+  perf_matrix_sendbuf = perf_matrix
+  latency_matrix_sendbuf = latency_matrix
+  perf_count_sendbuf = perf_count
+  CALL MPI_ALLREDUCE( perf_matrix_sendbuf, perf_matrix, SIZE(perf_matrix), MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
+  CALL MPI_ALLREDUCE( latency_matrix_sendbuf, latency_matrix, SIZE(latency_matrix), MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
+  CALL MPI_ALLREDUCE( perf_count_sendbuf, perf_count, SIZE(perf_count), MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr )
+  DEALLOCATE(perf_matrix_sendbuf)
+  DEALLOCATE(latency_matrix_sendbuf)
+  DEALLOCATE(perf_count_sendbuf)
+#else
   CALL MPI_ALLREDUCE( MPI_IN_PLACE, perf_matrix, SIZE(perf_matrix), MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
   CALL MPI_ALLREDUCE( MPI_IN_PLACE, latency_matrix, SIZE(latency_matrix), MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
   CALL MPI_ALLREDUCE( MPI_IN_PLACE, perf_count, SIZE(perf_count), MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr )
+#endif
 #endif
   if( mype == 0 ) then
      write(6,*)
@@ -458,6 +486,9 @@ contains
 
 #if defined __SCALAPACK
     INTEGER, ALLOCATABLE :: blacsmap(:,:)
+#if defined (_WIN32)
+    INTEGER, ALLOCATABLE :: blacsmap_sendbuf(:,:)
+#endif
     INTEGER :: ortho_cntx_pe
     INTEGER :: nprow, npcol, myrow, mycol, i, j, k
     INTEGER, EXTERNAL :: BLACS_PNUM
@@ -564,7 +595,14 @@ contains
 
    ! All MPI tasks defined in the global communicator take part in the definition of the BLACS grid
 
+#if defined (_WIN32)
+   ALLOCATE(blacsmap_sendbuf(np_ortho(1), np_ortho(2)))
+   blacsmap_sendbuf = blacsmap
+   CALL MPI_ALLREDUCE( blacsmap_sendbuf, blacsmap, SIZE( blacsmap ), MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr )
+   DEALLOCATE(blacsmap_sendbuf)
+#else
    CALL MPI_ALLREDUCE( MPI_IN_PLACE, blacsmap, SIZE( blacsmap ), MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr )
+#endif
 
    CALL BLACS_GRIDMAP( ortho_cntx_pe, blacsmap, nprow, nprow, npcol)
    CALL BLACS_GRIDINFO( ortho_cntx_pe, nprow, npcol, myrow, mycol )

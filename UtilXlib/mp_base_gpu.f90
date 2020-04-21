@@ -234,6 +234,9 @@ SUBROUTINE reduce_base_real_gpu( dim, ps_d, comm, root )
 #if defined (__MPI)  
   !
   INTEGER            :: info
+#if defined (_WIN32)  
+  REAL(DP), ALLOCATABLE :: ps_d_sendbuf(:)
+#endif
   !
 #if defined __TRACE
   write(*,*) 'reduce_base_real_gpu IN'
@@ -247,6 +250,18 @@ SUBROUTINE reduce_base_real_gpu( dim, ps_d, comm, root )
   CALL mp_synchronize( comm )
 #endif
   !
+#if defined (_WIN32)  
+  ALLOCATE( ps_d_sendbuf( dim ) )
+  ps_d_sendbuf = ps_d
+  IF( root >= 0 ) THEN
+     CALL MPI_REDUCE( ps_d_sendbuf, ps_d, dim, MPI_DOUBLE_PRECISION, MPI_SUM, root, comm, info )
+     IF( info /= 0 ) CALL errore( 'reduce_base_real_gpu', 'error in mpi_reduce 1', info )
+  ELSE
+     CALL MPI_ALLREDUCE( ps_d_sendbuf, ps_d, dim, MPI_DOUBLE_PRECISION, MPI_SUM, comm, info )
+     IF( info /= 0 ) CALL errore( 'reduce_base_real_gpu', 'error in mpi_allreduce 1', info )
+  END IF
+  DEALLOCATE( ps_d_sendbuf )
+#else
   IF( root >= 0 ) THEN
      CALL MPI_REDUCE( MPI_IN_PLACE, ps_d, dim, MPI_DOUBLE_PRECISION, MPI_SUM, root, comm, info )
      IF( info /= 0 ) CALL errore( 'reduce_base_real_gpu', 'error in mpi_reduce 1', info )
@@ -254,6 +269,7 @@ SUBROUTINE reduce_base_real_gpu( dim, ps_d, comm, root )
      CALL MPI_ALLREDUCE( MPI_IN_PLACE, ps_d, dim, MPI_DOUBLE_PRECISION, MPI_SUM, comm, info )
      IF( info /= 0 ) CALL errore( 'reduce_base_real_gpu', 'error in mpi_allreduce 1', info )
   END IF
+#endif
   !
   GO TO 2 ! Skip sync, already done by MPI call 
 1 CONTINUE
@@ -405,6 +421,9 @@ SUBROUTINE reduce_base_integer_gpu( dim, ps_d, comm, root )
 #if defined (__MPI)  
   !
   INTEGER            :: info
+#if defined (_WIN32)  
+  INTEGER, ALLOCATABLE :: ps_d_sendbuf(:)
+#endif
   !
 #if defined __TRACE
   write(*,*) 'reduce_base_integer_gpu IN'
@@ -418,6 +437,18 @@ SUBROUTINE reduce_base_integer_gpu( dim, ps_d, comm, root )
   CALL mp_synchronize( comm )
 #endif
   !
+#if defined (_WIN32)  
+  ALLOCATE( ps_d_sendbuf( dim ) )
+  ps_d_sendbuf = ps_d
+  IF( root >= 0 ) THEN
+     CALL MPI_REDUCE( ps_d_sendbuf, ps_d, dim, MPI_INTEGER, MPI_SUM, root, comm, info )
+     IF( info /= 0 ) CALL errore( 'reduce_base_integer_gpu', 'error in mpi_reduce 1', info )
+  ELSE
+     CALL MPI_ALLREDUCE( ps_d_sendbuf, ps_d, dim, MPI_INTEGER, MPI_SUM, comm, info )
+     IF( info /= 0 ) CALL errore( 'reduce_base_integer_gpu', 'error in mpi_allreduce 1', info )
+  END IF
+  DEALLOCATE( ps_d_sendbuf )
+#else
   IF( root >= 0 ) THEN
      CALL MPI_REDUCE( MPI_IN_PLACE, ps_d, dim, MPI_INTEGER, MPI_SUM, root, comm, info )
      IF( info /= 0 ) CALL errore( 'reduce_base_integer_gpu', 'error in mpi_reduce 1', info )
@@ -425,6 +456,7 @@ SUBROUTINE reduce_base_integer_gpu( dim, ps_d, comm, root )
      CALL MPI_ALLREDUCE( MPI_IN_PLACE, ps_d, dim, MPI_INTEGER, MPI_SUM, comm, info )
      IF( info /= 0 ) CALL errore( 'reduce_base_integer_gpu', 'error in mpi_allreduce 1', info )
   END IF
+#endif
   !
   GO TO 2 ! Skip sync, already done by MPI call 
 1 CONTINUE

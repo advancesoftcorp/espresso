@@ -2127,6 +2127,9 @@
         INTEGER, INTENT(IN) :: recvcount(:), displs(:)
         INTEGER, INTENT(IN) :: root, gid
         INTEGER :: ierr, npe, myid
+#if defined (_WIN32)
+        COMPLEX(DP), ALLOCATABLE :: alldata_buf(:,:)
+#endif
 
 #if defined (__MPI)
         CALL mpi_comm_size( gid, npe, ierr )
@@ -2136,6 +2139,19 @@
         !
         IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 8071 )
         !
+#if defined (_WIN32)
+        ALLOCATE(alldata_buf(LBOUND(alldata,1):UBOUND(alldata,1), LBOUND(alldata,2):UBOUND(alldata,2)))
+        IF (myid==root) THEN
+           alldata_buf = alldata
+           CALL MPI_GATHERV( alldata_buf, 0, MPI_DATATYPE_NULL, &
+                             alldata, recvcount, displs, my_column_type, root, gid, ierr )
+        ELSE
+           CALL MPI_GATHERV( alldata(1,displs(myid+1)+1), recvcount(myid+1), my_column_type, &
+                             alldata_buf, recvcount, displs, MPI_DATATYPE_NULL, root, gid, ierr )
+           alldata = alldata_buf
+        ENDIF
+        DEALLOCATE(alldata_buf)
+#else
         IF (myid==root) THEN
            CALL MPI_GATHERV( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, &
                              alldata, recvcount, displs, my_column_type, root, gid, ierr )
@@ -2143,6 +2159,7 @@
            CALL MPI_GATHERV( alldata(1,displs(myid+1)+1), recvcount(myid+1), my_column_type, &
                              MPI_IN_PLACE, recvcount, displs, MPI_DATATYPE_NULL, root, gid, ierr )
         ENDIF
+#endif
         IF (ierr/=0) CALL mp_stop( 8074 )
 #endif
         RETURN
@@ -2159,6 +2176,9 @@
         INTEGER, INTENT(IN) :: recvcount(:), displs(:)
         INTEGER, INTENT(IN) :: gid
         INTEGER :: ierr, npe, myid
+#if defined (_WIN32)
+        COMPLEX(DP), ALLOCATABLE :: alldata_sendbuf(:,:)
+#endif
 
 #if defined (__MPI)
         CALL mpi_comm_size( gid, npe, ierr )
@@ -2168,8 +2188,16 @@
         !
         IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 8071 )
         !
+#if defined (_WIN32)
+        ALLOCATE(alldata_sendbuf(LBOUND(alldata,1):UBOUND(alldata,1), LBOUND(alldata,2):UBOUND(alldata,2)))
+        alldata_sendbuf = alldata
+        CALL MPI_ALLGATHERV( alldata_sendbuf, 0, MPI_DATATYPE_NULL, &
+                             alldata, recvcount, displs, my_element_type, gid, ierr )
+        DEALLOCATE(alldata_sendbuf)
+#else
         CALL MPI_ALLGATHERV( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, &
                              alldata, recvcount, displs, my_element_type, gid, ierr )
+#endif
         IF (ierr/=0) CALL mp_stop( 8074 )
 #endif
         RETURN
@@ -5525,6 +5553,9 @@ END SUBROUTINE mp_type_free
          INTEGER, INTENT(IN) :: recvcount(:), displs(:)
          INTEGER, INTENT(IN) :: root, gid
          INTEGER :: ierr, npe, myid
+#if defined (_WIN32)
+         COMPLEX(DP), ALLOCATABLE :: alldata_d_buf(:,:)
+#endif
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
@@ -5550,6 +5581,19 @@ END SUBROUTINE mp_type_free
          IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 9129 )
          !
          ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
+#if defined (_WIN32)
+         ALLOCATE(alldata_d_buf(LBOUND(alldata_d,1):UBOUND(alldata_d,1), LBOUND(alldata_d,2):UBOUND(alldata_d,2)))
+         IF (myid==root) THEN
+            alldata_d_buf = alldata_d
+            CALL MPI_GATHERV( alldata_d_buf, 0, MPI_DATATYPE_NULL, &
+                              alldata_d, recvcount, displs, my_column_type, root, gid, ierr )
+         ELSE
+            CALL MPI_GATHERV( alldata_d(1,displs(myid+1)+1), recvcount(myid+1), my_column_type, &
+                              alldata_d_buf, recvcount, displs, MPI_DATATYPE_NULL, root, gid, ierr )
+            alldata_d = alldata_d_buf
+         ENDIF
+         DEALLOCATE(alldata_d)
+#else
          IF (myid==root) THEN
             CALL MPI_GATHERV( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, &
                               alldata_d, recvcount, displs, my_column_type, root, gid, ierr )
@@ -5557,6 +5601,7 @@ END SUBROUTINE mp_type_free
             CALL MPI_GATHERV( alldata_d(1,displs(myid+1)+1), recvcount(myid+1), my_column_type, &
                               MPI_IN_PLACE, recvcount, displs, MPI_DATATYPE_NULL, root, gid, ierr )
          ENDIF
+#endif
          !
          IF (ierr/=0) CALL mp_stop( 9130 )
          !
@@ -5577,6 +5622,9 @@ END SUBROUTINE mp_type_free
          INTEGER, INTENT(IN) :: recvcount(:), displs(:)
          INTEGER, INTENT(IN) :: gid
          INTEGER :: ierr, npe, myid
+#if defined (_WIN32)
+         COMPLEX(DP), ALLOCATABLE :: alldata_d_sendbuf(:,:)
+#endif
 
 #if defined (__MPI)
 #if ! defined(__GPU_MPI)
@@ -5602,8 +5650,15 @@ END SUBROUTINE mp_type_free
          IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 9133 )
          !
          ierr = cudaDeviceSynchronize()   ! This syncs __GPU_MPI
+#if defined (_WIN32)
+         ALLOCATE(alldata_d_buf, source=alldata_d)
+         CALL MPI_ALLGATHERV( alldata_d_buf, 0, MPI_DATATYPE_NULL, &
+                              alldata_d, recvcount, displs, my_element_type, gid, ierr )
+         DEALLOCATE(alldata_d_buf)
+#else
          CALL MPI_ALLGATHERV( MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, &
                               alldata_d, recvcount, displs, my_element_type, gid, ierr )
+#endif
          IF (ierr/=0) CALL mp_stop( 9134 )
          RETURN ! Sync not needed after MPI call
 #endif

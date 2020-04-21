@@ -20,15 +20,33 @@ CONTAINS
      REAL(DP), INTENT(INOUT)  :: tg_rho(:)
      REAL(DP), INTENT(INOUT)  :: tg_rho_nc(:,:)
      REAL(DP), INTENT(OUT) :: rhos(:,:)
+#if defined (_WIN32)
+     REAL(DP), ALLOCATABLE :: tg_rho_sendbuf(:)
+     REAL(DP), ALLOCATABLE :: tg_rho_nc_sendbuf(:,:)
+#endif
 
      INTEGER :: ierr, ioff, idx, ir3, ir, ipol, ioff_tg, nxyp, npol_
 !     write (*,*) ' enter tg_reduce_rho_1'
 
 #if defined(__MPI)
      IF( noncolin) THEN
+#if defined (_WIN32)
+        ALLOCATE(tg_rho_nc_sendbuf(LBOUND(tg_rho_nc,1):UBOUND(tg_rho_nc,1), LBOUND(tg_rho_nc,2):UBOUND(tg_rho_nc,2)))
+        tg_rho_nc_sendbuf = tg_rho_nc
+        CALL MPI_ALLREDUCE( tg_rho_nc_sendbuf, tg_rho_nc, SIZE(tg_rho_nc), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
+        DEALLOCATE(tg_rho_nc_sendbuf)
+#else
         CALL MPI_ALLREDUCE( MPI_IN_PLACE, tg_rho_nc, SIZE(tg_rho_nc), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
+#endif
      ELSE
+#if defined (_WIN32)
+        ALLOCATE(tg_rho_sendbuf(LBOUND(tg_rho,1):UBOUND(tg_rho,1)))
+        tg_rho_sendbuf = tg_rho
+        CALL MPI_ALLREDUCE( tg_rho_sendbuf, tg_rho, SIZE(tg_rho), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
+        DEALLOCATE(tg_rho_sendbuf)
+#else
         CALL MPI_ALLREDUCE( MPI_IN_PLACE, tg_rho, SIZE(tg_rho), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
+#endif
      END IF
 #endif
      !
@@ -70,13 +88,23 @@ CONTAINS
      INTEGER, INTENT(IN) :: ispin
      REAL(DP), INTENT(INOUT)  :: tmp_rhos(:)
      REAL(DP), INTENT(OUT) :: rhos(:,:)
+#if defined (_WIN32)
+     REAL(DP), ALLOCATABLE :: tmp_rhos_sendbuf(:)
+#endif
 
      INTEGER :: ierr, ioff, idx, ir3, nxyp, ioff_tg
 !     write (*,*) ' enter tg_reduce_rho_2'
 
      IF ( desc%nproc2 > 1 ) THEN
 #if defined(__MPI)
+#if defined (_WIN32)
+        ALLOCATE(tmp_rhos_sendbuf(LBOUND(tmp_rhos,1):UBOUND(tmp_rhos,1)))
+        tmp_rhos_sendbuf = tmp_rhos
+        CALL MPI_ALLREDUCE( tmp_rhos_sendbuf, tmp_rhos, SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
+        DEALLOCATE(tmp_rhos_sendbuf)
+#else
         CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
+#endif
 #endif
      ENDIF
      !
@@ -98,13 +126,23 @@ CONTAINS
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      REAL(DP), INTENT(INOUT)  :: tmp_rhos(:,:)
      REAL(DP), INTENT(OUT) :: rhos(:,:)
+#if defined (_WIN32)
+     REAL(DP), ALLOCATABLE :: tmp_rhos_sendbuf(:,:)
+#endif
 
      INTEGER :: ierr, from, ir3, ioff, nxyp, ioff_tg
 !     write (*,*) ' enter tg_reduce_rho_3'
 
      IF ( desc%nproc2 > 1 ) THEN
 #if defined(__MPI)
+#if defined (_WIN32)
+        ALLOCATE(tmp_rhos_sendbuf(LBOUND(tmp_rhos,1):UBOUND(tmp_rhos,1), LBOUND(tmp_rhos,2):UBOUND(tmp_rhos,2)))
+        tmp_rhos_sendbuf = tmp_rhos
+        CALL MPI_ALLREDUCE( tmp_rhos_sendbuf, tmp_rhos, SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
+        DEALLOCATE(tmp_rhos_sendbuf)
+#else
         CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
+#endif
 #endif
      ENDIF
      !
@@ -129,13 +167,23 @@ CONTAINS
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      COMPLEX(DP), INTENT(INOUT)  :: tmp_rhos(:)
      COMPLEX(DP), INTENT(OUT) :: rhos(:)
+#if defined (_WIN32)
+     COMPLEX(DP), ALLOCATABLE :: tmp_rhos_sendbuf(:)
+#endif
 
      INTEGER :: ierr, from, ir3, ioff, nxyp, ioff_tg
 !     write (*,*) ' enter tg_reduce_rho_4'
 
      IF ( desc%nproc2 > 1 ) THEN
 #if defined(__MPI)
+#if defined (_WIN32)
+        ALLOCATE(tmp_rhos_sendbuf(LBOUND(tmp_rhos,1):UBOUND(tmp_rhos,1)))
+        tmp_rhos_sendbuf = tmp_rhos
+        CALL MPI_ALLREDUCE( tmp_rhos_sendbuf, tmp_rhos, 2*SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
+        DEALLOCATE(tmp_rhos_sendbuf)
+#else
         CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, 2*SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
+#endif
 #endif
      ENDIF
      !
@@ -160,13 +208,23 @@ CONTAINS
      TYPE(fft_type_descriptor), INTENT(in) :: desc
      COMPLEX(DP), INTENT(INOUT)  :: tmp_rhos(:,:)
      COMPLEX(DP), INTENT(OUT) :: rhos(:,:)
+#if defined (_WIN32)
+     COMPLEX(DP), ALLOCATABLE :: tmp_rhos_sendbuf(:,:)
+#endif
 
      INTEGER :: ierr, from, ir3, ioff, nxyp, ioff_tg
 !     write (*,*) ' enter tg_reduce_rho_5'
 
      IF ( desc%nproc2 > 1 ) THEN
 #if defined(__MPI)
+#if defined (_WIN32)
+        ALLOCATE(tmp_rhos_sendbuf(LBOUND(tmp_rhos,1):UBOUND(tmp_rhos,1), LBOUND(tmp_rhos,2):UBOUND(tmp_rhos,2)))
+        tmp_rhos_sendbuf = tmp_rhos
+        CALL MPI_ALLREDUCE( tmp_rhos_sendbuf, tmp_rhos, 2*SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
+        DEALLOCATE(tmp_rhos_sendbuf)
+#else
         CALL MPI_ALLREDUCE( MPI_IN_PLACE, tmp_rhos, 2*SIZE(tmp_rhos), MPI_DOUBLE_PRECISION, MPI_SUM, desc%comm2, ierr )
+#endif
 #endif
      ENDIF
      !

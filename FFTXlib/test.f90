@@ -715,6 +715,9 @@ end subroutine recips
     INTEGER :: mype, npe
     LOGICAL :: global_sort, is_local
     INTEGER, ALLOCATABLE :: ngmpe(:)
+#if defined (_WIN32)
+    INTEGER, ALLOCATABLE :: ngmpe_sendbuf(:)
+#endif
     !
     ! The 'no_global_sort' is not optional in this case.
     ! This differs from the version present in QE distribution.
@@ -854,15 +857,26 @@ end subroutine recips
        CALL MPI_COMM_RANK(dfftp%comm, mype, ierr)
        CALL MPI_COMM_SIZE(dfftp%comm, npe, ierr)
        ALLOCATE( ngmpe( npe ) )
+#if defined (_WIN32)
+       ALLOCATE( ngmpe_sendbuf( npe ) )
+#endif
        ngmpe = 0
        ngmpe( mype + 1 ) = ngm
        !CALL mp_sum( ngmpe, dfftp%comm )
+#if defined (_WIN32)
+       ngmpe_sendbuf = ngmpe
+       CALL MPI_ALLREDUCE( ngmpe_sendbuf, ngmpe, 1, MPI_INTEGER, MPI_SUM, dfftp%comm, ierr )
+#else
        CALL MPI_ALLREDUCE( MPI_IN_PLACE, ngmpe, 1, MPI_INTEGER, MPI_SUM, dfftp%comm, ierr )
+#endif
        ngm_offset = 0
        DO ng = 1, mype
           ngm_offset = ngm_offset + ngmpe( ng )
        END DO
        DEALLOCATE( ngmpe )
+#if defined (_WIN32)
+       DEALLOCATE( ngmpe_sendbuf )
+#endif
        !
     END IF
     

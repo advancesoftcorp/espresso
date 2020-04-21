@@ -924,6 +924,9 @@ CONTAINS
 ! ... declare other variables
       INTEGER :: i, j, k, nr, nb(3)
       REAL(DP) :: gsq, g(3)
+#if defined (__MPI) && defined (_WIN32)
+      INTEGER :: nb_sendbuf(3)
+#endif
      !write (6,*) ' inside grid_set' ; FLUSH(6)
 
 !  ----------------------------------------------
@@ -963,7 +966,12 @@ CONTAINS
       END DO
 
 #if defined(__MPI)
+#if defined(_WIN32)
+      nb_sendbuf = nb
+      CALL MPI_ALLREDUCE( nb_sendbuf, nb, 3, MPI_INTEGER, MPI_MAX, dfft%comm, i )
+#else
       CALL MPI_ALLREDUCE( MPI_IN_PLACE, nb, 3, MPI_INTEGER, MPI_MAX, dfft%comm, i )
+#endif
 #endif
 
 ! ... the size of the 3d FFT matrix depends upon the maximum indices. With
