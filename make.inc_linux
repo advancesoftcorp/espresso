@@ -30,7 +30,7 @@
 TOPDIR = $(dir $(abspath $(filter %make.inc,$(MAKEFILE_LIST))))
 # if it doesn't work, uncomment the following line (edit if needed):
 
-# TOPDIR = /data2/group4/nakayama/q-e-qe-6.4.1-sannp
+# TOPDIR = /data2/group3/nisihara/compile/espresso
 
 # DFLAGS  = precompilation options (possible arguments to -D and -U)
 #           used by the C compiler and preprocessor
@@ -42,7 +42,7 @@ TOPDIR = $(dir $(abspath $(filter %make.inc,$(MAKEFILE_LIST))))
 # MANUAL_DFLAGS  = additional precompilation option(s), if desired
 #                  BEWARE: it does not work for IBM xlf! Manually edit FDFLAGS
 MANUAL_DFLAGS  =
-DFLAGS         =  -D__DFTI -D__MPI -D_OPENMP -D__SCALAPACK -D__ALT_IO_WFC
+DFLAGS         =  -D__DFTI -D__MPI -D_OPENMP -D__SCALAPACK -D__ELPA -D__ALT_IO_WFC
 FDFLAGS        = $(DFLAGS) $(MANUAL_DFLAGS)
 
 # IFLAGS = how to locate directories with *.h or *.f90 file to be included
@@ -51,6 +51,7 @@ FDFLAGS        = $(DFLAGS) $(MANUAL_DFLAGS)
 # for libxc add -I/path/to/libxc/include/
 
 IFLAGS         = -I$(TOPDIR)/include -I$(TOPDIR)/FoX/finclude -I../include/ -I/opt/intel/mkl/include
+
 # MOD_FLAG = flag used by f90 compiler to locate modules
 
 MOD_FLAG      = -I
@@ -76,7 +77,7 @@ BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/iotk/src \
 # and to specify the location of MPI libraries in MPI_LIBS
 
 MPIF90         = mpiifort
-F90           = ifort
+F90            = ifort
 CC             = mpiicc
 F77            = mpiifort
 
@@ -120,7 +121,7 @@ FFLAGS_NOMAIN   = -nofor_main
 
 LD             = mpiifort
 LDFLAGS        = -static-intel  -qopenmp
-LD_LIBS        =
+LD_LIBS        = 
 
 # External Libraries (if any) : blas, lapack, fft, MPI
 
@@ -141,36 +142,37 @@ BLAS_LIBS_SWITCH = external
 # For IBM machines with essl (-D__ESSL): load essl BEFORE lapack !
 # remember that LAPACK_LIBS precedes BLAS_LIBS in loading order
 
-LAPACK_LIBS    =
+LAPACK_LIBS    = 
 LAPACK_LIBS_SWITCH = external
 
 SCALAPACK_LIBS = -Wl,--start-group \
                  /opt/intel/mkl/lib/intel64/libmkl_blacs_intelmpi_lp64.a \
                  /opt/intel/mkl/lib/intel64/libmkl_scalapack_lp64.a \
-                 -Wl,--end-group
+                 -Wl,--end-group \
+                 /data2/group3/nisihara/compile/espresso/ELPA/libelpa.a
 
 # nothing needed here if the the internal copy of FFTW is compiled
 # (needs -D__FFTW in DFLAGS)
 
-FFT_LIBS       =
+FFT_LIBS       = 
 
 # HDF5
-HDF5_LIB =
+HDF5_LIB = 
 FOX_LIB  = -L$(TOPDIR)/FoX/lib  -lFoX_dom -lFoX_sax -lFoX_wxml -lFoX_common\
-            -lFoX_utils -lFoX_fsys
-FOX_FLAGS =
+            -lFoX_utils -lFoX_fsys 
+FOX_FLAGS = 
 # For parallel execution, the correct path to MPI libraries must
 # be specified in MPI_LIBS (except for IBM if you use mpxlf)
 
-MPI_LIBS       =
+MPI_LIBS       = 
 
 # IBM-specific: MASS libraries, if available and if -D__MASS is defined in FDFLAGS
 
-MASS_LIBS      =
+MASS_LIBS      = 
 
 # CUDA libraries
 CUDA_LIBS=
-CUDA_EXTLIBS =
+CUDA_EXTLIBS = 
 
 # ar command and flags - for most architectures: AR = ar, ARFLAGS = ruv
 
@@ -187,11 +189,11 @@ RANLIB         = ranlib
 FLIB_TARGETS   = all
 
 LIBOBJS        = $(TOPDIR)/clib/clib.a  $(TOPDIR)/iotk/src/libiotk.a
-LIBXC_LIBS     =
+LIBXC_LIBS     = 
 QELIBS         = $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIB) $(LIBXC_LIBS) $(LD_LIBS)
 
 # wget or curl - useful to download from network
 WGET = wget -O
 
 # Install directory - "make install" copies *.x executables there
-PREFIX = /usr/local
+PREFIX = /data2/group3/nisihara/compile
