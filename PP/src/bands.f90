@@ -149,7 +149,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   USE cell_base,            ONLY : at
   USE constants,            ONLY : rytoev
   USE gvect,                ONLY : g, ngm
-  USE klist,                ONLY : xk, nks, nkstot, ngk, igk_k
+  USE klist,                ONLY : xk, nks, nkstot, ngk, igk_k, wk
   USE io_files,             ONLY : iunpun, nwordwfc, iunwfc
   USE wvfct,                ONLY : nbnd, et, npwx
   USE uspp,                 ONLY : nkb, vkb
@@ -161,6 +161,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   USE mp_images,            ONLY : intra_image_comm
   USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
                                    deallocate_bec_type, becp
+  USE funct,                ONLY : dft_is_hybrid
 
   IMPLICIT NONE
   CHARACTER (len=*) :: filband
@@ -168,7 +169,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   LOGICAL, INTENT(IN) :: lsigma(4), no_overlap
 
   ! becp   : <psi|beta> at current  k-point
-  INTEGER :: ibnd, jbnd, i, ik, ig, ig1, ig2, ipol, npw, ngmax, jmax
+  INTEGER :: ibnd, jbnd, i, ik, ig, ig1, ig2, ipol, npw, ngmax, jmax, firstk_path
   INTEGER :: nks1tot, nks2tot, nks1, nks2
   INTEGER :: iunpun_sigma(4), ios(0:4), done(nbnd)
   CHARACTER(len=256) :: nomefile
@@ -211,7 +212,19 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
         CALL errore ('punch_band', 'Opening filband.N file ', ipol)
   ENDDO
   !
-  CALL find_nks1nks2(1,nkstot,nks1tot,nks1,nks2tot,nks2,spin_component)
+  firstk_path = 1
+  IF( dft_is_hybrid() ) THEN
+     DO ik=1,nkstot
+        IF ( wk(ik) <=  1E-7 ) THEN
+           firstk_path = ik
+           EXIT
+        ENDIF
+     ENDDO
+     IF ( firstk_path == 1 ) &
+           CALL errore ('punch_band', 'k point path with weight 0 not defined', 1)
+  ENDIF
+  !
+  CALL find_nks1nks2(firstk_path,nkstot,nks1tot,nks1,nks2tot,nks2,spin_component)
   !
   ! index of largest G in plane-wave basis set across k-points
   !
