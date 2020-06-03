@@ -149,7 +149,7 @@ SCALAPACK_LIBS = -Wl,--start-group \
                  /opt/intel/mkl/lib/intel64/libmkl_blacs_intelmpi_lp64.a \
                  /opt/intel/mkl/lib/intel64/libmkl_scalapack_lp64.a \
                  -Wl,--end-group \
-                 /data2/group3/nisihara/compile/espresso/ELPA/libelpa.a
+                 $(TOPDIR)/ELPA/libelpa.a
 
 # nothing needed here if the the internal copy of FFTW is compiled
 # (needs -D__FFTW in DFLAGS)
