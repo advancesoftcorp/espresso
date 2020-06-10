@@ -215,7 +215,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   firstk_path = 1
   IF( dft_is_hybrid() ) THEN
      DO ik=1,nkstot
-        IF ( wk(ik) <=  1E-7 ) THEN
+        IF ( wk(ik) < 1.d-4 ) THEN
            firstk_path = ik
            EXIT
         ENDIF
