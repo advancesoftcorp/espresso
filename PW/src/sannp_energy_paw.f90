@@ -21,6 +21,6 @@ SUBROUTINE sannp_energy_paw(energy, ia_start, ia_end)
   INTEGER,  INTENT(IN)    :: ia_start
   INTEGER,  INTENT(IN)    :: ia_end
   !
-  CALL errore('sannp_energy_paw', 'the current version of SANNP does not support PAW', 1)
+  !CALL errore('sannp_energy_paw', 'the current version of SANNP does not support PAW', 1)
   !
 END SUBROUTINE sannp_energy_paw

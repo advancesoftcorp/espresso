@@ -74,18 +74,6 @@ CONTAINS
       CALL errore('sannp_check', 'you have to calculate force for SANNP', 1)
     END IF
     !
-    IF (dft_is_hybrid()) THEN
-      CALL errore('sannp_check', 'SANNP does not support Hybrid-GGA', 1)
-    END IF
-    !
-    IF (dft_is_meta()) THEN
-      CALL errore('sannp_check', 'SANNP does not support meta-GGA', 1)
-    END IF
-    !
-    IF (dft_is_nonlocc()) THEN
-      CALL errore('sannp_check', 'SANNP does not support vdW-DF/rVV10', 1)
-    END IF
-    !
     IF (lelfield) THEN
       CALL errore('sannp_check', 'SANNP does not support electric field (lelfield)', 1)
     END IF
@@ -104,18 +92,6 @@ CONTAINS
     !
     IF (textfor) THEN
       CALL errore('sannp_check', 'SANNP does not support external force', 1)
-    END IF
-    !
-    IF (llondon .OR. ldftd3) THEN
-      CALL errore('sannp_check', 'SANNP does not support DFT-D', 1)
-    END IF
-    !
-    IF (lxdm) THEN
-      CALL errore('sannp_check', 'SANNP does not support XDM', 1)
-    END IF
-    !
-    IF (ts_vdw) THEN
-      CALL errore('sannp_check', 'SANNP does not support TS-vdW', 1)
     END IF
     !
     IF (do_comp_mt) THEN
@@ -156,17 +132,53 @@ CONTAINS
       CALL errore('sannp_check', 'SANNP does not support Spin-Orbit spin', 1)
     END IF
     !
+  END SUBROUTINE sannp_check
+  !
+  !----------------------------------------------------------------------------
+  LOGICAL FUNCTION sannp_alternative()
+    !----------------------------------------------------------------------------
+    !
+    ! ... check alternative mode for HDNNP
+    !
+    IMPLICIT NONE
+    !
+    sannp_alternative = .FALSE.
+    !
+    IF (dft_is_hybrid()) THEN
+      sannp_alternative = .TRUE.
+    END IF
+    !
+    IF (dft_is_meta()) THEN
+      sannp_alternative = .TRUE.
+    END IF
+    !
+    IF (dft_is_nonlocc()) THEN
+      sannp_alternative = .TRUE.
+    END IF
+    !
+    IF (llondon .OR. ldftd3) THEN
+      sannp_alternative = .TRUE.
+    END IF
+    !
+    IF (lxdm) THEN
+      sannp_alternative = .TRUE.
+    END IF
+    !
+    IF (ts_vdw) THEN
+      sannp_alternative = .TRUE.
+    END IF
+    !
     ! NB: the next version will support it.
     IF (okpaw) THEN
-      CALL errore('sannp_check', 'SANNP does not support PAW', 1)
+      sannp_alternative = .TRUE.
     END IF
     !
     ! NB: the next version will support it.
     IF (lda_plus_u) THEN
-      CALL errore('sannp_check', 'SANNP does not support LDA+U', 1)
+      sannp_alternative = .TRUE.
     END IF
     !
-  END SUBROUTINE sannp_check
+  END FUNCTION sannp_alternative
   !
   !----------------------------------------------------------------------------
   SUBROUTINE sannp_open()
@@ -245,10 +257,11 @@ CONTAINS
     INTEGER  :: i
     INTEGER  :: ia, ia_start, ia_end
     INTEGER  :: ja, ja_start, ja_end
+    LOGICAL  :: alter
     REAL(DP) :: x, y, z
     REAL(DP) :: fx,  fy,  fz
     REAL(DP) :: fx0, fy0, fz0
-    REAL(DP) :: e, esum, etot0, e0
+    REAL(DP) :: e, etot0, e0
     REAL(DP) :: q, qsum
     !
     REAL(DP), ALLOCATABLE :: energy(:)
@@ -261,6 +274,8 @@ CONTAINS
     IF (.NOT. do_sannp) THEN
       RETURN
     END IF
+    !
+    alter = sannp_alternative()
     !
     CALL divide(inter_pool_comm, nat, ia_start, ia_end)
     !
@@ -306,20 +321,19 @@ CONTAINS
     !
     IF (lda_plus_u) CALL sannp_energy_hub(energy, ia_start, ia_end)
     !
-    esum = 0.0_DP
+    DO ia = ia_start, ia_end
+      !
+      energy(ia) = energy(ia) + demet / DBLE(nat)
+      !
+    END DO
     !
     qsum = 0.0_DP
     !
     DO ia = ia_start, ia_end
       !
-      esum = esum + energy(ia)
-      !
       qsum = qsum + charge(ia)
       !
     END DO
-    !
-    CALL mp_sum(esum, inter_bgrp_comm)
-    CALL mp_sum(esum, inter_pool_comm)
     !
     CALL mp_sum(qsum, inter_bgrp_comm)
     CALL mp_sum(qsum, inter_pool_comm)
@@ -359,8 +373,16 @@ CONTAINS
       END DO
       !
       WRITE(stdout, '()')
-      WRITE(stdout, '(5X,"total energy w/o -TS      =",F17.8," Ry")') etot - demet
+      WRITE(stdout, '(5X,"total energy of SCF       =",F17.8," Ry")') etot
       WRITE(stdout, '(5X,"sum of atomic energies    =",F17.8," Ry")') etot0
+      !
+      IF (alter) THEN
+        !
+        WRITE(stdout, '()')
+        WRITE(stdout, '(5X, &
+        & "WARNING: atomic energies are not correct, you cannot perform SANNP but HDNNP.")')
+        !
+      END IF
       !
     END IF
     !
@@ -388,7 +410,13 @@ CONTAINS
     !
     IF (ionode) THEN
       !
-      WRITE(iunsannp, "(I8)") nat
+      IF (alter) THEN
+        i = 0
+      ELSE
+        i = 1
+      END IF
+      !
+      WRITE(iunsannp, "(2I8,4X,E20.12)") nat, i, etot
       !
       DO i = 1, 3
         !
