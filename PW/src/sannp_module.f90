@@ -74,52 +74,8 @@ CONTAINS
       CALL errore('sannp_check', 'you have to calculate force for SANNP', 1)
     END IF
     !
-    IF (lelfield) THEN
-      CALL errore('sannp_check', 'SANNP does not support electric field (lelfield)', 1)
-    END IF
-    !
-    IF (tefield) THEN
-      CALL errore('sannp_check', 'SANNP does not support electric field (tefield)', 1)
-    END IF
-    !
-    IF (dipfield) THEN
-      CALL errore('sannp_check', 'SANNP does not support dipole correction', 1)
-    END IF
-    !
-    IF (gate) THEN
-      CALL errore('sannp_check', 'SANNP does not support gate potential', 1)
-    END IF
-    !
-    IF (textfor) THEN
-      CALL errore('sannp_check', 'SANNP does not support external force', 1)
-    END IF
-    !
-    IF (do_comp_mt) THEN
-      CALL errore('sannp_check', 'SANNP does not support Martyna-Tuckerman', 1)
-    END IF
-    !
-    IF (do_comp_esm) THEN
-      CALL errore('sannp_check', 'SANNP does not support ESM method', 1)
-    END IF
-    !
-    IF (do_cutoff_2D) THEN
-      CALL errore('sannp_check', 'SANNP does not support 2D-framework', 1)
-    END IF
-    !
     IF (qmmm_mode > -1) THEN
       CALL errore('sannp_check', 'SANNP does not support QM/MM', 1)
-    END IF
-    !
-    IF (lgcscf) THEN
-      CALL errore('sannp_check', 'SANNP does not support GC-SCF', 1)
-    END IF
-    !
-    IF (lfcp) THEN
-      CALL errore('sannp_check', 'SANNP does not support FCP', 1)
-    END IF
-    !
-    IF (lrism) THEN
-      CALL errore('sannp_check', 'SANNP does not support 3D-RISM', 1)
     END IF
     !
     ! NB: the next version will support it.
@@ -145,36 +101,99 @@ CONTAINS
     sannp_alternative = .FALSE.
     !
     IF (dft_is_hybrid()) THEN
+      CALL infomsg('sannp_print', 'SANNP does not support Hybrid-GGA')
       sannp_alternative = .TRUE.
     END IF
     !
     IF (dft_is_meta()) THEN
+      CALL infomsg('sannp_print', 'SANNP does not support meta-GGA')
       sannp_alternative = .TRUE.
     END IF
     !
     IF (dft_is_nonlocc()) THEN
+      CALL infomsg('sannp_print', 'SANNP does not support vdW-DF/rVV10')
+      sannp_alternative = .TRUE.
+    END IF
+    !
+    IF (lelfield) THEN
+      CALL infomsg('sannp_print', 'SANNP does not support electric field (lelfield)')
+      sannp_alternative = .TRUE.
+    END IF
+    !
+    IF (tefield) THEN
+      CALL infomsg('sannp_print', 'SANNP does not support electric field (tefield)')
+      sannp_alternative = .TRUE.
+    END IF
+    !
+    IF (dipfield) THEN
+      CALL infomsg('sannp_print', 'SANNP does not support dipole correction')
+      sannp_alternative = .TRUE.
+    END IF
+    !
+    IF (gate) THEN
+      CALL infomsg('sannp_print', 'SANNP does not support gate potential')
+      sannp_alternative = .TRUE.
+    END IF
+    !
+    IF (textfor) THEN
+      CALL infomsg('sannp_print', 'SANNP does not support external force')
       sannp_alternative = .TRUE.
     END IF
     !
     IF (llondon .OR. ldftd3) THEN
+      CALL infomsg('sannp_print', 'SANNP does not support DFT-D')
       sannp_alternative = .TRUE.
     END IF
     !
     IF (lxdm) THEN
+      CALL infomsg('sannp_print', 'SANNP does not support XDM')
       sannp_alternative = .TRUE.
     END IF
     !
     IF (ts_vdw) THEN
+      CALL infomsg('sannp_print', 'SANNP does not support TS-vdW')
+      sannp_alternative = .TRUE.
+    END IF
+    !
+    IF (do_comp_mt) THEN
+      CALL infomsg('sannp_print', 'SANNP does not support Martyna-Tuckerman')
+      sannp_alternative = .TRUE.
+    END IF
+    !
+    IF (do_comp_esm) THEN
+      CALL infomsg('sannp_print', 'SANNP does not support ESM method')
+      sannp_alternative = .TRUE.
+    END IF
+    !
+    IF (do_cutoff_2D) THEN
+      CALL infomsg('sannp_print', 'SANNP does not support 2D-framework')
+      sannp_alternative = .TRUE.
+    END IF
+    !
+    IF (lgcscf) THEN
+      CALL infomsg('sannp_print', 'SANNP does not support GC-SCF')
+      sannp_alternative = .TRUE.
+    END IF
+    !
+    IF (lfcp) THEN
+      CALL infomsg('sannp_print', 'SANNP does not support FCP')
+      sannp_alternative = .TRUE.
+    END IF
+    !
+    IF (lrism) THEN
+      CALL infomsg('sannp_print', 'SANNP does not support 3D-RISM')
       sannp_alternative = .TRUE.
     END IF
     !
     ! NB: the next version will support it.
     IF (okpaw) THEN
+      CALL infomsg('sannp_print', 'SANNP does not support PAW')
       sannp_alternative = .TRUE.
     END IF
     !
     ! NB: the next version will support it.
     IF (lda_plus_u) THEN
+      CALL infomsg('sannp_print', 'SANNP does not support LDA+U')
       sannp_alternative = .TRUE.
     END IF
     !
@@ -277,6 +296,13 @@ CONTAINS
     !
     alter = sannp_alternative()
     !
+    IF (alter) THEN
+      !
+      CALL infomsg('sannp_print', &
+      & 'WARNING: atomic energies are NOT correct, you cannot perform SANNP but HDNNP.')
+      !
+    END IF
+    !
     CALL divide(inter_pool_comm, nat, ia_start, ia_end)
     !
     ja = ia_end - ia_start + 1
@@ -375,14 +401,6 @@ CONTAINS
       WRITE(stdout, '()')
       WRITE(stdout, '(5X,"total energy of SCF       =",F17.8," Ry")') etot
       WRITE(stdout, '(5X,"sum of atomic energies    =",F17.8," Ry")') etot0
-      !
-      IF (alter) THEN
-        !
-        WRITE(stdout, '()')
-        WRITE(stdout, '(5X, &
-        & "WARNING: atomic energies are not correct, you cannot perform SANNP but HDNNP.")')
-        !
-      END IF
       !
     END IF
     !
