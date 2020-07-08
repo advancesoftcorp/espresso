@@ -294,6 +294,13 @@ CONTAINS
       RETURN
     END IF
     !
+    IF (ionode) THEN
+      !
+      WRITE(stdout, '()')
+      WRITE(stdout, '(5X,"Atomic energies & charges (w/ Hirshfeld method)")')
+      !
+    END IF
+    !
     alter = sannp_alternative()
     !
     IF (alter) THEN
@@ -384,8 +391,6 @@ CONTAINS
       !
       etot0 = 0.0_DP
       !
-      WRITE(stdout, '()')
-      WRITE(stdout, '(5X,"Atomic energies & charges (w/ Hirshfeld method)")')
       WRITE(stdout, '()')
       WRITE(stdout, '(5X,A)') '  # atom     E (Ry)         Q (e)'
       !
