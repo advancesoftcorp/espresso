@@ -18,7 +18,7 @@ MODULE sannp_module
   USE control_flags,     ONLY : textfor, llondon, ldftd3, lxdm, ts_vdw
   USE Coul_cut_2D,       ONLY : do_cutoff_2D
   USE ener,              ONLY : etot, demet
-  USE esm,               ONLY : do_comp_esm
+  USE esm,               ONLY : do_comp_esm, esm_bc
   USE extfield,          ONLY : tefield, dipfield, gate
   USE fcp_module,        ONLY : lfcp
   USE fft_base,          ONLY : dfftp
@@ -88,6 +88,21 @@ CONTAINS
       CALL errore('sannp_check', 'SANNP does not support Spin-Orbit spin', 1)
     END IF
     !
+    ! NB: the next version will support it.
+    IF (do_comp_mt) THEN
+      CALL errore('sannp_check', 'SANNP does not support Martyna-Tuckerman', 1)
+    END IF
+    !
+    ! NB: the next version will support it.
+    IF (do_comp_esm .AND. (esm_bc /= 'pbc')) THEN
+      CALL errore('sannp_check', 'SANNP does not support ESM method', 1)
+    END IF
+    !
+    ! NB: the next version will support it.
+    IF (do_cutoff_2D) THEN
+      CALL errore('sannp_check', 'SANNP does not support 2D-framework', 1)
+    END IF
+    !
   END SUBROUTINE sannp_check
   !
   !----------------------------------------------------------------------------
@@ -152,21 +167,6 @@ CONTAINS
     !
     IF (ts_vdw) THEN
       CALL infomsg('sannp_print', 'SANNP does not support TS-vdW')
-      sannp_alternative = .TRUE.
-    END IF
-    !
-    IF (do_comp_mt) THEN
-      CALL infomsg('sannp_print', 'SANNP does not support Martyna-Tuckerman')
-      sannp_alternative = .TRUE.
-    END IF
-    !
-    IF (do_comp_esm) THEN
-      CALL infomsg('sannp_print', 'SANNP does not support ESM method')
-      sannp_alternative = .TRUE.
-    END IF
-    !
-    IF (do_cutoff_2D) THEN
-      CALL infomsg('sannp_print', 'SANNP does not support 2D-framework')
       sannp_alternative = .TRUE.
     END IF
     !
@@ -318,8 +318,9 @@ CONTAINS
       !
       CALL divide(inter_bgrp_comm, ja, ja_start, ja_end)
       !
-      ia_start = ia_start + ja_start - 1
-      ia_end   = ia_start + ja_end   - 1
+      ja       = ia_start - 1
+      ia_start = ja + ja_start
+      ia_end   = ja + ja_end
       !
     END IF
     !
