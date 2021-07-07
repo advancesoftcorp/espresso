@@ -32,14 +32,21 @@
      USE fft_scalar_sx6
 #elif defined(__ARM_LIB)
      USE fft_scalar_arm
-#else
+#elif defined(__FFTW)
      USE fft_scalar_fftw
+#else
+#error No fft_scalar backend selected!
 #endif
-       
+#if defined(__CUDA)
+     USE fft_scalar_cuFFT
+#endif
      IMPLICIT NONE
      SAVE
 
      PRIVATE
      PUBLIC :: cft_1z, cft_2xy, cfft3d, cfft3ds
+#if defined(__CUDA)
+     PUBLIC :: cft_1z_gpu, cft_2xy_gpu, cfft3d_gpu, cfft3ds_gpu
+#endif
 
    END MODULE fft_scalar

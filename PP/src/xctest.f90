@@ -26,7 +26,7 @@ PROGRAM xctest
   igcx=1
   igcc=3
   inlc=0
-  CALL set_dft_from_indices(iexch,icorr,igcx,igcc,inlc)
+  CALL set_dft_from_indices(iexch,icorr,igcx,igcc,0,inlc)
 
   OPEN(unit=17,form='unformatted',status='old')
   READ(17) nnr, nspin
@@ -45,6 +45,8 @@ END PROGRAM xctest
 
 SUBROUTINE test_gcxc( nnr, nspin, rhor, grhor )
   USE kinds, ONLY: DP
+  USE corr_gga, ONLY:glyp
+  USE exch_gga, ONLY:becke88
 !  use funct, only: gcxc
   IMPLICIT NONE
   INTEGER, INTENT(in) :: nnr, nspin

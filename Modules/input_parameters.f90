@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2008 Quantum ESPRESSO group
+! Copyright (C) 2002-2020 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -30,7 +30,7 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : nsx, lqmax, nsolx
+  USE parameters, ONLY : nsx, natx, sc_size, nsolx
   USE wannier_new,ONLY : wannier_data
   !
   IMPLICIT NONE
@@ -100,10 +100,10 @@ MODULE input_parameters
         CHARACTER(len=80) :: calculation = 'none'
           ! Specify the type of the simulation
           ! See below for allowed values
-        CHARACTER(len=80) :: calculation_allowed(14)
+        CHARACTER(len=80) :: calculation_allowed(15)
         DATA calculation_allowed / 'scf', 'nscf', 'relax', 'md', 'cp', &
           'vc-relax', 'vc-md', 'vc-cp', 'bands', 'neb', 'smd', 'cp-wf', &
-          'vc-cp-wf', 'cp-wf-nscf'/
+          'vc-cp-wf', 'cp-wf-nscf', 'ensemble'/
         CHARACTER(len=80) :: verbosity = 'default'
           ! define the verbosity of the code output
         CHARACTER(len=80) :: verbosity_allowed(6)
@@ -288,7 +288,7 @@ MODULE input_parameters
           gdir, nppstr, wf_collect, lelfield, nberrycyc, refg,            &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
           lfcp, tqmmm, trism, tsannp, vdw_table_name, lorbm, memory,      &
-          point_label_type, input_xml_schema_file, gate                                        
+          point_label_type, input_xml_schema_file, gate
 !
 !=----------------------------------------------------------------------------=!
 !  SYSTEM Namelist Input Parameters
@@ -399,16 +399,26 @@ MODULE input_parameters
           ! ONLY PW
 
         LOGICAL :: lda_plus_u = .false.
-          ! Use DFT+U method - following are the needed parameters
+          ! Use DFT+U(+V) method - following are the needed parameters
         INTEGER :: lda_plus_u_kind = 0
-        INTEGER, PARAMETER :: nspinx=2
+        INTEGER :: lback(nsx) = -1
+        INTEGER :: l1back(nsx) = -1
+        INTEGER, PARAMETER :: nspinx=2, lqmax=7
         REAL(DP) :: starting_ns_eigenvalue(lqmax,nspinx,nsx) = -1.0_DP
         REAL(DP) :: hubbard_u(nsx) = 0.0_DP
+        REAL(DP) :: hubbard_u_back(nsx) = 0.0_DP
+        REAL(DP) :: hubbard_v(natx,natx*(2*sc_size+1)**3,4) = 0.0_DP 
         REAL(DP) :: hubbard_j0(nsx) = 0.0_DP
         REAL(DP) :: hubbard_j(3,nsx) = 0.0_DP
         REAL(DP) :: hubbard_alpha(nsx) = 0.0_DP
+        REAL(DP) :: hubbard_alpha_back(nsx) = 0.0_DP
         REAL(DP) :: hubbard_beta(nsx) = 0.0_DP
         CHARACTER(len=80) :: U_projection_type = 'atomic'
+        CHARACTER(len=80) :: Hubbard_parameters = 'input'
+        LOGICAL :: reserv(nsx) = .FALSE.
+        LOGICAL :: reserv_back(nsx) = .FALSE.
+        LOGICAL :: hub_pot_fix = .FALSE.
+        LOGICAL :: backall(nsx) = .FALSE.
 
         LOGICAL :: la2F = .false.
           ! For electron-phonon calculations
@@ -475,7 +485,7 @@ MODULE input_parameters
         REAL(DP) :: fixed_magnetization(3) = 0.0_DP
         REAL(DP) :: angle1(nsx) = 0.0_DP
         REAL(DP) :: angle2(nsx) = 0.0_DP
-        INTEGER  :: report = 1
+        INTEGER  :: report =-1
         LOGICAL  :: no_t_rev = .FALSE.
 
         CHARACTER(len=80) :: constrained_magnetization = 'none'
@@ -616,12 +626,14 @@ MODULE input_parameters
              force_symmorphic, starting_charge, starting_magnetization,       &
              occupations, degauss, nspin, ecfixed,                            &
              qcutz, q2sigma, lda_plus_U, lda_plus_u_kind,                     &
-             Hubbard_U, Hubbard_J, Hubbard_alpha,                             &
-             Hubbard_J0, Hubbard_beta,                                        &
+             Hubbard_U, Hubbard_U_back, Hubbard_J, Hubbard_alpha,             &
+             Hubbard_alpha_back, Hubbard_J0, Hubbard_beta,                    &
+             hub_pot_fix, Hubbard_V, Hubbard_parameters,                      &
+             backall, lback, l1back, reserv, reserv_back,                     &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
              U_projection_type, input_dft, la2F, assume_isolated,             &
              nqx1, nqx2, nqx3, ecutfock, localization_thr, scdm, ace,         &
-             scdmden, scdmgrd, nscdm, n_proj,                                        &
+             scdmden, scdmgrd, nscdm, n_proj,                                 &
              exxdiv_treatment, x_gamma_extrapolation, yukawa, ecutvcut,       &
              exx_fraction, screening_parameter, ref_alat,                     &
              noncolin, lspinorb, starting_spin_angle, lambda, angle1, angle2, &
@@ -1029,10 +1041,10 @@ MODULE input_parameters
 
         CHARACTER(len=80) :: ion_dynamics = 'none'
           ! set how ions should be moved
-        CHARACTER(len=80) :: ion_dynamics_allowed(9)
+        CHARACTER(len=80) :: ion_dynamics_allowed(10)
         DATA ion_dynamics_allowed / 'none', 'sd', 'cg', 'langevin', &
                                     'damp', 'verlet', 'bfgs', 'beeman',& 
-                                    'langevin-smc' /
+                                    'langevin-smc', 'ipi' /
 
         REAL(DP) :: ion_radius(nsx) = 0.5_DP
           ! pseudo-atomic radius of the i-th atomic species (CP only)
@@ -1192,7 +1204,7 @@ MODULE input_parameters
                           wfc_extrapolation, nraise, remove_rigid_rot,         &
                           trust_radius_max, trust_radius_min,                  &
                           trust_radius_ini, w_1, w_2, bfgs_ndim, ignore_wolfe, &
-                          l_mplathe, n_muller,np_muller,l_exit_muller
+                          l_mplathe, n_muller, np_muller, l_exit_muller
 
 
 !=----------------------------------------------------------------------------=!
@@ -1209,9 +1221,9 @@ MODULE input_parameters
 
         CHARACTER(len=80) :: cell_dynamics  = 'none'
           ! set how the cell should be moved
-        CHARACTER(len=80) :: cell_dynamics_allowed(7)
+        CHARACTER(len=80) :: cell_dynamics_allowed(8)
         DATA cell_dynamics_allowed / 'sd', 'pr', 'none', 'w', 'damp-pr', &
-                                     'damp-w', 'bfgs'  /
+                                     'damp-w', 'bfgs', 'ipi'  /
 
         CHARACTER(len=80) :: cell_velocities = 'default'
           ! cell_velocities = 'zero' | 'default'*
@@ -1347,6 +1359,7 @@ MODULE input_parameters
           REAL(DP) :: exx_ps_rcut_pair
           REAL(DP) :: exx_me_rcut_self
           REAL(DP) :: exx_me_rcut_pair
+          LOGICAL  :: exx_use_cube_domain
 !=======================================================================
 
           INTEGER :: nit
@@ -1367,6 +1380,7 @@ MODULE input_parameters
           NAMELIST / wannier / wf_efield, wf_switch, sw_len, efx0, efy0, efz0,&
                                efx1, efy1, efz1, wfsd, wfdt,exx_neigh,exx_poisson_eps,&
                                exx_dis_cutoff,exx_ps_rcut_self, exx_me_rcut_self,   &
+                               exx_use_cube_domain,                      &
                                exx_ps_rcut_pair, exx_me_rcut_pair, vnbsp,&
                                maxwfdt, wf_q, wf_friction, nit, nsd, nsteps,  & 
                                tolw, adapt, calwf, nwf, wffort, writev
@@ -1394,6 +1408,9 @@ MODULE input_parameters
                constrain_pot(nwanx,2)                   ! constrained potential for wannier
           NAMELIST / wannier_ac / plot_wannier, use_energy_int, nwan, &
                                    plot_wan_num, plot_wan_spin, constrain_pot, print_wannier_coeff
+
+!  END manual
+! ----------------------------------------------------------------------
 
 !
 !=----------------------------------------------------------------------------=!
@@ -1944,6 +1961,7 @@ SUBROUTINE reset_input_checks()
     IF ( allocated( sp_vel ) ) DEALLOCATE( sp_vel )
     IF ( allocated( rd_for ) ) DEALLOCATE( rd_for )
     !
+    IF ( allocated( f_inp ) ) DEALLOCATE( f_inp )
     !
     IF ( allocated( constr_type_inp ) )   DEALLOCATE( constr_type_inp )
     IF ( allocated( constr_inp ) )        DEALLOCATE( constr_inp )

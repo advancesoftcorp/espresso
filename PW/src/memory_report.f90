@@ -34,7 +34,7 @@ SUBROUTINE memory_report()
   USE exx,       ONLY : ecutfock, use_ace
   USE exx_base,  ONLY : nkqs
   USE fft_base,  ONLY : dffts, dfftp
-  USE gvect,     ONLY : ngm, ngl, ngm_g, g, gcutm
+  USE gvect,     ONLY : ngm, ngl, ngm_g, g, ecutrho
   USE gvecs,     ONLY : ngms, doublegrid
   USE gvecw,     ONLY : ecutwfc, gcutw
   USE klist,     ONLY : nks, nkstot, xk, qnorm
@@ -54,12 +54,13 @@ SUBROUTINE memory_report()
   USE force_mod, ONLY : lforce, lstres
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
   USE rism3d_facade, ONLY : lrism3d, rism3t, rism3d_is_laue
-  USE mp_diag,   ONLY : np_ortho
   USE mp_bands,  ONLY : nproc_bgrp, nbgrp
   USE mp_pools,  ONLY : npool
   USE mp_images, ONLY : nproc_image  
   !
   IMPLICIT NONE
+  !
+  INCLUDE 'laxlib.fh'
   !
   INTEGER, PARAMETER :: MB=1024*1024
   INTEGER, PARAMETER :: GB=1024*MB
@@ -69,12 +70,11 @@ SUBROUTINE memory_report()
   INTEGER :: indm, ijv, roughestimate
   REAL(DP):: mbr, mbx, mby, mbz, dmbx, dmby, dmbz
   !
-  INTEGER, EXTERNAL :: n_plane_waves
-  !
   ! these quantities are real in order to prevent integer overflow
   !
   REAL(dp), PARAMETER :: complex_size=16_dp, real_size=8_dp, int_size=4_dp
   REAL(dp) :: ram, ram_, ram1, ram2, maxram, totram, add
+  INTEGER :: np_ortho(2)
   !
   IF ( gamma_only) THEN
      g_fact = 2  ! use half plane waves or G-vectors
@@ -161,14 +161,14 @@ SUBROUTINE memory_report()
   !=====================================================================
   ! Nonlocal pseudopotentials V_NL (beta functions), reciprocal space
   !=====================================================================
-  add = complex_size * nkb * npwx_l ! allocate_nlpot.f90:88 vkb
+  add = complex_size * nkb * npwx_l ! allocate_wfc.f90:62 vkb
   IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'nlocal pot', add/MB
   ram = ram + add
   ! other (possibly minor) data loads
   lmaxq = 2*lmaxkb+1
   IF (lmaxq > 0) THEN
      ! not accurate if spline_ps .and. cell_factor <= 1.1d0
-     nqxq = int( ( (sqrt(gcutm) + qnorm) / dq + 4) * cell_factor )
+     nqxq = int( ( (sqrt(ecutrho) + qnorm) / dq + 4) * cell_factor )
      ! allocate_nlpot.f90:87 qrad
      add = real_size * nqxq * nbetam*(nbetam+1)/2 * lmaxq * ntyp
      IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'qrad', add/MB
@@ -257,6 +257,7 @@ SUBROUTINE memory_report()
     IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'qr (very rough)', add/MB
     ram = ram + add
   END IF 
+  !=====================================================================
   !
   !=====================================================================
   ! RISM calculations
@@ -286,12 +287,16 @@ SUBROUTINE memory_report()
   END IF
   !=====================================================================
   !
+  !=====================================================================
+  !
   ! compute ram_: scratch space that raises the "high watermark"
   !
   !=====================================================================
   ! ram1:  scratch space allocated in iterative diagonalization 
   !        hpsi, spsi, hr and sr matrices, scalar products
   !        nbnd_l is the estimated dimension of distributed matrices
+  !
+  CALL laxlib_getval( np_ortho = np_ortho )
   !
   nbnd_l = nbndx/np_ortho(1)
   ram1 = complex_size/g_fact * ( 3*nbnd_l**2 ) ! hr,sr,vr/hc,sc,vc 
@@ -313,7 +318,8 @@ SUBROUTINE memory_report()
         IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'spsi', add/MB 
         ram1 = ram1 + add
      END IF
-  ELSE IF ( isolve == 3 ) THEN
+     !
+  ELSE IF ( isolve == 4 ) THEN
      ! RMM-DIIS
      nbnd_l = NINT( DBLE(nbnd) / nbgrp )
      add = complex_size * nbnd_l * npol * npwx_l * rmm_ndim
@@ -325,7 +331,7 @@ SUBROUTINE memory_report()
         ram1 = ram1 + add  ! sphi
         IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'sphi', add/MB
      END IF
-
+     !
      add = complex_size * nbnd * npol * npwx_l
      ram1 = ram1 + add     ! hpsi
      IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'hpsi', add/MB
@@ -342,6 +348,7 @@ SUBROUTINE memory_report()
         IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'skpsi', add/MB
      END IF
   END IF
+  !
   ram_ = ram1
   !=====================================================================
   !
@@ -418,9 +425,9 @@ SUBROUTINE memory_report()
            !                      vg                       ylmk0     qmod
            ram1 = real_size * (ngm*nspin_mag + ngm_l*( lmaxq*lmaxq + 1 ) )
            !                                    qgm      aux1
-           ram1 = ram1 + complex_size * ngm_l * ( maxnij + nat*3 )
+           ram1 = ram1 + complex_size * ngm_l * ( maxnij + 3*maxnab )
            !                           ddeeq
-           ram1 = ram1 + real_size * ( maxnij * nat * 3 * nspin_mag )
+           ram1 = ram1 + real_size * ( maxnij * maxnab * 3 * nspin_mag )
            IF ( iverbosity > 0 ) WRITE( stdout, 1013 ) 'addusforce', ram1/MB
            !
            ram_ = MAX ( ram_, ram1 )
@@ -469,6 +476,10 @@ SUBROUTINE memory_report()
      IF ( totram .lt. GB ) WRITE( stdout, 1012 ) totram/MB, ' MB'
      IF ( totram .ge. GB ) WRITE( stdout, 1012 ) totram/GB, ' GB'
   END IF
+  !
+  ! check: more bands than plane waves? not good
+  !
+  IF ( npwx_g < nbndx ) CALL errore('memory_report','more bands than PWs!',1)
   !
  1010 format (/5x,'Estimated static dynamical RAM per process > ', F10.2, A3)
  1011 format (/5x,'Estimated max dynamical RAM per process > ', F10.2, A3)

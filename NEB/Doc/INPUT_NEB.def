@@ -387,7 +387,7 @@ input_description -distribution {Quantum Espresso} -package NEB -program neb.x {
 			There can be any number (including zero) of INTERMEDIATE_IMAGE supercards.
 		    } {
 			eval $card_ATOMIC_POSITIONS
-			eval $card_TOTAL_CHARGE
+		    eval $card_TOTAL_CHARGE
 		    }
 		}
             

@@ -1,3 +1,6 @@
+build/
+.vscode/
+
 *~
 *.a
 *.inc
@@ -12,10 +15,12 @@
 *.dvi
 *.toc
 *.aux
+*_tmp.f90
+*.TMP
+*.out
 
 bin/*
 FoX
-iotk
 include/fft_defs.h
 include/configure.h
 include/c_defs.h
@@ -34,3 +39,6 @@ W90
 archive/wannier90-*tgz
 wannier90-*
 tempdir
+EPW/src/tags
+EPW/src/tmp
+LAXlib/*.fh

@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2016 Quantum ESPRESSO group
+# Copyright (C) 2001-2020 Quantum ESPRESSO Foundation
 # 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -29,25 +29,17 @@ default :
 	@echo '  tddfpt       time dependent dft code'
 	@echo '  gwl          GW with Lanczos chains'
 	@echo '  ld1          utilities for pseudopotential generation'
-	@echo '  upf          utilities for pseudopotential conversion'
 	@echo '  xspectra     X-ray core-hole spectroscopy calculations'
 	@echo '  couple       Library interface for coupling to external codes'
 	@echo '  epw          Electron-Phonon Coupling with wannier functions'
 	@echo '  gui          Graphical User Interface'
-	@echo '  examples     fetch from web examples for all core packages'
-	@echo '  test-suite   run semi-automated test-suite for regression testing'
-	@echo '  all          same as "make pwall cp ld1 upf tddfpt hp"'
+	@echo '  all          same as "make pwall cp ld1 tddfpt hp"'
 	@echo ' '
 	@echo 'where target identifies one or multiple THIRD-PARTIES PACKAGES:'
 	@echo '  gipaw        NMR and EPR spectra'
 	@echo '  w90          Maximally localised Wannier Functions'
 	@echo '  want         Quantum Transport with Wannier functions'
-	@echo '  west         Many-body perturbation corrections Without Empty STates'
-#	@echo '  SaX          Standard GW-BSE with plane waves'
 	@echo '  yambo        electronic excitations with plane waves'
-	@echo '  yambo-devel  yambo devel version'
-	@echo '  SternheimerGW calculate GW using Sternheimer equations'
-	@echo '  plumed       Metadynamics plugin for pw or cp'
 	@echo '  d3q          general third-order code and thermal transport codes'
 	@echo ' '
 	@echo 'where target is one of the following suite operation:'
@@ -90,7 +82,7 @@ neb : pwlibs
 	if test -d NEB; then \
 	( cd NEB; $(MAKE) TLDEPS= all || exit 1) ; fi
 
-tddfpt : phlibs
+tddfpt : lrmods
 	if test -d TDDFPT; then \
 	( cd TDDFPT; $(MAKE) TLDEPS= all || exit 1) ; fi
 
@@ -106,10 +98,6 @@ acfdt : phlibs
 	if test -d ACFDT ; then \
 	( cd ACFDT ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
-# target still present for backward compatibility
-gww:
-	@echo '"make gww" is obsolete, use "make gwl" instead '
-
 gwl : phlibs
 	if test -d GWW ; then \
 	( cd GWW ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
@@ -123,10 +111,6 @@ d3q : phlibs
 ld1 : bindir libs mods
 	if test -d atomic ; then \
 	( cd atomic ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
-
-upf : libs mods
-	if test -d upftools ; then \
-	( cd upftools ; $(MAKE) TLDEPS= all || exit 1 ) ; fi
 
 xspectra : pwlibs
 	if test -d XSpectra ; then \
@@ -162,12 +146,9 @@ gui :
 	    echo ; \
 	fi
 
-examples :
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
 pwall : pw neb ph pp pwcond acfdt
 
-all   : pwall cp ld1 upf tddfpt hp xspectra gwl 
+all   : pwall cp ld1 tddfpt hp xspectra gwl 
 
 ###########################################################
 # Auxiliary targets used by main targets:
@@ -194,7 +175,7 @@ pw4gwwlib : phlibs
 	if test -d GWW ; then \
 	( cd GWW ; $(MAKE) pw4gwwa || exit 1 ) ; fi
 
-mods : libiotk libfox libutil libla libfft
+mods : libfox libutil libla libfft libupf libbeef
 	( cd Modules ; $(MAKE) TLDEPS= all || exit 1 )
 
 libks_solvers : libs libutil libla
@@ -208,6 +189,9 @@ libfft :
 
 libutil : 
 	( cd UtilXlib ; $(MAKE) TLDEPS= all || exit 1 )
+
+libupf : libfox libutil
+	( cd upflib ; $(MAKE) TLDEPS= all || exit 1 )
 
 libs :
 	( cd clib ; $(MAKE) TLDEPS= all || exit 1 )
@@ -225,21 +209,17 @@ bindir :
 # Targets for external libraries
 ############################################################
 
-libblas : 
-	cd install ; $(MAKE) -f extlibs_makefile $@
-
 liblapack: 
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
-libiotk: 
-	cd install ; $(MAKE) -f extlibs_makefile $@
 libfox: 
 	cd install ; $(MAKE) -f extlibs_makefile $@
 
 libcuda: 
 	cd install ; $(MAKE) -f extlibs_makefile $@
-# In case of trouble with iotk and compilers, add
-# FFLAGS="$(FFLAGS_NOOPT)" after $(MFLAGS)
+
+libbeef:
+	cd install ; $(MAKE) -f extlibs_makefile $@
 
 #########################################################
 # plugins
@@ -248,25 +228,10 @@ libcuda:
 w90: bindir liblapack
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-want : 
+want: liblapack
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
-SaX : 
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
-yambo: 
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
-yambo-devel: 
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
-plumed: 
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
-west: pw
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
-SternheimerGW: lrmods 
+yambo: liblapack
 	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
 
 #########################################################
@@ -302,15 +267,6 @@ install :
 	@echo -e '\nQuantum ESPRESSO binaries are installed in $(PREFIX)/bin\n'
 
 #########################################################
-# Run test-suite for numerical regression testing
-# NB: it is assumed that reference outputs have been 
-#     already computed once (usualy during release)
-#########################################################
-
-test-suite: pw cp 
-	( cd install ; $(MAKE) -f plugins_makefile $@ || exit 1 )
-
-#########################################################
 # Other targets: clean up
 #########################################################
 
@@ -318,9 +274,9 @@ test-suite: pw cp
 clean : 
 	touch make.inc 
 	for dir in \
-		CPV LAXlib FFTXlib UtilXlib Modules PP PW EPW KS_Solvers \
+		CPV LAXlib FFTXlib UtilXlib upflib Modules PP PW EPW KS_Solvers \
 		NEB ACFDT COUPLE GWW XSpectra PWCOND dft-d3 \
-		atomic clib LR_Modules pwtools upftools \
+		atomic clib LR_Modules pwtools upflib \
 		dev-tools extlibs Environ TDDFPT PHonon HP GWW Doc GUI \
 	; do \
 	    if test -d $$dir ; then \
@@ -336,14 +292,11 @@ clean :
 veryclean : clean
 	- @(cd install ; $(MAKE) -f plugins_makefile veryclean)
 	- @(cd install ; $(MAKE) -f extlibs_makefile veryclean)
-	- rm -rf install/patch-plumed
-	- cd install ; rm -f config.log configure.msg config.status
-	- rm -rf include/configure.h install/make_wannier90.inc
-	- cd install ; rm -fr autom4te.cache
-	- cd install; ./clean.sh ; cd -
-	- cd include; ./clean.sh ; cd -
-	- rm -f espresso.tar.gz -
-	- rm -rf make.inc -
+	- (cd install ; rm -rf config.log configure.msg config.status \
+		configure.h make_wannier90.inc autom4te.cache )
+	- (cd include; rm -rf configure.in qe_cdefs.h )
+	- rm -f espresso.tar.gz
+	- rm -rf make.inc
 	- rm -rf FoX
 # remove everything not in the original distribution
 distclean : veryclean
@@ -386,14 +339,14 @@ tar-qe-modes :
 # NOTICE about "make doc": in order to build the .html and .txt
 # documentation in Doc, "tcl", "tcllib", "xsltproc" are needed;
 # in order to build the .pdf files in Doc, "pdflatex" is needed;
-# in order to build html files for user guide and developer manual,
+# in order to build html files for the user guide,
 # "latex2html" and "convert" (from Image-Magick) are needed.
 doc : 
 	if test -d Doc ; then \
-	( cd Doc ; $(MAKE) VERSION=6.4 TLDEPS= all ) ; fi
+	( cd Doc ; $(MAKE) VERSION=6.6 TLDEPS= all ) ; fi
 	for dir in */Doc; do \
 	( if test -f $$dir/Makefile ; then \
-	( cd $$dir; $(MAKE) VERSION=6.4 TLDEPS= all ) ; fi ) ;  done
+	( cd $$dir; $(MAKE) VERSION=6.6 TLDEPS= all ) ; fi ) ;  done
 
 doc_clean :
 	if test -d Doc ; then \
@@ -402,6 +355,6 @@ doc_clean :
 	( if test -f $$dir/Makefile ; then \
 	( cd $$dir; $(MAKE) TLDEPS= clean ) ; fi ) ;  done
 
-depend: libiotk
+depend:
 	@echo 'Checking dependencies...'
 	- ( if test -x install/makedeps.sh ; then install/makedeps.sh ; fi)

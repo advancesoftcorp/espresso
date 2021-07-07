@@ -11,8 +11,7 @@ rrmmdiagg.o \
 rotate_xpsi_k.o \
 rotate_xpsi_gamma.o \
 gram_schmidt_k.o \
-gram_schmidt_gamma.o \
-rmm_param.o
+gram_schmidt_gamma.o
 
 all : librmm.a
 

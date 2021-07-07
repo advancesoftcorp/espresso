@@ -119,8 +119,9 @@ MODULE autopilot
   CHARACTER(LEN=80) :: rule_ion_dynamics(max_event_step)
   REAL(DP)         :: rule_ion_damping(max_event_step)
   CHARACTER(LEN=80) :: rule_ion_temperature(max_event_step)
-
   REAL(DP) :: rule_tempw(max_event_step)
+  INTEGER  :: rule_nhpcl(max_event_step)
+  REAL(DP) :: rule_fnosep(max_event_step)
   !     &CELL
 
   !     &PHONON
@@ -147,8 +148,9 @@ MODULE autopilot
   LOGICAL :: event_ion_dynamics(max_event_step)   
   LOGICAL :: event_ion_damping(max_event_step)
   LOGICAL :: event_ion_temperature(max_event_step)   
-
   LOGICAL :: event_tempw(max_event_step)           
+  LOGICAL :: event_nhpcl(max_event_step)
+  LOGICAL :: event_fnosep(max_event_step)
   !     &CELL
 
   !     &PHONON
@@ -168,7 +170,9 @@ MODULE autopilot
        & event_electron_dynamics, event_electron_damping, event_ion_dynamics, &
        & current_nfi, pilot_p, pilot_unit, pause_p,auto_error, parse_mailbox, &
        & event_ion_damping, event_ion_temperature, event_tempw, &
-       & event_electron_orthogonalization
+       & event_electron_orthogonalization, &
+       & event_nhpcl, event_fnosep, rule_nhpcl, rule_fnosep
+
 
 CONTAINS
 
@@ -433,7 +437,7 @@ CONTAINS
     integer            :: event
 
     LOGICAL, EXTERNAL  :: matches
-    CHARACTER(LEN=1), EXTERNAL :: capital
+    LOGICAL            :: new_event
 
 
     ! this is a temporary local variable
@@ -543,13 +547,23 @@ CONTAINS
        ! Heres where it get interesting
        ! We may have a new event , or not! :)
 
-       IF ( ((event-1) .gt. 0) .and. ( now_step .lt. event_step(event-1)) ) THEN
-          IF( ionode ) write(*,*) ' AutoPilot: current input_line', input_line 
-          CALL auto_error( ' AutoPilot ','Dynamic Rule Event Out of Order!')
-          go to 20
+       IF ((event-1) .gt. 0) THEN
+          IF ( now_step .lt. event_step(event-1)) THEN
+             IF( ionode ) write(*,*) ' AutoPilot: current input_line', input_line 
+             CALL auto_error( ' AutoPilot ','Dynamic Rule Event Out of Order!')
+             go to 20
+          ENDIF
        ENDIF
 
-       IF ( (event .eq. 0) .or. ( now_step .gt. event_step(event)) ) THEN
+       IF (event .eq. 0) THEN
+          new_event = .true.
+       ELSEIF ( now_step .gt. event_step(event)) THEN
+          new_event = .true.
+       ELSE
+          new_event = .false.
+       ENDIF
+
+       IF ( new_event ) THEN
           ! new event
           event = event + 1
 
@@ -598,14 +612,24 @@ CONTAINS
        ! We may have a new event , or not! :)       
 
 
-       IF ( ((event-1) .gt. 0) .and. ( on_step .lt. event_step(event-1)) ) THEN
-          IF( ionode ) write(*,*) ' AutoPilot: current input_line', input_line 
-          CALL auto_error( ' AutoPilot ','Dynamic Rule Event Out of Order!')
-          go to 20
+       IF ( ((event-1) .gt. 0)) THEN 
+          IF ( on_step .lt. event_step(event-1))  THEN
+              IF( ionode ) write(*,*) ' AutoPilot: current input_line', input_line 
+              CALL auto_error( ' AutoPilot ','Dynamic Rule Event Out of Order!')
+              go to 20
+          ENDIF
        ENDIF
 
 
-       IF ( (event .eq. 0) .or. (on_step .gt. event_step(event)) ) THEN
+       IF (event .eq. 0) THEN
+           new_event = .true.
+       ELSEIF (on_step .gt. event_step(event)) THEN
+           new_event = .true.
+       ELSE
+           new_event = .false.
+       ENDIF
+
+       IF (new_event) THEN
           ! new event
           event = event + 1
           IF (event > max_event_step) THEN
@@ -759,6 +783,14 @@ CONTAINS
        read(value, *) realDP_value
        rule_tempw(event)  = realDP_value
        event_tempw(event) = .true.
+    ELSEIF ( matches( "NHPCL", var ) ) THEN
+       read(value, *) int_value
+       rule_nhpcl(event)  = int_value
+       event_nhpcl(event) = .true.
+    ELSEIF ( matches( "FNOSEP", var ) ) THEN
+       read(value, *) realDP_value
+       rule_fnosep(event)  = realDP_value
+       event_fnosep(event) = .true.
     ELSE
        CALL auto_error( 'autopilot', ' ASSIGN_RULE: FAILED  '//trim(var)//' '//trim(value) )
     END IF

@@ -1409,12 +1409,14 @@ CONTAINS
       z = (DBLE(jz) + esm_offset) / DBLE(dfftp%nr3) * L
 
       !! BC1 terms
-      Vhar0r(iz) = Vhar0r(iz) &
-                   - tpi*z**2*rg3 &
-                   - tpi*z0**2*rg3 &
-                   - fpi*z*sum1c &
-                   - fpi*sum2c
-
+      IF (esm_bc /= 'pbc') THEN
+        Vhar0r(iz) = Vhar0r(iz) &
+                     - tpi*z**2*rg3 &
+                     - tpi*z0**2*rg3 &
+                     - fpi*z*sum1c &
+                     - fpi*sum2c
+      END IF
+      !!
       IF (esm_bc == 'bc2') THEN
         !! BC2 terms
         Vhar0r(iz) = Vhar0r(iz) &
@@ -1481,10 +1483,12 @@ CONTAINS
         END IF
 
         !! BC1 terms
-        Vloc0r(iz) = Vloc0r(iz) - tpi*Qa/S &
-                     *((z - za)*qe_erf(salp*(z - za)) &
-                     + exp(-alpha*(z - za)**2)*sqrtpm1/salp)
-
+        IF (esm_bc /= 'pbc') THEN
+          Vloc0r(iz) = Vloc0r(iz) - tpi*Qa/S &
+                       *((z - za)*qe_erf(salp*(z - za)) &
+                       + exp(-alpha*(z - za)**2)*sqrtpm1/salp)
+        END IF
+        !!
         IF (esm_bc == 'bc2') THEN
           !! BC2 terms
           Vloc0r(iz) = Vloc0r(iz) &

@@ -13,13 +13,15 @@ SUBROUTINE data_structure_3drism(dfft, gvec, gamma_only, mp_task)
   ! ... this routine sets the data structure for the 3D-RISM's fft array
   ! ... In the parallel case, it distributes columns to processes, too
   !
-  USE cell_base,   ONLY : at, bg
-  USE fft_base,    ONLY : smap
-  USE fft_types,   ONLY : fft_type_descriptor, fft_type_init
-  USE gvec_3drism, ONLY : gvec_type, gvec_init_3drism
-  USE kinds,       ONLY : DP
-  USE mp_bands,    ONLY : nproc_bgrp, nyfft
-  USE mp_rism,     ONLY : mp_rism_task
+  USE cell_base,            ONLY : at, bg
+  USE command_line_options, ONLY : nmany_
+  USE fft_base,             ONLY : smap
+  USE fft_types,            ONLY : fft_type_descriptor, fft_type_init
+  USE gvec_3drism,          ONLY : gvec_type, gvec_init_3drism
+  USE kinds,                ONLY : DP
+  USE mp_bands,             ONLY : nproc_bgrp, nyfft
+  USE mp_rism,              ONLY : mp_rism_task
+  !USE symm_base,            ONLY : fft_fact
   !
   IMPLICIT NONE
   !
@@ -38,7 +40,10 @@ SUBROUTINE data_structure_3drism(dfft, gvec, gamma_only, mp_task)
   !
   ! ... set up fft descriptors, including parallel stuff: sticks, planes, etc.
   !
-  CALL fft_type_init(dfft, smap, "rho", gamma_only, lpara, intra_comm, at, bg, gvec%gcutm, 1.0_DP, nyfft=nyfft)
+  !CALL fft_type_init(dfft, smap, "rho", gamma_only, lpara, intra_comm, &
+  !     at, bg, gvec%gcutm, 1.0_DP, fft_fact=fft_fact, nyfft=nyfft, nmany=nmany_)
+  CALL fft_type_init(dfft, smap, "rho", gamma_only, lpara, intra_comm, &
+       at, bg, gvec%gcutm, 1.0_DP, nyfft=nyfft, nmany=nmany_)  ! do not use symmetric mesh
   !
   dfft%rho_clock_label = 'fftr'  ! this is the label of FFT for 3D-RISM
   !

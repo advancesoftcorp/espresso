@@ -45,7 +45,7 @@ MODULE bfgs_module
    USE kinds,     ONLY : DP
    USE io_files,  ONLY : iunbfgs, prefix
    USE constants, ONLY : eps4, eps8, eps16, RYTOEV
-   USE cell_base, ONLY : iforceh
+   USE cell_base, ONLY : iforceh      ! FIXME: should be passed as argument
    !
    USE basic_algebra_routines
    USE matrix_inversion
@@ -303,6 +303,14 @@ CONTAINS
       IF ( .NOT. conv_bfgs .AND. ( tr_min_hit > 1 ) ) CALL infomsg( 'bfgs',&
               'history already reset at previous step: stopping' )
       conv_bfgs = conv_bfgs .OR. ( tr_min_hit > 1 )
+      !
+      WRITE(stdout, '(5X,"Energy error",T30,"= ",1PE12.1)') energy_error
+      WRITE(stdout, '(5X,"Gradient error",T30,"= ",1PE12.1)') grad_error
+      IF( lmovecell ) WRITE(stdout, &
+         '(5X,"Cell gradient error",T30,"= ",1PE12.1,/)') cell_error
+      IF( lfcp ) WRITE(stdout, &
+         '(5X,"FCP gradient error",T30,"= ",1PE12.1,/)') fcp_error
+      !
       IF ( conv_bfgs ) GOTO 1000
       !
       ! ... some output is written
@@ -379,6 +387,8 @@ CONTAINS
             CALL reset_bfgs( n, lfcp, fcp_cap )
             !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
+            IF ( lmovecell ) FORALL( i=1:3, j=1:3) &
+                           & step( n-NADD + j+3*(i-1) ) = step( n-NADD + j+3*(i-1) )*iforceh(i,j)
             ! normalize step but remember its length
             nr_step_length = scnorm(step)
             step(:) = step(:) / nr_step_length
@@ -433,6 +443,8 @@ CONTAINS
             ! ... standard Newton-Raphson step
             !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
+            IF ( lmovecell ) FORALL( i=1:3, j=1:3) &
+                           & step( n-NADD + j+3*(i-1) ) = step( n-NADD + j+3*(i-1) )*iforceh(i,j)
             !
          END IF
          IF ( ( grad(:) .dot. step(:) ) > 0.0_DP ) THEN
@@ -442,6 +454,8 @@ CONTAINS
             !
             CALL reset_bfgs( n, lfcp, fcp_cap )
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
+            IF ( lmovecell ) FORALL( i=1:3, j=1:3) &
+                           & step( n-NADD + j+3*(i-1) ) = step( n-NADD + j+3*(i-1) )*iforceh(i,j)
             !
          END IF
          !
@@ -597,6 +611,8 @@ CONTAINS
             ! ... last gradient and reset gdiis history
             !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
+            IF ( lmovecell ) FORALL( i=1:3, j=1:3) &
+                           & step( n-NADD + j+3*(i-1) ) = step( n-NADD + j+3*(i-1) )*iforceh(i,j)
             !
             gdiis_iter = 0
             !
@@ -1016,7 +1032,7 @@ CONTAINS
                               lmovecell, lfcp, stdout, scratch )
       !------------------------------------------------------------------------
       !
-      USE io_files, ONLY : prefix, delete_if_present
+      USE io_files, ONLY : delete_if_present
       !
       IMPLICIT NONE
       REAL(DP),         INTENT(IN) :: energy, energy_thr, grad_thr, cell_thr, fcp_thr

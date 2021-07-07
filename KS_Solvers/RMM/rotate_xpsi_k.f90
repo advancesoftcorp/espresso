@@ -13,11 +13,14 @@ SUBROUTINE rotate_xpsi_k( h_psi, s_psi, overlap, &
   !
   ! ... Serial version of rotate_xpsi for colinear, k-point calculations
   !
-  USE rmm_param,     ONLY : DP
-  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm
+  USE util_param,    ONLY : DP
+  USE mp_bands_util, ONLY : intra_bgrp_comm, inter_bgrp_comm, &
+                          & me_bgrp, root_bgrp
   USE mp,            ONLY : mp_sum
   !
   IMPLICIT NONE
+  !
+  include 'laxlib.fh'
   !
   ! ... I/O variables
   !
@@ -140,7 +143,7 @@ SUBROUTINE rotate_xpsi_k( h_psi, s_psi, overlap, &
   !
   CALL start_clock('rotxpsik:diag')
   !
-  CALL cdiaghg( nstart, nbnd, hc, sc, nstart, en, vc )
+  CALL diaghg( nstart, nbnd, hc, sc, nstart, en, vc, me_bgrp, root_bgrp, intra_bgrp_comm )
   !
   e(:) = en(1:nbnd)
   !
@@ -210,17 +213,14 @@ SUBROUTINE protate_xpsi_k( h_psi, s_psi, overlap, &
   ! ... Parallel version of rotate_xpsi for colinear, k-point calculations
   ! ... Subroutine with distributed matrices, written by Carlo Cavazzoni
   !
-  USE rmm_param,        ONLY : DP
+  USE util_param,       ONLY : DP
   USE mp_bands_util,    ONLY : intra_bgrp_comm, inter_bgrp_comm, &
                                nbgrp, root_bgrp_id, my_bgrp_id
-  USE mp_diag,          ONLY : ortho_comm, np_ortho, me_ortho, ortho_comm_id,&
-                               leg_ortho, ortho_parent_comm, ortho_cntx, &
-                               do_distr_diag_inside_bgrp
-  USE descriptors,      ONLY : descla_init , la_descriptor
-  USE parallel_toolkit, ONLY : zsqmher
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier
   !
   IMPLICIT NONE
+  !
+  include 'laxlib.fh'
   !
   ! ... I/O variables
   !
@@ -247,14 +247,16 @@ SUBROUTINE protate_xpsi_k( h_psi, s_psi, overlap, &
   COMPLEX(DP), ALLOCATABLE :: tpsi(:,:), hpsi(:,:), spsi(:,:)
   REAL(DP),    ALLOCATABLE :: en(:)
   !
-  TYPE(la_descriptor) :: desc
+  INTEGER :: idesc(LAX_DESC_SIZE)
     ! matrix distribution descriptors
   INTEGER :: nx
     ! maximum local block dimension
   LOGICAL :: la_proc
     ! flag to distinguish procs involved in linear algebra
-  TYPE(la_descriptor), ALLOCATABLE :: desc_ip( :, : )
-  INTEGER, ALLOCATABLE :: rank_ip( :, : )
+  LOGICAL              :: do_distr_diag_inside_bgrp
+  INTEGER              :: ortho_parent_comm
+  INTEGER, ALLOCATABLE :: idesc_ip(:,:,:)
+  INTEGER, ALLOCATABLE :: rank_ip(:,:)
   !
   EXTERNAL :: h_psi, s_psi
     ! h_psi(npwx,npw,nvec,psi,hpsi)
@@ -265,10 +267,10 @@ SUBROUTINE protate_xpsi_k( h_psi, s_psi, overlap, &
 
   CALL start_clock('protxpsik')
   !
-  ALLOCATE( desc_ip( np_ortho(1), np_ortho(2) ) )
-  ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
+  CALL laxlib_getval( do_distr_diag_inside_bgrp = do_distr_diag_inside_bgrp, &
+                    & ortho_parent_comm = ortho_parent_comm )
   !
-  CALL desc_init( nstart, desc, desc_ip )
+  CALL desc_init( nstart, nx, la_proc, idesc, rank_ip, idesc_ip )
   !
   IF ( npol == 1 ) THEN
      !
@@ -335,15 +337,15 @@ SUBROUTINE protate_xpsi_k( h_psi, s_psi, overlap, &
   !
   CALL start_clock('protxpsik:diag')
   !
-  IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of pcdiaghg en and vc are the same across ortho_parent_comm
+  IF ( do_distr_diag_inside_bgrp ) THEN ! NB on output of pdiaghg en and vc are the same across ortho_parent_comm
      ! only the first bgrp performs the diagonalization
-     IF( my_bgrp_id == root_bgrp_id ) CALL pcdiaghg( nstart, hc, sc, nx, en, vc, desc )
+     IF( my_bgrp_id == root_bgrp_id ) CALL pdiaghg( nstart, hc, sc, nx, en, vc, idesc )
      IF( nbgrp > 1 ) THEN ! results must be brodcast to the other band groups
        CALL mp_bcast( vc, root_bgrp_id, inter_bgrp_comm )
        CALL mp_bcast( en, root_bgrp_id, inter_bgrp_comm )
      ENDIF
   ELSE
-     CALL pcdiaghg( nstart, hc, sc, nx, en, vc, desc )
+     CALL pdiaghg( nstart, hc, sc, nx, en, vc, idesc )
   END IF
   !
   e(:) = en(1:nbnd)
@@ -369,7 +371,7 @@ SUBROUTINE protate_xpsi_k( h_psi, s_psi, overlap, &
   DEALLOCATE( hpsi )
   DEALLOCATE( tpsi )
   !
-  DEALLOCATE( desc_ip )
+  DEALLOCATE( idesc_ip )
   DEALLOCATE( rank_ip )
   !
   CALL stop_clock('protxpsik')
@@ -387,35 +389,6 @@ SUBROUTINE protate_xpsi_k( h_psi, s_psi, overlap, &
   !
 CONTAINS
   !
-  SUBROUTINE desc_init( nsiz, desc, desc_ip )
-     !
-     INTEGER, INTENT(IN)  :: nsiz
-     TYPE(la_descriptor), INTENT(OUT) :: desc
-     TYPE(la_descriptor), INTENT(OUT) :: desc_ip(:,:)
-     INTEGER :: i, j, rank
-     INTEGER :: coor_ip( 2 )
-     !
-     CALL descla_init( desc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_cntx, ortho_comm_id )
-     !
-     nx = desc%nrcx
-     !
-     DO j = 0, desc%npc - 1
-        DO i = 0, desc%npr - 1
-           coor_ip( 1 ) = i
-           coor_ip( 2 ) = j
-           CALL descla_init( desc_ip(i+1,j+1), desc%n, desc%nx, &
-                             np_ortho, coor_ip, ortho_comm, ortho_cntx, 1 )
-           CALL GRID2D_RANK( 'R', desc%npr, desc%npc, i, j, rank )
-           rank_ip( i+1, j+1 ) = rank * leg_ortho
-        END DO
-     END DO
-     !
-     la_proc = .FALSE.
-     IF( desc%active_node > 0 ) la_proc = .TRUE.
-     !
-     RETURN
-  END SUBROUTINE desc_init
-  !
   !
   SUBROUTINE compute_distmat( dm, v, w )
      !
@@ -432,68 +405,69 @@ CONTAINS
      !
      work = ( 0.0_DP, 0.0_DP )
      !
-     DO ipc = 1, desc%npc !  loop on column procs 
+     DO ipc = 1, idesc(LAX_DESC_NPC) !  loop on column procs
         !
-        nc = desc_ip( 1, ipc )%nc
-        ic = desc_ip( 1, ipc )%ic
+        nc = idesc_ip( LAX_DESC_NC, 1, ipc )
+        ic = idesc_ip( LAX_DESC_IC, 1, ipc )
         !
         DO ipr = 1, ipc ! desc%npr ! ipc ! use symmetry for the loop on row procs
            !
-           nr = desc_ip( ipr, ipc )%nr
-           ir = desc_ip( ipr, ipc )%ir
+           nr = idesc_ip( LAX_DESC_NR, ipr, ipc )
+           ir = idesc_ip( LAX_DESC_IR, ipr, ipc )
            !
            !  rank of the processor for which this block (ipr,ipc) is destinated
            !
            root = rank_ip( ipr, ipc )
-
+           !
            ! use blas subs. on the matrix block
-
-           CALL ZGEMM( 'C', 'N', nr, nc, kdim, ( 1.D0, 0.D0 ),  v(1,ir), kdmx, w(1,ic), kdmx, ( 0.D0, 0.D0 ), work, nx )
-
+           !
+           CALL ZGEMM( 'C', 'N', nr, nc, kdim, ( 1.D0, 0.D0 ), &
+                     & v(1, ir), kdmx, w(1, ic), kdmx, ( 0.D0, 0.D0 ), work, nx )
+           !
            ! accumulate result on dm of root proc.
            CALL mp_root_sum( work, dm, root, ortho_parent_comm )
-
+           !
         END DO
         !
      END DO
-     if (ortho_parent_comm.ne.intra_bgrp_comm .and. nbgrp > 1) dm = dm/nbgrp
      !
-     CALL zsqmher( nstart, dm, nx, desc )
+     IF ( ortho_parent_comm /= intra_bgrp_comm .AND. nbgrp > 1 ) dm = dm / nbgrp
+     !
+     CALL laxlib_zsqmher( nstart, dm, nx, idesc )
      !
      DEALLOCATE( work )
      !
      RETURN
   END SUBROUTINE compute_distmat
-
-
+  !
   SUBROUTINE refresh_evc( )
      !
      INTEGER :: ipc, ipr
      INTEGER :: nr, nc, ir, ic, root
      COMPLEX(DP), ALLOCATABLE :: vtmp( :, : )
      COMPLEX(DP) :: beta
-
+     !
      ALLOCATE( vtmp( nx, nx ) )
      !
-     DO ipc = 1, desc%npc
+     DO ipc = 1, idesc(LAX_DESC_NPC)
         !
-        nc = desc_ip( 1, ipc )%nc
-        ic = desc_ip( 1, ipc )%ic
+        nc = idesc_ip( LAX_DESC_NC, 1, ipc )
+        ic = idesc_ip( LAX_DESC_IC, 1, ipc )
         !
         IF( ic <= nbnd ) THEN
            !
            nc = min( nc, nbnd - ic + 1 )
            !
            beta = ( 0.D0, 0.D0 )
-
-           DO ipr = 1, desc%npr
+           !
+           DO ipr = 1, idesc(LAX_DESC_NPR)
               !
-              nr = desc_ip( ipr, ipc )%nr
-              ir = desc_ip( ipr, ipc )%ir
+              nr = idesc_ip( LAX_DESC_NR, ipr, ipc )
+              ir = idesc_ip( LAX_DESC_IR, ipr, ipc )
               !
               root = rank_ip( ipr, ipc )
-
-              IF( ipr-1 == desc%myr .AND. ipc-1 == desc%myc .AND. la_proc ) THEN
+              !
+              IF( ipr-1 == idesc(LAX_DESC_MYR) .AND. ipc-1 == idesc(LAX_DESC_MYC) .AND. la_proc ) THEN
                  !
                  !  this proc sends his block
                  ! 
@@ -527,9 +501,8 @@ CONTAINS
                  !
               END IF
               ! 
-
               beta = ( 1.D0, 0.D0 )
-
+              !
            END DO
            !
         END IF
@@ -537,8 +510,7 @@ CONTAINS
      END DO
      !
      DEALLOCATE( vtmp )
-
-     RETURN
+     !
   END SUBROUTINE refresh_evc
-
+  !
 END SUBROUTINE protate_xpsi_k

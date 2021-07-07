@@ -16,9 +16,10 @@
   etf_mem     = 1
   lpolar      = .false.
   vme         = .true.
+  use_ws      = .false.
+  lphase      = .true.
 
   nbndsub     =  8
-  nbndskip    =  0
 
   wannierize  = .true.
   num_iter    = 1500
@@ -38,14 +39,13 @@
   wdata(10) = 'dis_mix_ratio     = 1.0'
   wdata(11) = 'conv_tol = 1E-9'
   wdata(12) = 'conv_window = 4'
-  wdata(13) = 'write_bvec  = .true.'
 
   elecselfen  = .false.
   phonselfen  = .false.
   a2f         = .false.
 
   fsthick     = 2.0 ! eV 
-  eptemp      = 1 ! K 
+  temps       = 1 ! K 
   degaussw    = 0.1 ! eV
 
   dvscf_dir   = './save/'
@@ -62,7 +62,3 @@
   nq2         = 2
   nq3         = 2
  /
-      3 cartesian
- 0.000000000   0.000000000   0.000000000
- 0.500000000  -0.500000000   0.500000000
- 0.000000000  -1.000000000   0.000000000

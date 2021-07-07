@@ -49,7 +49,7 @@ SUBROUTINE rotate_xpsi &
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nbnd)
   !
-  CALL start_clock( 'wfcrot' )
+  CALL start_clock( 'xwfcrot' )
   !
   IF( use_para_diag ) THEN
      !
@@ -85,6 +85,6 @@ SUBROUTINE rotate_xpsi &
      !
   END IF
   !
-  CALL stop_clock( 'wfcrot' )
+  CALL stop_clock( 'xwfcrot' )
   !
 END SUBROUTINE rotate_xpsi

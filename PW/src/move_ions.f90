@@ -6,28 +6,32 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE move_ions ( idone, ions_status )
+SUBROUTINE move_ions( idone, ions_status )
   !----------------------------------------------------------------------------
+  !! Perform a ionic step, according to the requested scheme:
   !
-  ! ... Perform an ionic step, according to the requested scheme:
-  ! ...    lbfgs               bfgs minimizations
-  ! ...    lmd                 molecular dynamics ( all kinds )
-  ! ... Additional variables affecting the calculation:
-  ! ...    lmovecell           Variable-cell calculation
-  ! ...    calc                Type of MD
-  ! ...    lconstrain          constrained MD
-  ! ..  "idone" is the counter on ionic moves, "nstep" their total number 
-  ! ... "istep" contains the number of all steps including previous runs
-  ! ... Coefficients for potential and wavefunctions extrapolation are
-  ! ... no longer computed here but in update_pot
+  !! * lbfgs: bfgs minimizations
+  !! * lmd: molecular dynamics ( all kinds )
+  !
+  !! Additional variables affecting the calculation:
+  !
+  !! * lmovecell: Variable-cell calculation
+  !! * calc: type of MD
+  !! * lconstrain: constrained MD
+  !! * "idone" is the counter on ionic moves, "nstep" their total number 
+  !! * "istep" contains the number of all steps including previous runs.
+  !
+  !! Coefficients for potential and wavefunctions extrapolation are
+  !! no longer computed here but in update_pot.
   !
   USE constants,              ONLY : e2, eps6, ry_kbar
   USE io_global,              ONLY : stdout
   USE io_files,               ONLY : tmp_dir
   USE kinds,                  ONLY : DP
   USE cell_base,              ONLY : alat, at, bg, omega, cell_force, &
-                                     fix_volume, fix_area, ibrav, enforce_ibrav
-  USE cellmd,                 ONLY : omega_old, at_old, press, lmovecell, calc
+                                     fix_volume, fix_area, ibrav, press, &
+                                     enforce_ibrav
+  USE cellmd,                 ONLY : omega_old, at_old, lmovecell, calc
   USE ions_base,              ONLY : nat, ityp, zv, tau, if_pos
   USE symm_base,              ONLY : checkallsym
   USE ener,                   ONLY : etot, ef
@@ -56,6 +60,8 @@ SUBROUTINE move_ions ( idone, ions_status )
   INTEGER,  INTENT(INOUT):: ions_status
   !! ions_status: see run_pwscf
   !
+  ! ... local variables
+  !
   REAL(DP)              :: energy_error, gradient_error, cell_error, fcp_error
   LOGICAL               :: step_accepted, exst
   REAL(DP), ALLOCATABLE :: pos(:), grad(:)
@@ -78,7 +84,7 @@ SUBROUTINE move_ions ( idone, ions_status )
         WRITE(stdout, '(5x,"NEW FEATURE: constraints with variable cell")')
         WRITE(stdout, '(5x,"-------------------------------------------")')
         !
-     END IF
+     ENDIF
      !
      bfgs_minimization : &
      IF ( lbfgs ) THEN
@@ -101,7 +107,7 @@ SUBROUTINE move_ions ( idone, ions_status )
            etot = etot + press * omega
            CALL cell_force( fcell, - transpose(bg)/alat, sigma, omega, press )
            epsp1 = epsp / ry_kbar
-        END IF
+        ENDIF
         !
         relec = 0.0_DP
         felec = 0.0_DP
@@ -112,7 +118,7 @@ SUBROUTINE move_ions ( idone, ions_status )
            tot_charge_ = tot_charge
         END IF
         !
-       IF ( ANY( if_pos(:,:) == 1 ) .OR. lmovecell .OR. lfcp ) THEN
+        IF ( ANY( if_pos(:,:) == 1 ) .OR. lmovecell .OR. lfcp ) THEN
            !
            CALL bfgs( pos, h, relec, etot, grad, fcell, felec, fixion, tmp_dir, stdout, epse, &
                       epsf, epsp1, fcp_eps, energy_error, gradient_error, cell_error, fcp_error, &
@@ -128,23 +134,24 @@ SUBROUTINE move_ions ( idone, ions_status )
         !
         IF ( lmovecell ) THEN
            ! changes needed only if cell moves
-           if (fix_volume) call impose_deviatoric_strain(alat*at, h)
-           if (fix_area)   call impose_deviatoric_strain_2d(alat*at, h)
-           at = h /alat
-           IF(enforce_ibrav) CALL remake_cell(ibrav, alat, at(1,1),at(1,2),at(1,3))  
+           IF (fix_volume) CALL impose_deviatoric_strain( alat*at, h )
+           IF (fix_area)   CALL impose_deviatoric_strain_2d( alat*at, h )
+           at = h / alat
+           IF(enforce_ibrav) CALL remake_cell( ibrav, alat, at(1,1),at(1,2),at(1,3) )
            CALL recips( at(1,1),at(1,2),at(1,3), bg(1,1),bg(1,2),bg(1,3) )
-           CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
-        END IF
+           CALL volume( alat, at(1,1),at(1,2),at(1,3), omega )
+           !
+        ENDIF
         !
         IF ( lfcp ) THEN
            nelec = relec
            tot_charge = SUM(zv(ityp(1:nat))) - nelec
         END IF
         !
-        CALL cryst_to_cart( nat, pos, at, 1 )
-        tau    =   RESHAPE( pos, (/ 3 , nat /) )
-        CALL cryst_to_cart( nat, grad, bg, 1 )
-        force = - RESHAPE( grad, (/ 3, nat /) )
+        CALL cryst_to_cart( nat, pos,  at, 1 )
+        tau    =  RESHAPE( pos,  (/ 3, nat /) )
+        !
+        DEALLOCATE( pos, grad, fixion )
         !
         IF ( conv_ions ) THEN
            !
@@ -157,7 +164,7 @@ SUBROUTINE move_ions ( idone, ions_status )
                  !
                  ions_status = 2
                  !
-              ELSE IF ( lmovecell ) THEN
+              ELSEIF ( lmovecell ) THEN
                  !
                  ! ... Variable-cell relaxation converged with starting cell
                  ! ... Do final calculation with G-vectors for relaxed cell
@@ -170,9 +177,9 @@ SUBROUTINE move_ions ( idone, ions_status )
                  !
                  ions_status = 0
                  !
-              END IF
+              ENDIF
               !
-           ELSE IF ( ions_status == 2 ) THEN
+           ELSEIF ( ions_status == 2 ) THEN
               !
               ! ... check with nonzero magnetization succeeded, see above
               !
@@ -180,13 +187,13 @@ SUBROUTINE move_ions ( idone, ions_status )
                  ions_status = 1
               ELSE
                  ions_status = 0
-              END IF
+              ENDIF
               !
-           ELSE IF ( ions_status == 1 ) THEN
+           ELSEIF ( ions_status == 1 ) THEN
               !
               ions_status = 0
               !
-           END IF
+           ENDIF
            !
            IF ( ions_status < 2 ) THEN
               !
@@ -197,7 +204,12 @@ SUBROUTINE move_ions ( idone, ions_status )
                  !
               END IF
               !
-           END IF
+           ENDIF
+           !
+        ELSEIF ( idone == nstep ) THEN
+           !
+           CALL terminate_bfgs ( etot, epse, epsf, epsp, fcp_eps, &
+                                 lmovecell, lfcp, stdout, tmp_dir )
            !
         ELSE
            !
@@ -210,7 +222,7 @@ SUBROUTINE move_ions ( idone, ions_status )
                                 ( gradient_error / ( epsf * upscale ) ) )
               tr2  = MAX( ( starting_scf_threshold / upscale ), tr2 ) 
               !
-           END IF
+           ENDIF
            !
            IF ( tr2 > 1.D-10 ) THEN
               WRITE( stdout, &
@@ -218,9 +230,9 @@ SUBROUTINE move_ions ( idone, ions_status )
            ELSE
               WRITE( stdout, &
                      '(5X,"new conv_thr",T30,"= ",1PE18.1 ," Ry",/)' ) tr2
-           END IF
+           ENDIF
            !
-        END IF
+        ENDIF
         !
         CALL output_tau( lmovecell, conv_ions )
         !
@@ -228,9 +240,7 @@ SUBROUTINE move_ions ( idone, ions_status )
            CALL output_fcp( tot_charge_, conv_ions )
         END IF
         !
-        DEALLOCATE( pos, grad, fixion )
-        !
-     END IF bfgs_minimization
+     ENDIF bfgs_minimization
      !
      IF ( lmd ) THEN
         !
@@ -274,9 +284,9 @@ SUBROUTINE move_ions ( idone, ions_status )
               !
               IF ( lfcp ) CALL fcp_terminate()
               !
-           END IF
+           ENDIF
            !
-        ELSE IF ( calc(1:1) == 'l' ) THEN
+        ELSEIF ( calc(1:1) == 'l' ) THEN
            !
            ! ... for smart monte carlo method
            !
@@ -295,9 +305,9 @@ SUBROUTINE move_ions ( idone, ions_status )
               WRITE( UNIT = stdout, &
                    FMT = '(/,5X,"End of molecular dynamics calculation")' )
               conv_ions = .true.
-           END IF
+           ENDIF
            !
-        ELSE IF ( calc == 'vd' ) THEN
+        ELSEIF ( calc == 'vd' ) THEN
            !
            IF ( ANY( if_pos(:,:) == 1 ) ) THEN
               !
@@ -319,7 +329,7 @@ SUBROUTINE move_ions ( idone, ions_status )
               !
               conv_ions = .true.
               !
-           END IF
+           ENDIF
            !
         ELSE
            !
@@ -338,22 +348,24 @@ SUBROUTINE move_ions ( idone, ions_status )
               WRITE( UNIT = stdout, FMT = '(/,5X,"Maximum number of ", &
              &    "iterations reached, stopping")' )
               conv_ions = ( calc(2:2) == 'd' )
-           END IF
+           ENDIF
            !
-        END IF
+        ENDIF
         !
         IF ( conv_ions ) ions_status  = 0
         !
-     END IF
+     ENDIF
      !
      ! ... before leaving check that the new positions still transform
      ! ... according to the symmetry of the system.
+     ! ... FIXME: should be done in all cases, not just for vc-md
+     ! ... FIXME 2: why not impose symmetry instead of just checking it?
      !
      CALL checkallsym( nat, tau, ityp)
      !
-  END IF
+  ENDIF
   !
-  
+  !
   CALL mp_bcast( ions_status, ionode_id, intra_image_comm )
   !
   !
@@ -372,7 +384,7 @@ SUBROUTINE move_ions ( idone, ions_status )
      CALL mp_bcast( omega_old, ionode_id, intra_image_comm )
      CALL mp_bcast( bg,        ionode_id, intra_image_comm )
      !
-  END IF
+  ENDIF
   !
   IF ( lfcp ) THEN
      CALL mp_bcast(nelec,      ionode_id, intra_image_comm)

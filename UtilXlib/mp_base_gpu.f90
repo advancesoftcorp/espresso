@@ -234,7 +234,7 @@ SUBROUTINE reduce_base_real_gpu( dim, ps_d, comm, root )
 #if defined (__MPI)  
   !
   INTEGER            :: info
-#if defined (_WIN32)  
+#if defined (_WIN32)
   REAL(DP), ALLOCATABLE :: ps_d_sendbuf(:)
 #endif
   !
@@ -250,8 +250,8 @@ SUBROUTINE reduce_base_real_gpu( dim, ps_d, comm, root )
   CALL mp_synchronize( comm )
 #endif
   !
-#if defined (_WIN32)  
-  ALLOCATE( ps_d_sendbuf( dim ) )
+#if defined (_WIN32)
+  ALLOCATE( ps_d_sendbuf(dim) )
   ps_d_sendbuf = ps_d
   IF( root >= 0 ) THEN
      CALL MPI_REDUCE( ps_d_sendbuf, ps_d, dim, MPI_DOUBLE_PRECISION, MPI_SUM, root, comm, info )
@@ -421,7 +421,7 @@ SUBROUTINE reduce_base_integer_gpu( dim, ps_d, comm, root )
 #if defined (__MPI)  
   !
   INTEGER            :: info
-#if defined (_WIN32)  
+#if defined (_WIN32)
   INTEGER, ALLOCATABLE :: ps_d_sendbuf(:)
 #endif
   !
@@ -437,8 +437,8 @@ SUBROUTINE reduce_base_integer_gpu( dim, ps_d, comm, root )
   CALL mp_synchronize( comm )
 #endif
   !
-#if defined (_WIN32)  
-  ALLOCATE( ps_d_sendbuf( dim ) )
+#if defined (_WIN32)
+  ALLOCATE( ps_d_sendbuf(dim) )
   ps_d_sendbuf = ps_d
   IF( root >= 0 ) THEN
      CALL MPI_REDUCE( ps_d_sendbuf, ps_d, dim, MPI_INTEGER, MPI_SUM, root, comm, info )
@@ -1191,4 +1191,7 @@ SUBROUTINE parallel_max_real_gpu( dim, ps_d, comm, root )
   RETURN
   !
 END SUBROUTINE parallel_max_real_gpu
+#else
+MODULE isntused
+END module 
 #endif

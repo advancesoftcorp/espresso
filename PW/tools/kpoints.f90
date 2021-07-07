@@ -42,7 +42,7 @@ program special_points
            5x,'***************************************************',/ )
   !
   !.....default values
-  !
+  ! 
   celldm(1)=1.d0
   do i=1,3
      nshift(i)=0
@@ -50,7 +50,7 @@ program special_points
   !
   write(*,'(5x,a)', advance="no") 'bravais lattice  >> '
   read(*,*) ibrav
-  !
+  !   
   write(*,'(5x,a)',advance="no") 'filout [mesh_k]  >> '
   read(*,'(a)') filout
   if (filout.eq.' ') filout='mesh_k'
@@ -111,7 +111,7 @@ program special_points
   enddo
   !
   call recips(at(1,1),at(1,2),at(1,3),bg(1,1),bg(1,2),bg(1,3))
-  !
+  ! 
   write(2,'(2x,''crystal axis:  ''/3(2x,''('',3f7.4,'')  ''/) )') &
                  ((at(i,j), i=1,3), j=1,3)
   write(2,'(2x,''reciprocal axis:  ''/3(2x,''('',3f7.4,'')  ''/) )') &
@@ -122,7 +122,7 @@ program special_points
   !
   call set_sym_bl ( )
   !
-  write(2,'(//,1x,i3,2x,a19)') nrot,'symmetry operations'
+  write(2,'(//,1x,i3,2x,a19)') nrot,'symmetry operations' 
   do n6=0,(nrot-1)/6
      nf=min(nrot-6*n6,6)
      write(2,'(1x)')
@@ -132,7 +132,7 @@ program special_points
   end do
   !
   sflag=.false.
-  do i=1,3
+  do i=1,3 
      ! shifted grid
      if(nshift(i).eq.1) then
         nshift(i)=2
@@ -156,7 +156,7 @@ program special_points
            k(3,n)=n3
            kw(n)=1
            ieq(n)=0
-           call check(n,k,kw,ieq,s,nrot,nmax)
+           call check(n,k,kw,ieq,s,nrot,nmax) 
         enddo
      enddo
   enddo
@@ -220,10 +220,10 @@ subroutine check(n,k,kw,ieq,s,nrot,nmax)
      kr(3)=0
      call ruotaijk ( s(1,1,irot),k(1,n),k(2,n),k(3,n),kr(1),kr(2),kr(3) )
      do j=1,3
-        do while(kr(j).ge.nmax(j))
+        do while(kr(j).ge.nmax(j)) 
            kr(j)=kr(j)-nmax(j)
         enddo
-        do while(kr(j).le.-1)
+        do while(kr(j).le.-1) 
            kr(j)=kr(j)+nmax(j)
         enddo
      enddo
@@ -239,7 +239,7 @@ subroutine check(n,k,kw,ieq,s,nrot,nmax)
            enddo
            ieq(n)=naux
            kw(naux)=kw(naux)+1
-           flag=.false.
+           flag=.false. 
         endif
         np=np+1
      enddo

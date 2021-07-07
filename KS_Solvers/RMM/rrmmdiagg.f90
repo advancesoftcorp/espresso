@@ -16,7 +16,7 @@ SUBROUTINE rrmmdiagg( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
   ! ... Iterative diagonalization of a complex hermitian matrix
   ! ... through preconditioned RMM-DIIS algorithm.
   !
-  USE rmm_param,     ONLY : DP, eps14, eps16
+  USE util_param,    ONLY : DP
   USE mp,            ONLY : mp_sum, mp_bcast
   USE mp_bands_util, ONLY : gstart, inter_bgrp_comm, intra_bgrp_comm, me_bgrp, root_bgrp, &
                             root_bgrp_id, use_bgrp_in_hpsi
@@ -60,6 +60,8 @@ SUBROUTINE rrmmdiagg( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
   REAL(DP),    PARAMETER   :: SREF = 0.50_DP
   REAL(DP),    PARAMETER   :: SMIN = 0.05_DP
   REAL(DP),    PARAMETER   :: SMAX = 1.00_DP
+  REAL(DP),    PARAMETER   :: eps14 = 1.0E-14_DP
+  REAL(DP),    PARAMETER   :: eps16 = 1.0E-16_DP
   !
   EXTERNAL :: h_psi, s_psi
     ! h_psi(npwx,npw,nbnd,psi,hpsi)
@@ -245,6 +247,11 @@ SUBROUTINE rrmmdiagg( h_psi, s_psi, npwx, npw, nbnd, psi, hpsi, spsi, e, &
   !
   CALL stop_clock( 'rrmmdiagg' )
   !
+  !CALL print_clock( 'rrmmdiagg' )
+  !CALL print_clock( 'rrmmdiagg:init_hpsi' )
+  !CALL print_clock( 'rrmmdiagg:do_diis' )
+  !CALL print_clock( 'rrmmdiagg:line_search' )
+  !
   RETURN
   !
   !
@@ -258,6 +265,8 @@ CONTAINS
     INTEGER :: ibnd
     !
     REAL(DP), EXTERNAL :: DDOT
+    !
+    CALL start_clock( 'rrmmdiagg:init_hpsi' )
     !
     ! ... Operate the Hamiltonian : H |psi>
     !
@@ -333,6 +342,8 @@ CONTAINS
     !
     e(1:nbnd) = ew(1:nbnd)
     !
+    CALL stop_clock( 'rrmmdiagg:init_hpsi' )
+    !
     RETURN
     !
   END SUBROUTINE calc_hpsi
@@ -352,6 +363,8 @@ CONTAINS
     COMPLEX(DP), ALLOCATABLE :: vec2(:,:)
     REAL(DP),    ALLOCATABLE :: vr(:)
     REAL(DP),    ALLOCATABLE :: tr(:,:)
+    !
+    CALL start_clock( 'rrmmdiagg:do_diis' )
     !
     ALLOCATE( vec1( npwx ) )
     ALLOCATE( vec2( npwx, idiis ) )
@@ -585,6 +598,8 @@ CONTAINS
     IF ( idiis > 1 )   DEALLOCATE( vr )
     IF ( motconv > 0 ) DEALLOCATE( tr )
     !
+    CALL stop_clock( 'rrmmdiagg:do_diis' )
+    !
     RETURN
     !
   END SUBROUTINE do_diis
@@ -734,6 +749,8 @@ CONTAINS
     !
     REAL(DP), EXTERNAL    :: DDOT
     !
+    CALL start_clock( 'rrmmdiagg:line_search' )
+    !
     IF ( motconv > 0 ) THEN
        !
        ALLOCATE( ekin( motconv ) )
@@ -766,7 +783,7 @@ CONTAINS
        !
        IF ( gstart == 2 ) THEN
           !
-          psir = DBLE ( psi(ig,ibnd) )
+          psir = DBLE ( psi(1,ibnd) )
           psi2 = psir * psir
           ekin(jbnd) = ekin(jbnd) + g2kin(1) * psi2
           !
@@ -1055,6 +1072,8 @@ CONTAINS
        DEALLOCATE( coef )
        !
     END IF
+    !
+    CALL stop_clock( 'rrmmdiagg:line_search' )
     !
     RETURN
     !

@@ -11,7 +11,7 @@ MODULE io_rism_xml
   !----------------------------------------------------------------------------
   !
   USE err_rism,    ONLY : stop_by_err_rism, IERR_RISM_INCORRECT_DATA_TYPE
-  USE io_files,    ONLY : tmp_dir, prefix, create_directory
+  USE io_files,    ONLY : restart_dir, create_directory
   USE io_global,   ONLY : ionode, ionode_id
   USE kinds,       ONLY : DP
   USE rism,        ONLY : rism_type, ITYPE_1DRISM, ITYPE_3DRISM, ITYPE_LAUERISM
@@ -60,7 +60,7 @@ CONTAINS
     END IF
     !
     ! ... set file name
-    dirname = TRIM(tmp_dir) // TRIM(prefix) // '.save'
+    dirname = restart_dir()
     CALL create_directory(dirname)
     !
     ext = ' '
@@ -136,7 +136,7 @@ CONTAINS
     END IF
     !
     ! ... set file name
-    dirname = TRIM(tmp_dir) // TRIM(prefix) // '.save'
+    dirname = restart_dir()
     ext = ' '
     IF (PRESENT(extension)) THEN
       ext = '.' // TRIM(extension)
@@ -229,7 +229,7 @@ CONTAINS
     END IF
     !
     ! ... set file name
-    dirname = TRIM(tmp_dir) // TRIM(prefix) // '.save'
+    dirname = restart_dir()
     CALL create_directory(dirname)
     !
     ext = ' '
@@ -436,7 +436,7 @@ CONTAINS
     END IF
     !
     ! ... set file name
-    dirname = TRIM(tmp_dir) // TRIM(prefix) // '.save'
+    dirname = restart_dir()
     ext = ' '
     IF (PRESENT(extension)) THEN
       ext = '.' // TRIM(extension)

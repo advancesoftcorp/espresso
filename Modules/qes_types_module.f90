@@ -145,6 +145,18 @@ MODULE qes_types_module
     !
   END TYPE Hubbard_ns_type
   !
+  TYPE :: backL_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    INTEGER :: l_index
+    !
+    INTEGER :: backL
+    !
+  END TYPE backL_type
+  !
   TYPE :: smearing_type
     !
     CHARACTER(len=100) :: tagname
@@ -504,39 +516,18 @@ MODULE qes_types_module
     !
   END TYPE hybrid_type
   !
-  TYPE :: dftU_type
+  TYPE :: HubbardBack_type
     !
     CHARACTER(len=100) :: tagname
     LOGICAL  :: lwrite = .FALSE.
     LOGICAL  :: lread  = .FALSE.
     !
-    LOGICAL  :: lda_plus_u_kind_ispresent = .FALSE.
-    INTEGER :: lda_plus_u_kind
-    LOGICAL  :: Hubbard_U_ispresent = .FALSE.
-    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_U
-    INTEGER   :: ndim_Hubbard_U
-    LOGICAL  :: Hubbard_J0_ispresent = .FALSE.
-    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_J0
-    INTEGER   :: ndim_Hubbard_J0
-    LOGICAL  :: Hubbard_alpha_ispresent = .FALSE.
-    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_alpha
-    INTEGER   :: ndim_Hubbard_alpha
-    LOGICAL  :: Hubbard_beta_ispresent = .FALSE.
-    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_beta
-    INTEGER   :: ndim_Hubbard_beta
-    LOGICAL  :: Hubbard_J_ispresent = .FALSE.
-    TYPE(HubbardJ_type), DIMENSION(:), ALLOCATABLE :: Hubbard_J
-    INTEGER   :: ndim_Hubbard_J
-    LOGICAL  :: starting_ns_ispresent = .FALSE.
-    TYPE(starting_ns_type), DIMENSION(:), ALLOCATABLE :: starting_ns
-    INTEGER   :: ndim_starting_ns
-    LOGICAL  :: Hubbard_ns_ispresent = .FALSE.
-    TYPE(Hubbard_ns_type), DIMENSION(:), ALLOCATABLE :: Hubbard_ns
-    INTEGER   :: ndim_Hubbard_ns
-    LOGICAL  :: U_projection_type_ispresent = .FALSE.
-    CHARACTER(len=256) :: U_projection_type
+    CHARACTER(len=256) :: species
+    CHARACTER(len=256) :: background
+    TYPE(backL_type), DIMENSION(:), ALLOCATABLE :: l_number
+    INTEGER   :: ndim_l_number
     !
-  END TYPE dftU_type
+  END TYPE HubbardBack_type
   !
   TYPE :: vdW_type
     !
@@ -987,6 +978,7 @@ MODULE qes_types_module
     LOGICAL :: spinorbit
     REAL(DP) :: total
     REAL(DP) :: absolute
+    LOGICAL  :: do_magnetization_ispresent = .FALSE.
     LOGICAL :: do_magnetization
     !
   END TYPE magnetization_type
@@ -1072,6 +1064,8 @@ MODULE qes_types_module
     LOGICAL :: alat_ispresent = .FALSE.
     INTEGER :: bravais_index
     LOGICAL :: bravais_index_ispresent = .FALSE.
+    CHARACTER(len=256) :: alternative_axes
+    LOGICAL :: alternative_axes_ispresent = .FALSE.
     LOGICAL  :: atomic_positions_ispresent = .FALSE.
     TYPE(atomic_positions_type) :: atomic_positions
     LOGICAL  :: wyckoff_positions_ispresent = .FALSE.
@@ -1082,21 +1076,51 @@ MODULE qes_types_module
     !
   END TYPE atomic_structure_type
   !
-  TYPE :: dft_type
+  TYPE :: dftU_type
     !
     CHARACTER(len=100) :: tagname
     LOGICAL  :: lwrite = .FALSE.
     LOGICAL  :: lread  = .FALSE.
     !
-    CHARACTER(len=256) :: functional
-    LOGICAL  :: hybrid_ispresent = .FALSE.
-    TYPE(hybrid_type) :: hybrid
-    LOGICAL  :: dftU_ispresent = .FALSE.
-    TYPE(dftU_type) :: dftU
-    LOGICAL  :: vdW_ispresent = .FALSE.
-    TYPE(vdW_type) :: vdW
+    LOGICAL  :: lda_plus_u_kind_ispresent = .FALSE.
+    INTEGER :: lda_plus_u_kind
+    LOGICAL  :: Hubbard_U_ispresent = .FALSE.
+    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_U
+    INTEGER   :: ndim_Hubbard_U
+    LOGICAL  :: Hubbard_J0_ispresent = .FALSE.
+    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_J0
+    INTEGER   :: ndim_Hubbard_J0
+    LOGICAL  :: Hubbard_alpha_ispresent = .FALSE.
+    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_alpha
+    INTEGER   :: ndim_Hubbard_alpha
+    LOGICAL  :: Hubbard_beta_ispresent = .FALSE.
+    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_beta
+    INTEGER   :: ndim_Hubbard_beta
+    LOGICAL  :: Hubbard_J_ispresent = .FALSE.
+    TYPE(HubbardJ_type), DIMENSION(:), ALLOCATABLE :: Hubbard_J
+    INTEGER   :: ndim_Hubbard_J
+    LOGICAL  :: starting_ns_ispresent = .FALSE.
+    TYPE(starting_ns_type), DIMENSION(:), ALLOCATABLE :: starting_ns
+    INTEGER   :: ndim_starting_ns
+    LOGICAL  :: Hubbard_ns_ispresent = .FALSE.
+    TYPE(Hubbard_ns_type), DIMENSION(:), ALLOCATABLE :: Hubbard_ns
+    INTEGER   :: ndim_Hubbard_ns
+    LOGICAL  :: U_projection_type_ispresent = .FALSE.
+    CHARACTER(len=256) :: U_projection_type
+    LOGICAL  :: Hubbard_back_ispresent = .FALSE.
+    TYPE(HubbardBack_type), DIMENSION(:), ALLOCATABLE :: Hubbard_back
+    INTEGER   :: ndim_Hubbard_back
+    LOGICAL  :: Hubbard_U_back_ispresent = .FALSE.
+    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_U_back
+    INTEGER   :: ndim_Hubbard_U_back
+    LOGICAL  :: Hubbard_alpha_back_ispresent = .FALSE.
+    TYPE(HubbardCommon_type), DIMENSION(:), ALLOCATABLE :: Hubbard_alpha_back
+    INTEGER   :: ndim_Hubbard_alpha_back
+    LOGICAL  :: Hubbard_ns_nc_ispresent = .FALSE.
+    TYPE(Hubbard_ns_type), DIMENSION(:), ALLOCATABLE :: Hubbard_ns_nc
+    INTEGER   :: ndim_Hubbard_ns_nc
     !
-  END TYPE dft_type
+  END TYPE dftU_type
   !
   TYPE :: basis_set_type
     !
@@ -1277,44 +1301,6 @@ MODULE qes_types_module
     !
   END TYPE band_structure_type
   !
-  TYPE :: input_type
-    !
-    CHARACTER(len=100) :: tagname
-    LOGICAL  :: lwrite = .FALSE.
-    LOGICAL  :: lread  = .FALSE.
-    !
-    TYPE(control_variables_type) :: control_variables
-    TYPE(atomic_species_type) :: atomic_species
-    TYPE(atomic_structure_type) :: atomic_structure
-    TYPE(dft_type) :: dft
-    TYPE(spin_type) :: spin
-    TYPE(bands_type) :: bands
-    TYPE(basis_type) :: basis
-    TYPE(electron_control_type) :: electron_control
-    TYPE(k_points_IBZ_type) :: k_points_IBZ
-    TYPE(ion_control_type) :: ion_control
-    TYPE(cell_control_type) :: cell_control
-    LOGICAL  :: symmetry_flags_ispresent = .FALSE.
-    TYPE(symmetry_flags_type) :: symmetry_flags
-    LOGICAL  :: boundary_conditions_ispresent = .FALSE.
-    TYPE(boundary_conditions_type) :: boundary_conditions
-    LOGICAL  :: ekin_functional_ispresent = .FALSE.
-    TYPE(ekin_functional_type) :: ekin_functional
-    LOGICAL  :: external_atomic_forces_ispresent = .FALSE.
-    TYPE(matrix_type) :: external_atomic_forces
-    LOGICAL  :: free_positions_ispresent = .FALSE.
-    TYPE(integerMatrix_type) :: free_positions
-    LOGICAL  :: starting_atomic_velocities_ispresent = .FALSE.
-    TYPE(matrix_type) :: starting_atomic_velocities
-    LOGICAL  :: electric_field_ispresent = .FALSE.
-    TYPE(electric_field_type) :: electric_field
-    LOGICAL  :: atomic_constraints_ispresent = .FALSE.
-    TYPE(atomic_constraints_type) :: atomic_constraints
-    LOGICAL  :: spin_constraints_ispresent = .FALSE.
-    TYPE(spin_constraints_type) :: spin_constraints
-    !
-  END TYPE input_type
-  !
   TYPE :: step_type
     !
     CHARACTER(len=100) :: tagname
@@ -1334,6 +1320,22 @@ MODULE qes_types_module
     REAL(DP) :: FCP_tot_charge
     !
   END TYPE step_type
+  !
+  TYPE :: dft_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    CHARACTER(len=256) :: functional
+    LOGICAL  :: hybrid_ispresent = .FALSE.
+    TYPE(hybrid_type) :: hybrid
+    LOGICAL  :: dftU_ispresent = .FALSE.
+    TYPE(dftU_type) :: dftU
+    LOGICAL  :: vdW_ispresent = .FALSE.
+    TYPE(vdW_type) :: vdW
+    !
+  END TYPE dft_type
   !
   TYPE :: outputElectricField_type
     !
@@ -1405,6 +1407,44 @@ MODULE qes_types_module
     REAL(DP) :: left_buffer_v
     !
   END TYPE rismlaue_type
+  !
+  TYPE :: input_type
+    !
+    CHARACTER(len=100) :: tagname
+    LOGICAL  :: lwrite = .FALSE.
+    LOGICAL  :: lread  = .FALSE.
+    !
+    TYPE(control_variables_type) :: control_variables
+    TYPE(atomic_species_type) :: atomic_species
+    TYPE(atomic_structure_type) :: atomic_structure
+    TYPE(dft_type) :: dft
+    TYPE(spin_type) :: spin
+    TYPE(bands_type) :: bands
+    TYPE(basis_type) :: basis
+    TYPE(electron_control_type) :: electron_control
+    TYPE(k_points_IBZ_type) :: k_points_IBZ
+    TYPE(ion_control_type) :: ion_control
+    TYPE(cell_control_type) :: cell_control
+    LOGICAL  :: symmetry_flags_ispresent = .FALSE.
+    TYPE(symmetry_flags_type) :: symmetry_flags
+    LOGICAL  :: boundary_conditions_ispresent = .FALSE.
+    TYPE(boundary_conditions_type) :: boundary_conditions
+    LOGICAL  :: ekin_functional_ispresent = .FALSE.
+    TYPE(ekin_functional_type) :: ekin_functional
+    LOGICAL  :: external_atomic_forces_ispresent = .FALSE.
+    TYPE(matrix_type) :: external_atomic_forces
+    LOGICAL  :: free_positions_ispresent = .FALSE.
+    TYPE(integerMatrix_type) :: free_positions
+    LOGICAL  :: starting_atomic_velocities_ispresent = .FALSE.
+    TYPE(matrix_type) :: starting_atomic_velocities
+    LOGICAL  :: electric_field_ispresent = .FALSE.
+    TYPE(electric_field_type) :: electric_field
+    LOGICAL  :: atomic_constraints_ispresent = .FALSE.
+    TYPE(atomic_constraints_type) :: atomic_constraints
+    LOGICAL  :: spin_constraints_ispresent = .FALSE.
+    TYPE(spin_constraints_type) :: spin_constraints
+    !
+  END TYPE input_type
   !
   TYPE :: output_type
     !

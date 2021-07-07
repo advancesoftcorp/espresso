@@ -16,7 +16,7 @@ SUBROUTINE gram_schmidt_gamma( npwx, npw, nbnd, psi, hpsi, spsi, e, &
   ! ... Gram-Schmidt orthogonalization, for Gamma-only calculations.
   ! ... blocking algorithm is used.
   !
-  USE rmm_param,     ONLY : DP, eps16
+  USE util_param,    ONLY : DP
   USE mp,            ONLY : mp_sum, mp_max, mp_bcast
   USE mp_bands_util, ONLY : gstart, inter_bgrp_comm, intra_bgrp_comm, my_bgrp_id
   !
@@ -45,6 +45,10 @@ SUBROUTINE gram_schmidt_gamma( npwx, npw, nbnd, psi, hpsi, spsi, e, &
   INTEGER                  :: jbnd_start, jbnd_end
   COMPLEX(DP), ALLOCATABLE :: phi(:,:), hphi(:,:), sphi(:,:)
   INTEGER,     ALLOCATABLE :: owner_bgrp_id(:)
+  !
+  REAL(DP),    PARAMETER   :: eps16 = 1.0E-16_DP
+  !
+  CALL start_clock( 'gsorthg' )
   !
   eigen_ = eigen
   !
@@ -128,13 +132,19 @@ SUBROUTINE gram_schmidt_gamma( npwx, npw, nbnd, psi, hpsi, spsi, e, &
      !
      ! ... Orthogonalize diagonal block by standard Gram-Schmidt
      !
+     CALL start_clock( 'gsorthg:diag' )
+     !
      ibnd_start = ( iblock - 1 ) * nbsize + 1
      ibnd_end   = MIN( iblock * nbsize, nbnd )
      !
      IF ( owner_bgrp_id(iblock) == my_bgrp_id ) &
      CALL gram_schmidt_diag( ibnd_start, ibnd_end )
      !
+     CALL stop_clock( 'gsorthg:diag' )
+     !
      ! ... Bcast diagonal block
+     !
+     CALL start_clock( 'gsorthg:bcast' )
      !
      CALL mp_bcast( phi(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
      !
@@ -144,7 +154,11 @@ SUBROUTINE gram_schmidt_gamma( npwx, npw, nbnd, psi, hpsi, spsi, e, &
      IF ( uspp ) &
      CALL mp_bcast( sphi(:,ibnd_start:ibnd_end), owner_bgrp_id(iblock), inter_bgrp_comm )
      !
+     CALL stop_clock( 'gsorthg:bcast' )
+     !
      ! ... Project off-diagonal block outside of diagonal block
+     !
+     CALL start_clock( 'gsorthg:offdiag' )
      !
      jblock_start = MAX( iblock_start, iblock + 1 )
      jblock_end   = iblock_end
@@ -154,6 +168,8 @@ SUBROUTINE gram_schmidt_gamma( npwx, npw, nbnd, psi, hpsi, spsi, e, &
      !
      IF ( jblock_start <= jblock_end .AND. jbnd_start <= jbnd_end ) &
      CALL project_offdiag( ibnd_start, ibnd_end, jbnd_start, jbnd_end )
+     !
+     CALL stop_clock( 'gsorthg:offdiag' )
      !
   END DO
   !
@@ -167,18 +183,28 @@ SUBROUTINE gram_schmidt_gamma( npwx, npw, nbnd, psi, hpsi, spsi, e, &
   IF ( uspp ) &
   CALL DCOPY( npwx2 * nbnd, sphi(1,1), 1, spsi(1,1), 1 )
   !
-  ! ... Calculate energy eigenvalues
+  ! ... Calculate energy eigenvalues, and sort wave functions
   !
-  IF ( eigen_ ) CALL energyeigen( )
+  CALL start_clock( 'gsorthg:esort' )
   !
-  ! ... Sort wave functions
+  IF ( eigen_ )  CALL energyeigen( )
   !
   IF ( reorder ) CALL sort_vectors( )
+  !
+  CALL stop_clock( 'gsorthg:esort' )
   !
   DEALLOCATE( phi )
   IF ( eigen_ ) DEALLOCATE( hphi )
   IF ( uspp   ) DEALLOCATE( sphi )
   DEALLOCATE( owner_bgrp_id )
+  !
+  CALL stop_clock( 'gsorthg' )
+  !
+  !CALL print_clock( 'gsorthk' )
+  !CALL print_clock( 'gsorthk:diag' )
+  !CALL print_clock( 'gsorthk:bcast' )
+  !CALL print_clock( 'gsorthk:offdiag' )
+  !CALL print_clock( 'gsorthk:esort' )
   !
   RETURN
   !

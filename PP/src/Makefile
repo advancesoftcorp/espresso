@@ -13,6 +13,7 @@ add_shift_cc.o \
 add_shift_lc.o \
 add_shift_us.o \
 atomic_wfc_nc_proj.o \
+xctest_qe_libxc.o \
 chdens_module.o \
 chdens_bspline.o \
 chdens_bspline_sphere.o \
@@ -37,6 +38,7 @@ projections_mod.o \
 projwfc_box.o \
 punch_plot.o \
 punch_rism.o \
+read_proj.o \
 smallgk.o \
 solvdens.o \
 stm.o \
@@ -45,6 +47,8 @@ sum_band_kin.o \
 sym_band.o \
 vasp_read_chgcar_mod.o \
 vasp_xml_module.o \
+wannier_proj.o \
+wannier_enrg.o \
 work_function.o \
 write_p_avg.o \
 write_proj.o \
@@ -53,11 +57,11 @@ write_hamiltonians.o \
 xc_vdW_scale_mod.o   # added by Yang Jiao
 
 PWOBJS = ../../PW/src/libpw.a
-QEOBJS = ../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a \
+QEMODS = ../../Modules/libqemod.a ../../upflib/libupf.a ../../KS_Solvers/libks_solvers.a \
          ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a \
          ../../dft-d3/libdftd3qe.a
 
-MODULES = $(PWOBJS) $(QEOBJS)
+MODULES = $(PWOBJS) $(QEMODS)
 
 TLDEPS= pwlibs
 
@@ -65,7 +69,7 @@ all : tldeps open_grid.x average.x bands.x dos.x epsilon.x initial_state.x fs.x 
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       pawplot.x sumpdos.x pw2wannier90.x pw2critic.x pw2gw.x \
       wannier_ham.x wannier_plot.x molecularpdos.x \
-      pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x ppacf.x pprism.x
+      pw2bgw.x wfck2r.x fermi_velocity.x fermi_proj.x ppacf.x xctest_qe_libxc.x pprism.x
 
 
 libpp.a : $(PPOBJS) 
@@ -73,7 +77,7 @@ libpp.a : $(PPOBJS)
 	$(RANLIB) $@
 
 qexml.x: qexml.o qexml_example.o
-	$(LD) $(LDFLAGS) -o $@ qexml_example.o qexml.o $(QEOBJS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ qexml_example.o qexml.o $(QEMODS) $(LIBOBJS)
 
 open_grid.x : open_grid.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
@@ -225,6 +229,11 @@ fermi_proj.x : fermi_proj.o libpp.a $(MODULES) $(LIBOBJS)
 ppacf.x : ppacf.o libpp.a $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		ppacf.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
+
+xctest_qe_libxc.x : xctest_qe_libxc.o libpp.a $(MODULES) $(LIBOBJS)
+	$(LD) $(LD_LIBS) $(LDFLAGS) $(DFLAGS) -o $@ \
+		xctest_qe_libxc.o libpp.a $(MODULES) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PP/src/$@ . )
 
 pprism.x : postrism.o libpp.a $(MODULES) $(LIBOBJS)

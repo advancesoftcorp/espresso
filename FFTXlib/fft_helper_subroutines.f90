@@ -1,3 +1,11 @@
+!
+! Copyright (C) Quantum ESPRESSO Foundation
+!
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 MODULE fft_helper_subroutines
 
   IMPLICIT NONE
@@ -7,6 +15,27 @@ MODULE fft_helper_subroutines
     MODULE PROCEDURE tg_reduce_rho_1,tg_reduce_rho_2,tg_reduce_rho_3,tg_reduce_rho_4, &
 &                    tg_reduce_rho_5
   END INTERFACE
+
+  INTERFACE c2psi_gamma
+    MODULE PROCEDURE c2psi_gamma_cpu
+#ifdef __CUDA
+    MODULE PROCEDURE c2psi_gamma_gpu
+#endif
+  END INTERFACE
+  PRIVATE
+  PUBLIC :: fftx_threed2oned, fftx_oned2threed
+  PUBLIC :: tg_reduce_rho
+  PUBLIC :: tg_get_nnr, tg_get_recip_inc, fftx_ntgrp, fftx_tgpe, &
+       tg_get_group_nr3
+  ! Used only in CP
+  PUBLIC :: fftx_add_threed2oned_gamma, fftx_psi2c_gamma, c2psi_gamma, &
+       fftx_add_field, c2psi_gamma_tg
+#if defined (__CUDA)
+  PUBLIC :: fftx_psi2c_gamma_gpu
+#endif
+  PUBLIC :: fft_dist_info
+  ! Used only in CP+EXX
+  PUBLIC :: fftx_tgcomm
 
 CONTAINS
 
@@ -25,7 +54,7 @@ CONTAINS
      REAL(DP), ALLOCATABLE :: tg_rho_nc_sendbuf(:,:)
 #endif
 
-     INTEGER :: ierr, ioff, idx, ir3, ir, ipol, ioff_tg, nxyp, npol_
+     INTEGER :: ierr, ioff, ir3, ir, ipol, ioff_tg, nxyp, npol_
 !     write (*,*) ' enter tg_reduce_rho_1'
 
 #if defined(__MPI)
@@ -92,7 +121,7 @@ CONTAINS
      REAL(DP), ALLOCATABLE :: tmp_rhos_sendbuf(:)
 #endif
 
-     INTEGER :: ierr, ioff, idx, ir3, nxyp, ioff_tg
+     INTEGER :: ierr, ioff, ir3, nxyp, ioff_tg
 !     write (*,*) ' enter tg_reduce_rho_2'
 
      IF ( desc%nproc2 > 1 ) THEN
@@ -328,7 +357,7 @@ CONTAINS
   END SUBROUTINE
 
 
-  SUBROUTINE c2psi_gamma( desc, psi, c, ca )
+  SUBROUTINE c2psi_gamma_cpu( desc, psi, c, ca )
      !
      !  Copy wave-functions from 1D array (c_bgrp) to 3D array (psi) in Fourier space
      !
@@ -360,6 +389,48 @@ CONTAINS
         end do
      END IF
   END SUBROUTINE
+
+#ifdef __CUDA
+  SUBROUTINE c2psi_gamma_gpu( desc, psi, c, ca )
+     !
+     !  Copy wave-functions from 1D array (c_bgrp) to 3D array (psi) in Fourier space,
+     !  GPU implementation.
+     !
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     complex(DP), DEVICE, INTENT(OUT) :: psi(:)
+     complex(DP), DEVICE, INTENT(IN) :: c(:)
+     complex(DP), DEVICE, OPTIONAL, INTENT(IN) :: ca(:)
+     complex(DP), parameter :: ci=(0.0d0,1.0d0)
+     integer :: ig
+     integer, device, pointer :: nlm_d(:), nl_d(:)
+
+     nlm_d => desc%nlm_d
+     nl_d => desc%nl_d
+     !
+     psi = 0.0d0
+     !
+     !  nlm and nl array: hold conversion indices form 3D to
+     !     1-D vectors. Columns along the z-direction are stored
+     !     contigiously
+     !  c array: stores the Fourier expansion coefficients
+     !     Loop for all local g-vectors (ngw)
+     IF( PRESENT(ca) ) THEN
+        !$cuf kernel do (1)
+        do ig = 1, desc%ngw
+           psi( nlm_d( ig ) ) = CONJG( c( ig ) ) + ci * conjg( ca( ig ))
+           psi( nl_d( ig ) ) = c( ig ) + ci * ca( ig )
+        end do
+     ELSE
+        !$cuf kernel do (1)
+        do ig = 1, desc%ngw
+           psi( nlm_d( ig ) ) = CONJG( c( ig ) )
+           psi( nl_d( ig ) ) = c( ig )
+        end do
+     END IF
+  END SUBROUTINE
+#endif
 
   SUBROUTINE c2psi_k( desc, psi, c, igk, ngk)
      !
@@ -498,6 +569,34 @@ CONTAINS
      ELSE
         DO ig=1,desc%ngw
            vout1(ig) = vin(desc%nl(ig))
+        END DO
+     END IF
+  END SUBROUTINE
+
+  SUBROUTINE fftx_psi2c_gamma_gpu( desc, vin, vout1, vout2 )
+     USE fft_param
+     USE fft_types,      ONLY : fft_type_descriptor
+     TYPE(fft_type_descriptor), INTENT(in) :: desc
+     complex(DP), INTENT(OUT) :: vout1(:)
+     complex(DP), OPTIONAL, INTENT(OUT) :: vout2(:)
+     complex(DP), INTENT(IN) :: vin(:)
+     INTEGER,     POINTER     :: nl(:), nlm(:)
+#if defined (__CUDA)
+     attributes(DEVICE) :: vout1, vout2, vin, nl, nlm
+#endif
+     INTEGER :: ig
+     nl  => desc%nl_d
+     nlm => desc%nlm_d
+     IF( PRESENT( vout2 ) ) THEN
+!$cuf kernel do(1)
+        DO ig=1,desc%ngw
+           vout1(ig) = CMPLX( DBLE(vin(nl(ig))+vin(nlm(ig))),AIMAG(vin(nl(ig))-vin(nlm(ig))),kind=DP)
+           vout2(ig) = CMPLX(AIMAG(vin(nl(ig))+vin(nlm(ig))),-DBLE(vin(nl(ig))-vin(nlm(ig))),kind=DP)
+        END DO
+     ELSE
+!$cuf kernel do(1)
+        DO ig=1,desc%ngw
+           vout1(ig) = vin(nl(ig))
         END DO
      END IF
   END SUBROUTINE

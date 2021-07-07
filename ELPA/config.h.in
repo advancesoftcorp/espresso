@@ -1,0 +1,417 @@
+/* config.h.in.  Generated from configure.ac by autoheader.  */
+
+/* use blocking in trans_ev_band_to_full */
+#undef BAND_TO_FULL_BLOCKING
+
+/* build for K-Computer */
+#undef BUILD_KCOMPUTER
+
+/* build for SX-Aurora */
+#undef BUILD_SXAURORA
+
+/* "Current ELPA API version" */
+#undef CURRENT_API_VERSION
+
+/* "Current ELPA autotune version" */
+#undef CURRENT_AUTOTUNE_VERSION
+
+/* enable CUDA debugging */
+#undef DEBUG_CUDA
+
+/* Earliest supported ELPA API version */
+#undef EARLIEST_API_VERSION
+
+/* Earliest ELPA API version, which supports autotuning */
+#undef EARLIEST_AUTOTUNE_VERSION
+
+/* enable autotuning functionality */
+#undef ENABLE_AUTOTUNING
+
+/* enable C tests */
+#undef ENABLE_C_TESTS
+
+/* allow to link against the 64bit integer versions of math libraries */
+#undef HAVE_64BIT_INTEGER_MATH_SUPPORT
+
+/* allow to link against the 64bit integer versions of the MPI library */
+#undef HAVE_64BIT_INTEGER_MPI_SUPPORT
+
+/* Define to 1 to support Advanced Bit Manipulation */
+#undef HAVE_ABM
+
+/* Define to 1 to support Multi-Precision Add-Carry Instruction Extensions */
+#undef HAVE_ADX
+
+/* Define to 1 to support Advanced Encryption Standard New Instruction Set
+   (AES-NI) */
+#undef HAVE_AES
+
+/* Support Altivec instructions */
+#undef HAVE_ALTIVEC
+
+/* AVX is supported on this CPU */
+#undef HAVE_AVX
+
+/* AVX2 is supported on this CPU */
+#undef HAVE_AVX2
+
+/* AVX512 is supported on this CPU */
+#undef HAVE_AVX512
+
+/* Define to 1 to support AVX-512 Byte and Word Instructions */
+#undef HAVE_AVX512_BW
+
+/* Define to 1 to support AVX-512 Conflict Detection Instructions */
+#undef HAVE_AVX512_CD
+
+/* Define to 1 to support AVX-512 Doubleword and Quadword Instructions */
+#undef HAVE_AVX512_DQ
+
+/* Define to 1 to support AVX-512 Exponential & Reciprocal Instructions */
+#undef HAVE_AVX512_ER
+
+/* Define to 1 to support AVX-512 Foundation Extensions */
+#undef HAVE_AVX512_F
+
+/* Define to 1 to support AVX-512 Integer Fused Multiply Add Instructions */
+#undef HAVE_AVX512_IFMA
+
+/* Define to 1 to support AVX-512 Conflict Prefetch Instructions */
+#undef HAVE_AVX512_PF
+
+/* Define to 1 to support AVX-512 Vector Byte Manipulation Instructions */
+#undef HAVE_AVX512_VBMI
+
+/* Define to 1 to support AVX-512 Vector Length Extensions */
+#undef HAVE_AVX512_VL
+
+/* AVX512 for Xeon is supported on this CPU */
+#undef HAVE_AVX512_XEON
+
+/* AVX512 for Xeon-PHI is supported on this CPU */
+#undef HAVE_AVX512_XEON_PHI
+
+/* Define to 1 to support Bit Manipulation Instruction Set 1 */
+#undef HAVE_BMI1
+
+/* Define to 1 to support Bit Manipulation Instruction Set 2 */
+#undef HAVE_BMI2
+
+/* Enable more timing */
+#undef HAVE_DETAILED_TIMINGS
+
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
+
+/* Fortran can query environment variables */
+#undef HAVE_ENVIRONMENT_CHECKING
+
+/* Define to 1 to support Fused Multiply-Add Extensions 3 */
+#undef HAVE_FMA3
+
+/* Define to 1 to support Fused Multiply-Add Extensions 4 */
+#undef HAVE_FMA4
+
+/* automatically support clusters with different Intel CPUs */
+#undef HAVE_HETEROGENOUS_CLUSTER_SUPPORT
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* can use module iso_fortran_env */
+#undef HAVE_ISO_FORTRAN_ENV
+
+/* Use the PAPI library */
+#undef HAVE_LIBPAPI
+
+/* Use likwid */
+#undef HAVE_LIKWID
+
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* Define to 1 to support Multimedia Extensions */
+#undef HAVE_MMX
+
+/* can use the Fortran mpi module */
+#undef HAVE_MPI_MODULE
+
+/* Define to 1 to support Memory Protection Extensions */
+#undef HAVE_MPX
+
+/* NEON_ARCH64 intrinsics are supported on this CPU */
+#undef HAVE_NEON_ARCH64_SSE
+
+/* Define to 1 to support Prefetch Vector Data Into Caches WT1 */
+#undef HAVE_PREFETCHWT1
+
+/* Define to 1 to support Digital Random Number Generator */
+#undef HAVE_RDRND
+
+/* Redirect stdout and stderr of test programs per MPI tasks to a file */
+#undef HAVE_REDIRECT
+
+/* Define to 1 to support Secure Hash Algorithm Extension */
+#undef HAVE_SHA
+
+/* build for skewsyemmtric case */
+#undef HAVE_SKEWSYMMETRIC
+
+/* SPARC64 intrinsics are supported on this CPU */
+#undef HAVE_SPARC64_SSE
+
+/* Define to 1 to support Streaming SIMD Extensions */
+#undef HAVE_SSE
+
+/* Define to 1 to support Streaming SIMD Extensions */
+#undef HAVE_SSE2
+
+/* Define to 1 to support Streaming SIMD Extensions 3 */
+#undef HAVE_SSE3
+
+/* Define to 1 to support Streaming SIMD Extensions 4.1 */
+#undef HAVE_SSE4_1
+
+/* Define to 1 to support Streaming SIMD Extensions 4.2 */
+#undef HAVE_SSE4_2
+
+/* Define to 1 to support AMD Streaming SIMD Extensions 4a */
+#undef HAVE_SSE4a
+
+/* gcc intrinsics SSE is supported on this CPU */
+#undef HAVE_SSE_INTRINSICS
+
+/* Define to 1 to support Supplemental Streaming SIMD Extensions 3 */
+#undef HAVE_SSSE3
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Support VSX instructions */
+#undef HAVE_VSX
+
+/* Altivec VSX intrinsics are supported on this CPU */
+#undef HAVE_VSX_SSE
+
+/* Define to 1 to support eXtended Operations Extensions */
+#undef HAVE_XOP
+
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
+#undef LT_OBJDIR
+
+/* enable error argument in C-API to be optional */
+#undef OPTIONAL_C_ERROR_ARGUMENT
+
+/* Name of package */
+#undef PACKAGE
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* Work around a PGI bug with variable-length string results */
+#undef PGI_VARIABLE_STRING_BUG
+
+/* The size of `long int', as computed by sizeof. */
+#undef SIZEOF_LONG_INT
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* compile build config into the library object */
+#undef STORE_BUILD_CONFIG
+
+/* for performance reasons use assumed size Fortran arrays, even if not
+   debuggable */
+#undef USE_ASSUMED_SIZE
+
+/* use some Fortran 2008 features */
+#undef USE_FORTRAN2008
+
+/* Version number of package */
+#undef VERSION
+
+/* build also single-precision for complex calculation */
+#undef WANT_SINGLE_PRECISION_COMPLEX
+
+/* build also single-precision for real calculation */
+#undef WANT_SINGLE_PRECISION_REAL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_COMPLEX_AVX2_BLOCK1_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_COMPLEX_AVX2_BLOCK2_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_COMPLEX_AVX512_BLOCK1_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_COMPLEX_AVX512_BLOCK2_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_COMPLEX_AVX_BLOCK1_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_COMPLEX_AVX_BLOCK2_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_COMPLEX_BGP_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_COMPLEX_BGQ_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_COMPLEX_GENERIC_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_COMPLEX_GENERIC_SIMPLE_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_COMPLEX_SSE_ASSEMBLY_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_COMPLEX_SSE_BLOCK1_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_COMPLEX_SSE_BLOCK2_KERNEL
+
+/* use only one specific complex kernel (set at compile time) */
+#undef WITH_FIXED_COMPLEX_KERNEL
+
+/* use only one specific real kernel (set at compile time) */
+#undef WITH_FIXED_REAL_KERNEL
+
+/* enable GPU support */
+#undef WITH_GPU_VERSION
+
+/* use MPI */
+#undef WITH_MPI
+
+/* enable NVTX support */
+#undef WITH_NVTX
+
+/* use OpenMP threading */
+#undef WITH_OPENMP
+
+/* build and install python wrapper */
+#undef WITH_PYTHON
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_AVX2_BLOCK2_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_AVX2_BLOCK4_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_AVX2_BLOCK6_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_AVX512_BLOCK2_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_AVX512_BLOCK4_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_AVX512_BLOCK6_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_AVX_BLOCK2_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_AVX_BLOCK4_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_AVX_BLOCK6_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_BGP_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_BGQ_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_GENERIC_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_GENERIC_SIMPLE_BLOCK4_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_GENERIC_SIMPLE_BLOCK6_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_GENERIC_SIMPLE_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_NEON_ARCH64_BLOCK2_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_NEON_ARCH64_BLOCK4_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_NEON_ARCH64_BLOCK6_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_SPARC64_BLOCK2_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_SPARC64_BLOCK4_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_SPARC64_BLOCK6_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_SSE_ASSEMBLY_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_SSE_BLOCK2_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_SSE_BLOCK4_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_SSE_BLOCK6_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_VSX_BLOCK2_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_VSX_BLOCK4_KERNEL
+
+/* Build elpa_m4_kernel kernel */
+#undef WITH_REAL_VSX_BLOCK6_KERNEL
+
+/* build SCALAPACK test cases */
+#undef WITH_SCALAPACK_TESTS

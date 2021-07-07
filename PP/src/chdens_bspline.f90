@@ -171,7 +171,7 @@ SUBROUTINE plot_1d_bspline (nptx, m1, x0, e, rhor, alat, iflag, ounit, laue)
   enddo
 
   ! interpolate
-  call bspline_interpolation(nptx, rg, rhor, carica, laue) 
+  call bspline_interpolation(nptx, rg, rhor, carica, laue)
 
   ! we print the charge on output
   if (ionode) then
@@ -217,7 +217,7 @@ SUBROUTINE plot_2d_bspline (nx, ny, m1, m2, x0, e1, e2, rhor, alat, &
 
   ! interpolate
   nptx = nx*ny
-  call bspline_interpolation(nptx, rg(1,1,1), rhor, carica(1,1), laue) 
+  call bspline_interpolation(nptx, rg(1,1,1), rhor, carica(1,1), laue)
 
   ! and we print the charge on output
   if (ionode) then
@@ -308,7 +308,7 @@ SUBROUTINE plot_3d_bspline (alat, at, nat, tau, atm, ityp, rhor, &
 
   ! interpolate
   nptx = nx*ny*nz
-  call bspline_interpolation(nptx, rg(1,1,1,1), rhor, carica(1,1,1), laue) 
+  call bspline_interpolation(nptx, rg(1,1,1,1), rhor, carica(1,1,1), laue)
 
   rhomax = maxval(carica)
   if (ionode) then

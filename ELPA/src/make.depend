@@ -1,2 +1,0 @@
-elpa2.o : blockedQR.o
-elpa2.o : elpa1.o

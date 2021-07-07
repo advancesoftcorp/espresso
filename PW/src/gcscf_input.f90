@@ -58,7 +58,7 @@ SUBROUTINE iosys_gcscf()
   !
   ! ... modify rmm_conv
   !
-  IF (isolve == 2 .AND. (.NOT. rmm_conv)) THEN
+  IF (isolve == 4 .AND. (.NOT. rmm_conv)) THEN
      !
      rmm_conv = .TRUE.
      !

@@ -5,15 +5,17 @@ include ../../make.inc
 # location of needed modules
 MODFLAGS= $(BASEMOD_FLAGS) \
           $(MOD_FLAG)../src \
-          $(MOD_FLAG)../../dft-d3/
+          $(MOD_FLAG)../../dft-d3
 QEMODS = ../../Modules/libqemod.a ../../FFTXlib/libqefft.a \
-         ../../KS_Solvers/libks_solvers.a \
-         ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
+         ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a \
+         ../../UtilXlib/libutil.a ../../LAXlib/libqela.a \
+         ../../dft-d3/libdftd3qe.a
+# libqela required by xlf for obscure reasons
 PWOBJS = ../src/libpw.a
 
 TLDEPS= pwlibs
 
-all : tldeps ev.x kpoints.x pwi2xsf.x ibrav2cell.x cell2ibrav.x rism1d.x
+all : tldeps ev.x kpoints.x pwi2xsf.x ibrav2cell.x cell2ibrav.x scan_ibrav.x rism1d.x
 
 ibrav2cell.x : ibrav2cell.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
@@ -22,6 +24,10 @@ ibrav2cell.x : ibrav2cell.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 cell2ibrav.x : cell2ibrav.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		cell2ibrav.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
+	- ( cd ../../bin ; ln -fs ../PW/tools/$@ . )
+scan_ibrav.x : scan_ibrav.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		scan_ibrav.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../PW/tools/$@ . )
 
 ev.x : ev.o $(PWOBJS) $(QEMODS) $(LIBOBJS)

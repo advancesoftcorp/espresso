@@ -47,6 +47,8 @@ MODULE qes_read_module
     MODULE PROCEDURE qes_read_HubbardJ
     MODULE PROCEDURE qes_read_starting_ns
     MODULE PROCEDURE qes_read_Hubbard_ns
+    MODULE PROCEDURE qes_read_HubbardBack
+    MODULE PROCEDURE qes_read_backL
     MODULE PROCEDURE qes_read_vdW
     MODULE PROCEDURE qes_read_spin
     MODULE PROCEDURE qes_read_bands
@@ -116,7 +118,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(espresso_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -336,7 +338,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(general_info_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -433,7 +435,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(parallel_info_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -602,7 +604,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(input_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -983,7 +985,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(step_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -1161,7 +1163,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(output_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -1530,7 +1532,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(timing_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -1587,7 +1589,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(clock_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -1680,7 +1682,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(control_variables_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -2117,7 +2119,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(xml_format_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -2170,7 +2172,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(creator_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -2223,7 +2225,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(created_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -2276,7 +2278,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(atomic_species_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -2340,7 +2342,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(species_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -2514,7 +2516,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(atomic_structure_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -2548,6 +2550,13 @@ MODULE qes_read_module
       obj%bravais_index_ispresent = .TRUE.
     ELSE
       obj%bravais_index_ispresent = .FALSE.
+    END IF
+    !
+    IF (hasAttribute(xml_node, "alternative_axes")) THEN
+      CALL extractDataAttribute(xml_node, "alternative_axes", obj%alternative_axes)
+      obj%alternative_axes_ispresent = .TRUE.
+    ELSE
+      obj%alternative_axes_ispresent = .FALSE.
     END IF
     !
 
@@ -2642,7 +2651,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(atomic_positions_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -2686,7 +2695,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(atom_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -2740,7 +2749,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(wyckoff_positions_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -2804,7 +2813,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(cell_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -2901,7 +2910,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(dft_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -3010,7 +3019,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(hybrid_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -3251,7 +3260,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(qpoint_grid_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -3317,7 +3326,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(dftU_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -3498,6 +3507,70 @@ MODULE qes_read_module
        obj%U_projection_type_ispresent = .FALSE.
     END IF
     !
+    tmp_node_list => getElementsByTagname(xml_node, "Hubbard_back")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%Hubbard_back_ispresent = .TRUE.
+    ELSE
+      obj%Hubbard_back_ispresent = .FALSE.
+    END IF
+    obj%ndim_Hubbard_back = tmp_node_list_size
+    ALLOCATE(obj%Hubbard_back(tmp_node_list_size))
+    DO index=1,tmp_node_list_size
+        tmp_node => item( tmp_node_list, index-1 )
+        CALL qes_read_HubbardBack(tmp_node, obj%Hubbard_back(index), ierr )
+    END DO
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "Hubbard_U_back")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%Hubbard_U_back_ispresent = .TRUE.
+    ELSE
+      obj%Hubbard_U_back_ispresent = .FALSE.
+    END IF
+    obj%ndim_Hubbard_U_back = tmp_node_list_size
+    ALLOCATE(obj%Hubbard_U_back(tmp_node_list_size))
+    DO index=1,tmp_node_list_size
+        tmp_node => item( tmp_node_list, index-1 )
+        CALL qes_read_HubbardCommon(tmp_node, obj%Hubbard_U_back(index), ierr )
+    END DO
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "Hubbard_alpha_back")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%Hubbard_alpha_back_ispresent = .TRUE.
+    ELSE
+      obj%Hubbard_alpha_back_ispresent = .FALSE.
+    END IF
+    obj%ndim_Hubbard_alpha_back = tmp_node_list_size
+    ALLOCATE(obj%Hubbard_alpha_back(tmp_node_list_size))
+    DO index=1,tmp_node_list_size
+        tmp_node => item( tmp_node_list, index-1 )
+        CALL qes_read_HubbardCommon(tmp_node, obj%Hubbard_alpha_back(index), ierr )
+    END DO
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "Hubbard_ns_nc")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    !
+    IF (tmp_node_list_size>0) THEN
+      obj%Hubbard_ns_nc_ispresent = .TRUE.
+    ELSE
+      obj%Hubbard_ns_nc_ispresent = .FALSE.
+    END IF
+    obj%ndim_Hubbard_ns_nc = tmp_node_list_size
+    ALLOCATE(obj%Hubbard_ns_nc(tmp_node_list_size))
+    DO index=1,tmp_node_list_size
+        tmp_node => item( tmp_node_list, index-1 )
+        CALL qes_read_Hubbard_ns(tmp_node, obj%Hubbard_ns_nc(index), ierr )
+    END DO
+    !
     !
     obj%lwrite = .TRUE.
     !
@@ -3510,7 +3583,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(HubbardCommon_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -3557,7 +3630,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(HubbardJ_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -3610,7 +3683,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(starting_ns_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -3683,7 +3756,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(Hubbard_ns_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -3780,13 +3853,134 @@ MODULE qes_read_module
   END SUBROUTINE qes_read_Hubbard_ns
   !
   !
+  SUBROUTINE qes_read_HubbardBack(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(HubbardBack_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    !
+
+    IF (hasAttribute(xml_node, "species")) THEN
+      CALL extractDataAttribute(xml_node, "species", obj%species)
+    ELSE
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: HubbardBackType",&
+                        "required attribute species not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: HubbardBackType",&
+                      "required attribute species not found", 10 )
+      END IF
+    END IF
+    !
+
+
+
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "background")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size /= 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:HubbardBackType","background: wrong number of occurrences")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:HubbardBackType","background: wrong number of occurrences",10)
+        END IF
+    END IF
+    !
+    tmp_node => item(tmp_node_list, 0)
+    IF (ASSOCIATED(tmp_node))&
+       CALL extractDataContent(tmp_node, obj%background, IOSTAT = iostat_ )
+    IF ( iostat_ /= 0 ) THEN
+       IF ( PRESENT (ierr ) ) THEN 
+          CALL infomsg("qes_read:HubbardBackType","error reading background")
+          ierr = ierr + 1
+       ELSE 
+          CALL errore ("qes_read:HubbardBackType","error reading background",10)
+       END IF
+    END IF
+    !
+    tmp_node_list => getElementsByTagname(xml_node, "l_number")
+    tmp_node_list_size = getLength(tmp_node_list)
+    !
+    IF (tmp_node_list_size < 1) THEN
+        IF (PRESENT(ierr) ) THEN 
+           CALL infomsg("qes_read:HubbardBackType","l_number: not enough elements")
+           ierr = ierr + 1 
+        ELSE 
+           CALL errore("qes_read:HubbardBackType","l_number: not enough elements",10)
+        END IF
+    END IF
+    !
+    obj%ndim_l_number = tmp_node_list_size
+    ALLOCATE(obj%l_number(tmp_node_list_size))
+    DO index=1,tmp_node_list_size
+        tmp_node => item( tmp_node_list, index-1 )
+        CALL qes_read_backL(tmp_node, obj%l_number(index), ierr )
+    END DO
+    !
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_HubbardBack
+  !
+  !
+  SUBROUTINE qes_read_backL(xml_node, obj, ierr )
+    !
+    IMPLICIT NONE
+    !
+    TYPE(Node), INTENT(IN), POINTER                 :: xml_node
+    TYPE(backL_type), INTENT(OUT) :: obj
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
+    !
+    TYPE(Node), POINTER :: tmp_node
+    TYPE(NodeList), POINTER :: tmp_node_list
+    INTEGER :: tmp_node_list_size, index, iostat_
+    !
+    obj%tagname = getTagName(xml_node)
+    !
+
+    IF (hasAttribute(xml_node, "l_index")) THEN
+      CALL extractDataAttribute(xml_node, "l_index", obj%l_index)
+    ELSE
+      IF ( PRESENT(ierr) ) THEN
+         CALL infomsg ( "qes_read: backLType",&
+                        "required attribute l_index not found" )
+         ierr = ierr + 1
+      ELSE
+         CALL errore ("qes_read: backLType",&
+                      "required attribute l_index not found", 10 )
+      END IF
+    END IF
+    !
+
+
+
+    !
+    !
+    CALL extractDataContent(xml_node, obj%backL )
+    !
+    obj%lwrite = .TRUE.
+    !
+  END SUBROUTINE qes_read_backL
+  !
+  !
   SUBROUTINE qes_read_vdW(xml_node, obj, ierr )
     !
     IMPLICIT NONE
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(vdW_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -4163,7 +4357,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(spin_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -4260,7 +4454,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(bands_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -4429,7 +4623,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(smearing_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -4469,7 +4663,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(occupations_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -4503,7 +4697,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(basis_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -4668,7 +4862,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(basis_set_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -4921,7 +5115,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(basisSetItem_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -4987,7 +5181,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(reciprocal_lattice_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -5084,7 +5278,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(electron_control_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -5573,7 +5767,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(k_points_IBZ_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -5662,7 +5856,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(monkhorst_pack_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -5767,7 +5961,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(k_point_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -5808,7 +6002,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(ion_control_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -5981,7 +6175,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(bfgs_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -6178,7 +6372,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(md_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -6395,7 +6589,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(cell_control_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -6628,7 +6822,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(symmetry_flags_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -6797,7 +6991,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(boundary_conditions_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -6869,7 +7063,7 @@ MODULE qes_read_module
     IF (tmp_node_list_size>0) THEN
       obj%fcp_ispresent = .TRUE.
       tmp_node => item(tmp_node_list, 0)
-      CALL extractDataContent(tmp_node, obj%fcp, IOSTAT = iostat_)
+      CALL extractDataContent(tmp_node, obj%fcp , IOSTAT = iostat_)
       IF ( iostat_ /= 0 ) THEN
          IF ( PRESENT (ierr ) ) THEN 
             CALL infomsg("qes_read:boundary_conditionsType","error reading fcp")
@@ -6922,7 +7116,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(esm_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -7043,7 +7237,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(ekin_functional_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -7140,7 +7334,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(spin_constraints_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -7241,7 +7435,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(electric_field_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -7534,7 +7728,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(gate_settings_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -7751,7 +7945,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(atomic_constraints_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -7843,7 +8037,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(atomic_constraint_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -7940,7 +8134,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(inputOccupations_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -8000,7 +8194,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(outputElectricField_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -8105,7 +8299,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(BerryPhaseOutput_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -8200,7 +8394,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(dipoleOutput_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -8345,7 +8539,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(finiteFieldOut_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -8418,7 +8612,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(polarization_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -8507,7 +8701,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(ionicPolarization_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -8588,7 +8782,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(electronicPolarization_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -8673,7 +8867,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(phase_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -8721,7 +8915,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(gateInfo_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -8842,7 +9036,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(convergence_info_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -8903,7 +9097,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(scf_conv_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -9000,7 +9194,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(opt_conv_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -9097,7 +9291,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(algorithmic_info_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -9222,7 +9416,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(symmetries_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -9346,7 +9540,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(symmetry_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -9451,7 +9645,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(equivalent_atoms_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -9498,7 +9692,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(info_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -9546,7 +9740,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(outputPBC_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -9595,7 +9789,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(magnetization_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -9731,25 +9925,29 @@ MODULE qes_read_module
     tmp_node_list => getElementsByTagname(xml_node, "do_magnetization")
     tmp_node_list_size = getLength(tmp_node_list)
     !
-    IF (tmp_node_list_size /= 1) THEN
+    IF (tmp_node_list_size > 1) THEN
         IF (PRESENT(ierr) ) THEN 
-           CALL infomsg("qes_read:magnetizationType","do_magnetization: wrong number of occurrences")
+           CALL infomsg("qes_read:magnetizationType","do_magnetization: too many occurrences")
            ierr = ierr + 1 
         ELSE 
-           CALL errore("qes_read:magnetizationType","do_magnetization: wrong number of occurrences",10)
+           CALL errore("qes_read:magnetizationType","do_magnetization: too many occurrences",10)
         END IF
     END IF
     !
-    tmp_node => item(tmp_node_list, 0)
-    IF (ASSOCIATED(tmp_node))&
-       CALL extractDataContent(tmp_node, obj%do_magnetization, IOSTAT = iostat_ )
-    IF ( iostat_ /= 0 ) THEN
-       IF ( PRESENT (ierr ) ) THEN 
-          CALL infomsg("qes_read:magnetizationType","error reading do_magnetization")
-          ierr = ierr + 1
-       ELSE 
-          CALL errore ("qes_read:magnetizationType","error reading do_magnetization",10)
-       END IF
+    IF (tmp_node_list_size>0) THEN
+      obj%do_magnetization_ispresent = .TRUE.
+      tmp_node => item(tmp_node_list, 0)
+      CALL extractDataContent(tmp_node, obj%do_magnetization , IOSTAT = iostat_)
+      IF ( iostat_ /= 0 ) THEN
+         IF ( PRESENT (ierr ) ) THEN 
+            CALL infomsg("qes_read:magnetizationType","error reading do_magnetization")
+            ierr = ierr + 1
+         ELSE 
+            CALL errore ("qes_read:magnetizationType","error reading do_magnetization",10)
+         END IF
+      END IF
+    ELSE
+       obj%do_magnetization_ispresent = .FALSE.
     END IF
     !
     !
@@ -9764,7 +9962,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(total_energy_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -10093,7 +10291,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(band_structure_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -10557,7 +10755,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(ks_energies_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -11258,7 +11456,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(closed_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -11311,7 +11509,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(vector_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -11345,7 +11543,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(integerVector_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -11379,7 +11577,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(matrix_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -11430,7 +11628,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(integerMatrix_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list
@@ -11481,7 +11679,7 @@ MODULE qes_read_module
     !
     TYPE(Node), INTENT(IN), POINTER                 :: xml_node
     TYPE(scalarQuantity_type), INTENT(OUT) :: obj
-    INTEGER, OPTIONAL, INTENT(OUT)                  :: ierr
+    INTEGER, OPTIONAL, INTENT(INOUT)                  :: ierr
     !
     TYPE(Node), POINTER :: tmp_node
     TYPE(NodeList), POINTER :: tmp_node_list

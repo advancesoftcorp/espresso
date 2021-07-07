@@ -55,7 +55,7 @@ SUBROUTINE extract_rism(filplot, lpunch)
   CHARACTER(LEN=256), INTENT(OUT) :: filplot
   LOGICAL,            INTENT(OUT) :: lpunch
   !
-  LOGICAL                      :: dummy
+  LOGICAL                      :: needwf
   INTEGER                      :: ios
   CHARACTER(LEN=256)           :: outdir
   CHARACTER(LEN=256), EXTERNAL :: trimcheck
@@ -100,7 +100,8 @@ SUBROUTINE extract_rism(filplot, lpunch)
   END IF
   !
   ! ... read data of pw.x
-  CALL read_xml_file(dummy)
+  needwf = .FALSE.
+  CALL read_file_new(needwf)
   !
   ! ... check condition
   IF (.NOT. lrism3d) THEN
