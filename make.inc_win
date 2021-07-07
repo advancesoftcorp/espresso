@@ -102,7 +102,7 @@ CPPFLAGS       = -P -traditional -Uvector $(DFLAGS) $(IFLAGS)
 # C flags must include DFLAGS and IFLAGS
 # F90 flags must include MODFLAGS, IFLAGS, and FDFLAGS with appropriate syntax
 
-CFLAGS         = -O3 $(DFLAGS) $(IFLAGS)
+CFLAGS         = -O3 -Drandom=rand -Dsrandom=srand $(DFLAGS) $(IFLAGS)
 F90FLAGS       = $(FFLAGS) -x f95-cpp-input -fopenmp $(FDFLAGS) $(CUDA_F90FLAGS) $(IFLAGS) $(MODFLAGS)
 
 # compiler flags with and without optimization for fortran-77

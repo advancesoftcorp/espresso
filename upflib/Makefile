@@ -57,10 +57,10 @@ tldeps :
 	( cd ../.. ; $(MAKE) $(TLDEPS) || exit 1 ) ; fi
 
 virtual_v2.x : virtual_v2.o $(QEMODS) 
-	$(LD) $(LDFLAGS) -o $@ virtual_v2.o $(QEMODS) $(LAPACK_LIBS) $(BLAS_LIBS)
+	$(LD) $(LDFLAGS) -o $@ virtual_v2.o $(QEMODS) $(LAPACK_LIBS) $(BLAS_LIBS) $(MPI_LIBS)
 
 upfconv.x : upfconv.o casino_pp.o $(QEMODS) 
-	$(LD) $(LDFLAGS) -o $@ upfconv.o casino_pp.o $(QEMODS) $(LAPACK_LIBS) $(BLAS_LIBS)
+	$(LD) $(LDFLAGS) -o $@ upfconv.o casino_pp.o $(QEMODS) $(LAPACK_LIBS) $(BLAS_LIBS) $(MPI_LIBS)
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *_tmp.f90 *.mod *.L
