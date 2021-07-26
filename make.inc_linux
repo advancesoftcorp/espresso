@@ -40,7 +40,7 @@ TOPDIR = $(dir $(abspath $(filter %make.inc,$(MAKEFILE_LIST))))
 # MANUAL_DFLAGS  = additional precompilation option(s), if desired
 #                  BEWARE: it does not work for IBM xlf! Manually edit FDFLAGS
 MANUAL_DFLAGS  =
-DFLAGS         = -D__DFTI -D__MPI -D_OPENMP -D__SCALAPACK -D__ELPA_2019 -D__ALT_IO_WFC
+DFLAGS         = -D__DFTI -D__MPI -D_OPENMP -D__SCALAPACK -D__ELPA_2015 -D__ALT_IO_WFC
 FDFLAGS        = $(DFLAGS) $(MANUAL_DFLAGS)
 
 # IFLAGS = how to locate directories with *.h or *.f90 file to be included
@@ -49,8 +49,9 @@ FDFLAGS        = $(DFLAGS) $(MANUAL_DFLAGS)
 # for libxc add -I/path/to/libxc/include/
 
 MKLROOT        = /opt/app/intel2019/mkl
+ELPAROOT       = $(TOPDIR)/ELPA2015
 IFLAGS         = -I$(TOPDIR)/include -I$(TOPDIR)/FoX/finclude -I../include/ -I$(MKLROOT)/include \
-                 -I$(TOPDIR)/ELPA/elpa -I$(TOPDIR)/ELPA/modules -I$(TOPDIR)/ELPA/src/helpers
+                 -I$(ELPAROOT)/elpa -I$(ELPAROOT)/modules -I$(ELPAROOT)/src/helpers
 
 # MOD_FLAG = flag used by f90 compiler to locate modules
 
@@ -145,7 +146,7 @@ BLAS_LIBS      = -Wl,--start-group \
 LAPACK_LIBS    = 
 LAPACK_LIBS_SWITCH = external
 
-SCALAPACK_LIBS = $(TOPDIR)/ELPA/lib/libelpa.a
+SCALAPACK_LIBS = $(ELPAROOT)/lib/libelpa.a
 
 # nothing needed here if the the internal copy of FFTW is compiled
 # (needs -D__FFTW in DFLAGS)
