@@ -29,6 +29,6 @@ SUBROUTINE stop_cp_run()
   !
   CALL mp_global_end()
   !
-  STOP 0
+  !STOP 0
   !
 END SUBROUTINE stop_cp_run
