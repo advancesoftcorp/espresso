@@ -28,7 +28,7 @@
 TOPDIR = $(dir $(abspath $(filter %make.inc,$(MAKEFILE_LIST))))
 # if it doesn't work, uncomment the following line (edit if needed):
 
-# TOPDIR = /data/group3/nisihara/compile/espresso
+# TOPDIR = /data2/group3/nisihara/espresso/q-e
 
 # DFLAGS  = precompilation options (possible arguments to -D and -U)
 #           used by the C compiler and preprocessor
@@ -40,7 +40,7 @@ TOPDIR = $(dir $(abspath $(filter %make.inc,$(MAKEFILE_LIST))))
 # MANUAL_DFLAGS  = additional precompilation option(s), if desired
 #                  BEWARE: it does not work for IBM xlf! Manually edit FDFLAGS
 MANUAL_DFLAGS  =
-DFLAGS         = -D__DFTI -D__MPI -D_OPENMP -D__SCALAPACK -D__ELPA_2015 -D__ALT_IO_WFC
+DFLAGS         = -D__DFTI -D__MPI -D__SCALAPACK -D__ELPA_2019 -D__ALT_IO_WFC
 FDFLAGS        = $(DFLAGS) $(MANUAL_DFLAGS)
 
 # IFLAGS = how to locate directories with *.h or *.f90 file to be included
@@ -48,8 +48,8 @@ FDFLAGS        = $(DFLAGS) $(MANUAL_DFLAGS)
 #          the latter contains .e.g. files needed by FFT libraries
 # for libxc add -I/path/to/libxc/include/
 
-MKLROOT        = /opt/app/intel2019/mkl
-ELPAROOT       = $(TOPDIR)/ELPA2015
+MKLROOT        = /opt/app/oneapi/mkl/2021.4.0
+ELPAROOT       = $(TOPDIR)/ELPA2019
 IFLAGS         = -I$(TOPDIR)/include -I$(TOPDIR)/FoX/finclude -I../include/ -I$(MKLROOT)/include \
                  -I$(ELPAROOT)/elpa -I$(ELPAROOT)/modules -I$(ELPAROOT)/src/helpers
 
@@ -77,9 +77,9 @@ BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
 # try to specify the directory containing "mpif.h" in IFLAGS
 # and to specify the location of MPI libraries in MPI_LIBS
 
-MPIF90         = mpiifort
+MPIF90         = mpif90
 F90            = ifort
-CC             = mpiicc
+CC             = mpicxx
 
 # CUDA Toolkit path
 CUDA_PATH=
@@ -122,7 +122,7 @@ FFLAGS_NOMAIN   = -nofor_main
 # for libxc, set LD_LIBS=-L/path/to/libxc/lib/ -lxcf90 -lxc
 # If libxc is older than v5.0.0 replace -lxcf90 with -lxcf03
 
-LD             = mpiifort
+LD             = mpif90
 LDFLAGS        = -static-intel -qopenmp
 LD_LIBS        = 
 
@@ -135,7 +135,7 @@ BLAS_LIBS      = -Wl,--start-group \
                  $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a \
                  $(MKLROOT)/lib/intel64/libmkl_intel_thread.a \
                  $(MKLROOT)/lib/intel64/libmkl_core.a \
-                 $(MKLROOT)/lib/intel64/libmkl_blacs_intelmpi_lp64.a \
+                 $(MKLROOT)/lib/intel64/libmkl_blacs_openmpi_lp64.a \
                  $(MKLROOT)/lib/intel64/libmkl_scalapack_lp64.a \
                  -Wl,--end-group
 
@@ -143,7 +143,7 @@ BLAS_LIBS      = -Wl,--start-group \
 # LAPACK_LIBS_SWITCH = internal
 # LAPACK_LIBS = $(TOPDIR)/LAPACK/liblapack.a
 
-LAPACK_LIBS    = 
+LAPACK_LIBS    =
 LAPACK_LIBS_SWITCH = external
 
 SCALAPACK_LIBS = $(ELPAROOT)/lib/libelpa.a
@@ -198,4 +198,4 @@ QELIBS         = $(BEEF_LIBS) $(LIBXC_LIBS) $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAP
 WGET = wget -O
 
 # Install directory - "make install" copies *.x executables there
-PREFIX = /data/group3/nisihara/espresso
+PREFIX = /data2/group3/nisihara/espresso
