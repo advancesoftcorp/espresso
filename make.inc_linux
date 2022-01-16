@@ -79,7 +79,7 @@ BASEMOD_FLAGS= $(MOD_FLAG)$(TOPDIR)/upflib \
 
 MPIF90         = mpif90
 F90            = ifort
-CC             = mpicxx
+CC             = mpicc
 
 # CUDA Toolkit path
 CUDA_PATH=
@@ -124,7 +124,7 @@ FFLAGS_NOMAIN   = -nofor_main
 
 LD             = mpif90
 LDFLAGS        = -static-intel -qopenmp
-LD_LIBS        = 
+LD_LIBS        =
 
 # External Libraries (if any) : blas, lapack, fft, MPI
 
@@ -151,21 +151,21 @@ SCALAPACK_LIBS = $(ELPAROOT)/lib/libelpa.a
 # nothing needed here if the the internal copy of FFTW is compiled
 # (needs -D__FFTW in DFLAGS)
 
-FFT_LIBS       = 
+FFT_LIBS       =
 
 # HDF5
-HDF5_LIBS = 
+HDF5_LIBS =
 FOX_LIB  = -L$(TOPDIR)/FoX/lib  -lFoX_dom -lFoX_sax -lFoX_wxml -lFoX_common\
-            -lFoX_utils -lFoX_fsys 
-FOX_FLAGS = 
+            -lFoX_utils -lFoX_fsys
+FOX_FLAGS =
 # For parallel execution, the correct path to MPI libraries must
 # be specified in MPI_LIBS (except for IBM if you use mpxlf)
 
-MPI_LIBS       = 
+MPI_LIBS       =
 
 # IBM-specific: MASS libraries, if available and if -D__MASS is defined in FDFLAGS
 
-MASS_LIBS      = 
+MASS_LIBS      =
 
 # library for bayesian error estimate functionals
 
@@ -174,7 +174,7 @@ BEEF_LIBS_SWITCH = internal
 
 # CUDA libraries
 CUDA_LIBS=
-CUDA_EXTLIBS = 
+CUDA_EXTLIBS =
 
 # ar command and flags - for most architectures: AR = ar, ARFLAGS = ruv
 
@@ -191,7 +191,7 @@ RANLIB         = ranlib
 FLIB_TARGETS   = all
 
 LIBOBJS        = $(TOPDIR)/clib/clib.a
-LIBXC_LIBS     = 
+LIBXC_LIBS     =
 QELIBS         = $(BEEF_LIBS) $(LIBXC_LIBS) $(CUDA_LIBS) $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(FOX_LIB) $(FFT_LIBS) $(BLAS_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(HDF5_LIBS) $(LD_LIBS)
 
 # wget or curl - useful to download from network
