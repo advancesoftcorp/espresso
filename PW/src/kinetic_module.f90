@@ -13,6 +13,7 @@ MODULE kinetic_module
   ! ... the module for Kinetic Energy Density
   !
   USE cell_base, ONLY : at, alat, omega
+  USE constants, ONLY : e2
   USE fft_base,  ONLY : dffts, dfftp
   USE kinds,     ONLY : DP
   USE io_files,  ONLY : tmp_dir, prefix
@@ -176,16 +177,16 @@ CONTAINS
       WRITE(iunkinetic, '(3E25.16)') alat * at(1, 3), alat * at(2, 3), alat * at(3, 3)
       !
       WRITE(iunkinetic, '("#Charge")')
-      CALL density_print(iunkinetic, dffts%nr1x, dffts%nr2x, dffts%nr3x, rho%of_r(:, 1))
+      CALL density_print(iunkinetic, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1.0_DP, rho%of_r(:, 1))
       !
       WRITE(iunkinetic, '("#Kinetic Energy Density (by Gradient)")')
-      CALL density_print(iunkinetic, dffts%nr1x, dffts%nr2x, dffts%nr3x, tauG)
+      CALL density_print(iunkinetic, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1.0_DP / e2, tauG)
       !
       WRITE(iunkinetic, '("#Kinetic Energy Density (by Laplacian)")')
-      CALL density_print(iunkinetic, dffts%nr1x, dffts%nr2x, dffts%nr3x, tauL)
+      CALL density_print(iunkinetic, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1.0_DP / e2, tauL)
       !
       WRITE(iunkinetic, '("#Kinetic Energy Derivative")')
-      CALL density_print(iunkinetic, dffts%nr1x, dffts%nr2x, dffts%nr3x, dtdr)
+      CALL density_print(iunkinetic, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1.0_DP / e2, dtdr)
       !
     END IF
     !
@@ -204,17 +205,17 @@ CONTAINS
 END MODULE kinetic_module
 !
 !----------------------------------------------------------------------------
-SUBROUTINE density_print(iun, nr1x, nr2x, nr3x, rhor)
+SUBROUTINE density_print(iun, nr1x, nr2x, nr3x, fac, rhor)
   !----------------------------------------------------------------------------
   !
-  USE constants, ONLY : e2
-  USE fft_base,  ONLY : dffts
-  USE kinds,     ONLY : DP
+  USE fft_base, ONLY : dffts
+  USE kinds,    ONLY : DP
   !
   IMPLICIT NONE
   !
   INTEGER,  INTENT(IN) :: iun
   INTEGER,  INTENT(IN) :: nr1x, nr2x, nr3x
+  REAL(DP), INTENT(IN) :: fac
   REAL(DP), INTENT(IN) :: rhor(nr1x, nr2x, nr3x)
   !
   INTEGER :: i1,  i2,  i3
@@ -228,7 +229,7 @@ SUBROUTINE density_print(iun, nr1x, nr2x, nr3x, rhor)
     !
     DO i2 = 1, nr2
       !
-      WRITE(iun,'(6E25.16)') (rhor(i1, i2, i3) / e2, i3 = 1, nr3)
+      WRITE(iun,'(6E25.16)') (fac * rhor(i1, i2, i3), i3 = 1, nr3)
       !
     END DO
     !
