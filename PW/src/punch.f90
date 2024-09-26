@@ -41,6 +41,7 @@ SUBROUTINE punch( what )
   USE xdm_module,           ONLY : write_xdmdat
   USE rism3d_facade,        ONLY : lrism3d, rism3d_write_to_restart
   USE solvmol,              ONLY : nsolV
+  USE kinetic_module,       ONLY : do_kinetic, kinetic_print
   !
   IMPLICIT NONE
   !
@@ -133,6 +134,10 @@ SUBROUTINE punch( what )
      ! ... if allocated, deallocate variables containing info on ionic steps 
      ! 
      CALL qexsd_reset_steps()
+     !
+     ! ... Kinetic Energy Density
+     !
+     IF ( lscf .AND. do_kinetic ) CALL kinetic_print()
      !
   ELSEIF ( TRIM(what) == 'config' .AND.  nks == 1 ) THEN
      !

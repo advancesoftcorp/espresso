@@ -136,6 +136,8 @@ irrek.o \
 iweights.o \
 intersite_V.o \
 init_nsg.o \
+kinetic_module.o \
+kinetic_sum_band.o \
 nsg_adj.o \
 start_k.o \
 kpoint_grid.o \
