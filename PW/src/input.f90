@@ -218,6 +218,8 @@ SUBROUTINE iosys()
 
   USE sannp_module,          ONLY : do_sannp, sannp_check
 
+  USE kinetic_module,        ONLY : do_kinetic
+
   USE vlocal,        ONLY : starting_charge_ => starting_charge
   !
   ! ... CONTROL namelist
@@ -230,7 +232,7 @@ SUBROUTINE iosys()
                                nberrycyc, efield_cart, lecrpa,                 &
                                lfcp, vdw_table_name, memory, max_seconds,      &
                                tqmmm, efield_phase, gate, trism, tsannp,       &
-                               max_xml_steps
+                               tkinetic, max_xml_steps
 
   !
   ! ... SYSTEM namelist
@@ -1695,6 +1697,10 @@ SUBROUTINE iosys()
   !
   do_sannp = tsannp
   IF ( do_sannp ) CALL sannp_check()
+  !
+  ! ... set variables for Kinetic Energy Density
+  !
+  do_kinetic = tkinetic
   !
   ! ... End of reading input parameters
   !

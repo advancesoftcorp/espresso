@@ -264,6 +264,8 @@ MODULE input_parameters
 
         LOGICAL :: tsannp = .FALSE.   ! punch data of SANNP. enabled if .true.
 
+        LOGICAL :: tkinetic = .FALSE. ! punch data of Kinetic Energy Density. enabled if .true.
+
         CHARACTER(len=256) :: vdw_table_name = ' '
 
         CHARACTER(len=10) :: point_label_type='SC'
@@ -287,8 +289,8 @@ MODULE input_parameters
           forc_conv_thr, pseudo_dir, disk_io, tefield, dipfield, lberry,  &
           gdir, nppstr, wf_collect, lelfield, nberrycyc, refg,            &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
-          lfcp, tqmmm, trism, tsannp, vdw_table_name, lorbm, memory,      &
-          point_label_type, input_xml_schema_file, gate
+          lfcp, tqmmm, trism, tsannp, tkinetic, vdw_table_name,           &
+          lorbm, memory, point_label_type, input_xml_schema_file, gate
 !
 !=----------------------------------------------------------------------------=!
 !  SYSTEM Namelist Input Parameters
