@@ -68,6 +68,12 @@ SUBROUTINE kinetic_sum_band(tauG, tauL, dtdr)
     !
   END IF
   !
+  CALL mp_sum(tauG, inter_pool_comm)
+  CALL mp_sum(tauG, inter_bgrp_comm)
+  !
+  CALL mp_sum(dtdr, inter_pool_comm)
+  CALL mp_sum(dtdr, inter_bgrp_comm)
+  !
   ! ... tauL = -psi Lap psi = |grad psi|^2 + (1/2)*Lap rho
   !
   aux = (0.0_DP, 0.0_DP)
@@ -111,15 +117,6 @@ SUBROUTINE kinetic_sum_band(tauG, tauL, dtdr)
     END IF
     !
   END DO
-  !
-  CALL mp_sum(tauG, inter_pool_comm)
-  CALL mp_sum(tauG, inter_bgrp_comm)
-  !
-  CALL mp_sum(tauL, inter_pool_comm)
-  CALL mp_sum(tauL, inter_bgrp_comm)
-  !
-  CALL mp_sum(dtdr, inter_pool_comm)
-  CALL mp_sum(dtdr, inter_bgrp_comm)
   !
   DEALLOCATE(kplusg)
   DEALLOCATE(aux)
