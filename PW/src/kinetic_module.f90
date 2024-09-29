@@ -109,7 +109,7 @@ CONTAINS
     IMPLICIT NONE
     !
     INTEGER  :: ir
-    INTEGER  :: nx1, nx2, nx3
+    INTEGER  :: nr1x, nr2x, nr3x
     INTEGER  :: nfft
     REAL(DP) :: fac
     REAL(DP) :: eneTauG
@@ -144,10 +144,10 @@ CONTAINS
     !
     ! ... allocate memory
     !
-    nx1  = dffts%nr1x
-    nx2  = dffts%nr2x
-    nx3  = dffts%nr3x
-    nfft = nx1 * nx2 * nx3
+    nr1x = dffts%nr1x
+    nr2x = dffts%nr2x
+    nr3x = dffts%nr3x
+    nfft = nr1x * nr2x * nr3x
     !
     ALLOCATE(tauG(dffts%nnr))
     ALLOCATE(tauL(dffts%nnr))
@@ -215,16 +215,16 @@ CONTAINS
       WRITE(iunkinetic, '(3E25.16)') alat * at(1, 3), alat * at(2, 3), alat * at(3, 3)
       !
       WRITE(iunkinetic, '("#Charge")')
-      CALL density_print(iunkinetic, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1.0_DP, rhor_g)
+      CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP, rhor_g)
       !
       WRITE(iunkinetic, '("#Kinetic Energy Density (by Gradient)")')
-      CALL density_print(iunkinetic, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1.0_DP / e2, tauG_g)
+      CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP / e2, tauG_g)
       !
       WRITE(iunkinetic, '("#Kinetic Energy Density (by Laplacian)")')
-      CALL density_print(iunkinetic, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1.0_DP / e2, tauL_g)
+      CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP / e2, tauL_g)
       !
       WRITE(iunkinetic, '("#Kinetic Energy Derivative")')
-      CALL density_print(iunkinetic, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1.0_DP / e2, dtdr_g)
+      CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP / e2, dtdr_g)
       !
     END IF
     !
