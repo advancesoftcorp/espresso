@@ -19,6 +19,7 @@ MODULE kinetic_module
   USE io_files,  ONLY : tmp_dir, prefix
   USE io_global, ONLY : ionode, stdout
   USE mp,        ONLY : mp_sum, mp_barrier
+  USE mp_bands,  ONLY : intra_bgrp_comm
   USE mp_images, ONLY : intra_image_comm
   USE scf,       ONLY : rho
   !
