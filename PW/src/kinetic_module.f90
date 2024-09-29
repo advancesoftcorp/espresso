@@ -157,6 +157,10 @@ CONTAINS
       !
     END DO
     !
+    CALL mp_sum(eneTauG, intra_bgrp_comm)
+    CALL mp_sum(eneTauL, intra_bgrp_comm)
+    CALL mp_sum(eneDtdr, intra_bgrp_comm)
+    !
     WRITE(stdout, '()')
     WRITE(stdout, '(5X,"Kinetic energy (by Gradient)  =",F17.8," Ry")') eneTauG
     WRITE(stdout, '(5X,"Kinetic energy (by Laplacian) =",F17.8," Ry")') eneTauL
