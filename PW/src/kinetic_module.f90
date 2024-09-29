@@ -12,16 +12,17 @@ MODULE kinetic_module
   !
   ! ... the module for Kinetic Energy Density
   !
-  USE cell_base, ONLY : at, alat, omega
-  USE constants, ONLY : e2
-  USE fft_base,  ONLY : dffts, dfftp
-  USE kinds,     ONLY : DP
-  USE io_files,  ONLY : tmp_dir, prefix
-  USE io_global, ONLY : ionode, stdout
-  USE mp,        ONLY : mp_sum, mp_barrier
-  USE mp_bands,  ONLY : intra_bgrp_comm
-  USE mp_images, ONLY : intra_image_comm
-  USE scf,       ONLY : rho
+  USE cell_base,   ONLY : at, alat, omega
+  USE constants,   ONLY : e2
+  USE fft_base,    ONLY : dffts, dfftp
+  USE kinds,       ONLY : DP
+  USE io_files,    ONLY : tmp_dir, prefix
+  USE io_global,   ONLY : ionode, stdout
+  USE mp,          ONLY : mp_sum, mp_barrier
+  USE mp_bands,    ONLY : intra_bgrp_comm
+  USE mp_images,   ONLY : intra_image_comm
+  USE scatter_mod, ONLY : gather_grid
+  USE scf,         ONLY : rho
   !
   IMPLICIT NONE
   SAVE
@@ -108,6 +109,8 @@ CONTAINS
     IMPLICIT NONE
     !
     INTEGER  :: ir
+    INTEGER  :: nx1, nx2, nx3
+    INTEGER  :: nfft
     REAL(DP) :: fac
     REAL(DP) :: eneTauG
     REAL(DP) :: eneTauL
@@ -116,6 +119,10 @@ CONTAINS
     REAL(DP), ALLOCATABLE :: tauG(:)
     REAL(DP), ALLOCATABLE :: tauL(:)
     REAL(DP), ALLOCATABLE :: dtdr(:)
+    REAL(DP), ALLOCATABLE :: rhor_g(:)
+    REAL(DP), ALLOCATABLE :: tauG_g(:)
+    REAL(DP), ALLOCATABLE :: tauL_g(:)
+    REAL(DP), ALLOCATABLE :: dtdr_g(:)
     !
     IF (.NOT. do_kinetic) THEN
       RETURN
@@ -128,7 +135,8 @@ CONTAINS
       !
     END IF
     !
-    IF (dfftp%nr1 /= dffts%nr1 .OR. dfftp%nr2 /= dffts%nr2 .OR. dfftp%nr3 /= dffts%nr3) THEN
+    IF (dfftp%nr1  /= dffts%nr1  .OR. dfftp%nr2  /= dffts%nr2  .OR. dfftp%nr3  /= dffts%nr3 .OR. \
+        dfftp%nr1x /= dffts%nr1x .OR. dfftp%nr2x /= dffts%nr2x .OR. dfftp%nr3x /= dffts%nr3x) THEN
       !
       CALL errore('kinetic_print', 'Kinetic Energy Density does not support dual FFT-mesh', 1)
       !
@@ -136,9 +144,18 @@ CONTAINS
     !
     ! ... allocate memory
     !
+    nx1  = dffts%nr1x
+    nx2  = dffts%nr2x
+    nx3  = dffts%nr3x
+    nfft = nx1 * nx2 * nx3
+    !
     ALLOCATE(tauG(dffts%nnr))
     ALLOCATE(tauL(dffts%nnr))
     ALLOCATE(dtdr(dffts%nnr))
+    ALLOCATE(rhor_g(nfft))
+    ALLOCATE(tauG_g(nfft))
+    ALLOCATE(tauL_g(nfft))
+    ALLOCATE(dtdr_g(nfft))
     !
     ! ... calculate Kinetic Energy Density
     !
@@ -167,6 +184,22 @@ CONTAINS
     WRITE(stdout, '(5X,"Kinetic energy (by Laplacian) =",F17.8," Ry")') eneTauL
     WRITE(stdout, '(5X,"Integral [ dT/drho * rho ]    =",F17.8," Ry")') eneDtdr
     !
+#if defined(__MPI)
+    rhor_g = 0.0_DP
+    tauG_g = 0.0_DP
+    tauL_g = 0.0_DP
+    dtdr_g = 0.0_DP
+    CALL gather_grid(dffts, rho%of_r(:, 1), rhor_g)
+    CALL gather_grid(dffts, tauG, tauG_g)
+    CALL gather_grid(dffts, tauL, tauL_g)
+    CALL gather_grid(dffts, dtdr, dtdr_g)
+#else
+    rhor_g = rho%of_r(:, 1)
+    tauG_g = tauG
+    tauL_g = tauL
+    dtdr_g = dtdr
+#endif
+    !
     ! ... print data, in Hartree unit
     !
     CALL kinetic_open()
@@ -182,16 +215,16 @@ CONTAINS
       WRITE(iunkinetic, '(3E25.16)') alat * at(1, 3), alat * at(2, 3), alat * at(3, 3)
       !
       WRITE(iunkinetic, '("#Charge")')
-      CALL density_print(iunkinetic, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1.0_DP, rho%of_r(:, 1))
+      CALL density_print(iunkinetic, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1.0_DP, rhor_g)
       !
       WRITE(iunkinetic, '("#Kinetic Energy Density (by Gradient)")')
-      CALL density_print(iunkinetic, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1.0_DP / e2, tauG)
+      CALL density_print(iunkinetic, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1.0_DP / e2, tauG_g)
       !
       WRITE(iunkinetic, '("#Kinetic Energy Density (by Laplacian)")')
-      CALL density_print(iunkinetic, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1.0_DP / e2, tauL)
+      CALL density_print(iunkinetic, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1.0_DP / e2, tauL_g)
       !
       WRITE(iunkinetic, '("#Kinetic Energy Derivative")')
-      CALL density_print(iunkinetic, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1.0_DP / e2, dtdr)
+      CALL density_print(iunkinetic, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1.0_DP / e2, dtdr_g)
       !
     END IF
     !
@@ -204,6 +237,10 @@ CONTAINS
     DEALLOCATE(tauG)
     DEALLOCATE(tauL)
     DEALLOCATE(dtdr)
+    DEALLOCATE(rhor_g)
+    DEALLOCATE(tauG_g)
+    DEALLOCATE(tauL_g)
+    DEALLOCATE(dtdr_g)
     !
   END SUBROUTINE kinetic_print
   !
