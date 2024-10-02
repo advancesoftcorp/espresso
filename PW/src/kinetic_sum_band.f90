@@ -44,7 +44,7 @@ SUBROUTINE kinetic_sum_band(tauG, tauL, dtdr)
   REAL(DP),    ALLOCATABLE :: kplusg(:)
   COMPLEX(DP), ALLOCATABLE :: aux(:)
   !
-  REAL(DP),    PARAMETER   :: rho_min = 1.0E-8_DP
+  REAL(DP),    PARAMETER   :: rho_min = 1.0E-16_DP
   !
   CALL divide(inter_bgrp_comm, nbnd, ibnd_start, ibnd_end)
   !
