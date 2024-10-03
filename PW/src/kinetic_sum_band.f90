@@ -74,7 +74,7 @@ SUBROUTINE kinetic_sum_band(tauG, tauL, dtdr)
   CALL mp_sum(dtdr, inter_pool_comm)
   CALL mp_sum(dtdr, inter_bgrp_comm)
   !
-  ! ... tauL = -psi Lap psi = |grad psi|^2 + (1/2)*Lap rho
+  ! ... tauL = -psi Lap psi = |grad psi|^2 - (1/2)*Lap rho
   !
   aux = (0.0_DP, 0.0_DP)
   !
@@ -98,7 +98,7 @@ SUBROUTINE kinetic_sum_band(tauG, tauL, dtdr)
   !
   CALL invfft('Rho', aux, dffts)
   !
-  tauL(:) = tauG(:) + DBLE(aux(:))
+  tauL(:) = tauG(:) - DBLE(aux(:))
   !
   ! ... dtdr = (-psi Lap psi + (ef-e)*|psi|^2) / rho
   !
