@@ -137,7 +137,7 @@ SUBROUTINE punch( what )
      !
      ! ... Kinetic Energy Density
      !
-     IF ( lscf .AND. do_kinetic ) CALL kinetic_print()
+     IF ( lscf .AND. do_kinetic ) CALL kinetic_print(.TRUE.)
      !
   ELSEIF ( TRIM(what) == 'config' .AND.  nks == 1 ) THEN
      !

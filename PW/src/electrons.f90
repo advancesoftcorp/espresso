@@ -425,6 +425,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
   !
   USE plugin_variables,     ONLY : plugin_etot
   !
+  USE kinetic_module,       ONLY : do_kinetic, kinetic_nprint, kinetic_print
+  !
   IMPLICIT NONE
   !
   INTEGER, INTENT (IN) :: printout
@@ -599,6 +601,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
         IF ( first ) tr2_min = ethr*MAX( 1.D0, nelec ) 
         !
         ! ... diagonalization of the KS hamiltonian
+        !
+        IF ( do_kinetic ) THEN
+           IF ( kinetic_nprint > 0 .AND. MOD(iter - 1, kinetic_nprint) == 0 ) &
+           CALL kinetic_print( .FALSE., iter )
+        END IF
         !
         IF ( lelfield ) THEN
            CALL c_bands_efield( iter )

@@ -22,29 +22,33 @@ MODULE kinetic_module
   USE mp_bands,    ONLY : intra_bgrp_comm
   USE mp_images,   ONLY : intra_image_comm
   USE scatter_mod, ONLY : gather_grid
-  USE scf,         ONLY : rho
   !
   IMPLICIT NONE
   SAVE
   PRIVATE
   !
-  LOGICAL :: do_kinetic = .FALSE.
+  LOGICAL :: do_kinetic     = .FALSE.
+  INTEGER :: kinetic_nprint = 0
   INTEGER :: iunkinetic
   !
   PUBLIC :: do_kinetic
+  PUBLIC :: kinetic_nprint
   PUBLIC :: kinetic_print
   !
 CONTAINS
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE kinetic_open()
+  SUBROUTINE kinetic_open(idx)
     !----------------------------------------------------------------------------
     !
     ! ... open file of Kinetic Energy Density
     !
     IMPLICIT NONE
     !
+    INTEGER, INTENT(IN) :: idx
+    !
     INTEGER            :: ios
+    CHARACTER(LEN=8)   :: str
     CHARACTER(LEN=256) :: filename
     !
     INTEGER, EXTERNAL  :: find_free_unit
@@ -55,7 +59,16 @@ CONTAINS
     !
     iunkinetic = find_free_unit()
     !
-    filename = TRIM(tmp_dir) // TRIM(prefix) // '.ked'
+    IF (idx > 0) THEN
+      !
+      WRITE(str, '(I8)') idx
+      filename = TRIM(tmp_dir) // TRIM(prefix) // '.ked.' // TRIM(ADJUSTL(str))
+      !
+    ELSE
+      !
+      filename = TRIM(tmp_dir) // TRIM(prefix) // '.ked'
+      !
+    END IF
     !
     IF (ionode) THEN
       !
@@ -101,13 +114,17 @@ CONTAINS
   END SUBROUTINE kinetic_close
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE kinetic_print()
+  SUBROUTINE kinetic_print(with_dtdr, idx)
     !----------------------------------------------------------------------------
     !
     ! ... print data for Kinetic Energy Density
     !
     IMPLICIT NONE
     !
+    LOGICAL,           INTENT(IN) :: with_dtdr
+    INTEGER, OPTIONAL, INTENT(IN) :: idx
+    !
+    INTEGER  :: idx_
     INTEGER  :: ir
     INTEGER  :: nr1x, nr2x, nr3x
     INTEGER  :: nfft
@@ -116,6 +133,7 @@ CONTAINS
     REAL(DP) :: eneTauL
     REAL(DP) :: eneDtdr
     !
+    REAL(DP), ALLOCATABLE :: rhor(:)
     REAL(DP), ALLOCATABLE :: tauG(:)
     REAL(DP), ALLOCATABLE :: tauL(:)
     REAL(DP), ALLOCATABLE :: dtdr(:)
@@ -124,11 +142,17 @@ CONTAINS
     REAL(DP), ALLOCATABLE :: tauL_g(:)
     REAL(DP), ALLOCATABLE :: dtdr_g(:)
     !
+    IF (PRESENT(idx)) THEN
+      idx_ = idx
+    ELSE
+      idx_ = 0
+    END IF
+    !
     IF (.NOT. do_kinetic) THEN
       RETURN
     END IF
     !
-    IF (ionode) THEN
+    IF (ionode .AND. idx_ < 1) THEN
       !
       WRITE(stdout, '()')
       WRITE(stdout, '(5X,"Writing Kinetic Energy Density to file.")')
@@ -149,6 +173,7 @@ CONTAINS
     nr3x = dffts%nr3x
     nfft = nr1x * nr2x * nr3x
     !
+    ALLOCATE(rhor(dffts%nnr))
     ALLOCATE(tauG(dffts%nnr))
     ALLOCATE(tauL(dffts%nnr))
     ALLOCATE(dtdr(dffts%nnr))
@@ -159,7 +184,7 @@ CONTAINS
     !
     ! ... calculate Kinetic Energy Density
     !
-    CALL kinetic_sum_band(tauG, tauL, dtdr)
+    CALL kinetic_sum_band(rhor, tauG, tauL, dtdr)
     !
     eneTauG = 0.0_DP
     eneTauL = 0.0_DP
@@ -171,7 +196,7 @@ CONTAINS
       !
       eneTauG = eneTauG + fac * tauG(ir)
       eneTauL = eneTauL + fac * tauL(ir)
-      eneDtdr = eneDtdr + fac * dtdr(ir) * rho%of_r(ir, 1)
+      eneDtdr = eneDtdr + fac * dtdr(ir) * rhor(ir)
       !
     END DO
     !
@@ -179,22 +204,26 @@ CONTAINS
     CALL mp_sum(eneTauL, intra_bgrp_comm)
     CALL mp_sum(eneDtdr, intra_bgrp_comm)
     !
-    WRITE(stdout, '()')
-    WRITE(stdout, '(5X,"Kinetic energy (by Gradient)  =",F17.8," Ry")') eneTauG
-    WRITE(stdout, '(5X,"Kinetic energy (by Laplacian) =",F17.8," Ry")') eneTauL
-    WRITE(stdout, '(5X,"Integral [ dT/drho * rho ]    =",F17.8," Ry")') eneDtdr
+    IF (ionode .AND. idx_ < 1) THEN
+      !
+      WRITE(stdout, '()')
+      WRITE(stdout, '(5X,"Kinetic energy (by Gradient)  =",F17.8," Ry")') eneTauG
+      WRITE(stdout, '(5X,"Kinetic energy (by Laplacian) =",F17.8," Ry")') eneTauL
+      WRITE(stdout, '(5X,"Integral [ dT/drho * rho ]    =",F17.8," Ry")') eneDtdr
+      !
+    END IF
     !
 #if defined(__MPI)
     rhor_g = 0.0_DP
     tauG_g = 0.0_DP
     tauL_g = 0.0_DP
     dtdr_g = 0.0_DP
-    CALL gather_grid(dffts, rho%of_r(:, 1), rhor_g)
+    CALL gather_grid(dffts, rhor, rhor_g)
     CALL gather_grid(dffts, tauG, tauG_g)
     CALL gather_grid(dffts, tauL, tauL_g)
     CALL gather_grid(dffts, dtdr, dtdr_g)
 #else
-    rhor_g = rho%of_r(:, 1)
+    rhor_g = rhor
     tauG_g = tauG
     tauL_g = tauL
     dtdr_g = dtdr
@@ -202,7 +231,7 @@ CONTAINS
     !
     ! ... print data, in Hartree unit
     !
-    CALL kinetic_open()
+    CALL kinetic_open(idx_)
     !
     IF (ionode) THEN
       !
@@ -214,6 +243,14 @@ CONTAINS
       WRITE(iunkinetic, '(3E25.16)') alat * at(1, 2), alat * at(2, 2), alat * at(3, 2)
       WRITE(iunkinetic, '(3E25.16)') alat * at(1, 3), alat * at(2, 3), alat * at(3, 3)
       !
+      WRITE(iunkinetic, '("#Including Kinetic Energy Derivative")')
+      !
+      IF (with_dtdr) THEN
+        WRITE(iunkinetic, "(I8)") 1
+      ELSE
+        WRITE(iunkinetic, "(I8)") 0
+      END IF
+      !
       WRITE(iunkinetic, '("#Charge")')
       CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP, rhor_g)
       !
@@ -223,8 +260,12 @@ CONTAINS
       WRITE(iunkinetic, '("#Kinetic Energy Density (by Laplacian)")')
       CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP / e2, tauL_g)
       !
-      WRITE(iunkinetic, '("#Kinetic Energy Derivative")')
-      CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP / e2, dtdr_g)
+      IF (with_dtdr) THEN
+        !
+        WRITE(iunkinetic, '("#Kinetic Energy Derivative")')
+        CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP / e2, dtdr_g)
+        !
+      END IF
       !
     END IF
     !
@@ -234,6 +275,7 @@ CONTAINS
     !
     ! ... deallocate memory
     !
+    DEALLOCATE(rhor)
     DEALLOCATE(tauG)
     DEALLOCATE(tauL)
     DEALLOCATE(dtdr)

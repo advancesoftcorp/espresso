@@ -7,7 +7,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------------
-SUBROUTINE kinetic_sum_band(tauG, tauL, dtdr)
+SUBROUTINE kinetic_sum_band(rhor, tauG, tauL, dtdr)
   !--------------------------------------------------------------------------
   !
   ! ... calculate Kinetic Energy Density
@@ -26,12 +26,12 @@ SUBROUTINE kinetic_sum_band(tauG, tauL, dtdr)
   USE mp_bands,         ONLY : inter_bgrp_comm
   USE mp_pools,         ONLY : inter_pool_comm
   USE noncollin_module, ONLY : noncolin, npol
-  USE scf,              ONLY : rho
   USE wavefunctions,    ONLY : evc, psic, psic_nc
   USE wvfct,            ONLY : nbnd, npwx, wg, et
   !
   IMPLICIT NONE
   !
+  REAL(DP), INTENT(OUT) :: rhor(dffts%nnr)
   REAL(DP), INTENT(OUT) :: tauG(dffts%nnr)
   REAL(DP), INTENT(OUT) :: tauL(dffts%nnr)
   REAL(DP), INTENT(OUT) :: dtdr(dffts%nnr)
@@ -51,11 +51,13 @@ SUBROUTINE kinetic_sum_band(tauG, tauL, dtdr)
   ALLOCATE(kplusg(npwx))
   ALLOCATE(aux(dffts%nnr))
   !
+  rhor(:) = 0.0_DP
   tauG(:) = 0.0_DP
   tauL(:) = 0.0_DP
   dtdr(:) = 0.0_DP
   !
-  ! ... calculate tauG = |grad psi|^2
+  ! ... calculate rhor = |psi|^2
+  ! ... and       tauG = |grad psi|^2
   ! ... and       dtdr = (ef-e)*|psi|^2
   !
   IF (gamma_only) THEN
@@ -68,6 +70,9 @@ SUBROUTINE kinetic_sum_band(tauG, tauL, dtdr)
     !
   END IF
   !
+  CALL mp_sum(rhor, inter_pool_comm)
+  CALL mp_sum(rhor, inter_bgrp_comm)
+  !
   CALL mp_sum(tauG, inter_pool_comm)
   CALL mp_sum(tauG, inter_bgrp_comm)
   !
@@ -76,13 +81,21 @@ SUBROUTINE kinetic_sum_band(tauG, tauL, dtdr)
   !
   ! ... tauL = -psi Lap psi = |grad psi|^2 - (1/2)*Lap rho
   !
-  aux = (0.0_DP, 0.0_DP)
+  aux(:) = rhor(:)
+  !
+  CALL fwfft('Rho', aux, dffts)
+  !
+  IF (gstart > 1) THEN
+    !
+    aux(dffts%nl(1)) = (0.0_DP, 0.0_DP)
+    !
+  END IF
   !
   fac = -0.5_DP * tpiba2
   !
   DO ig = gstart, dffts%ngm
     !
-    aux(dffts%nl(ig)) = fac * gg(ig) * rho%of_g(ig, 1)
+    aux(dffts%nl(ig)) = fac * gg(ig) * aux(dffts%nl(ig))
     !
   END DO
   !
@@ -104,7 +117,7 @@ SUBROUTINE kinetic_sum_band(tauG, tauL, dtdr)
   !
   DO ir = 1, dffts%nnr
     !
-    rho0 = rho%of_r(ir, 1)
+    rho0 = rhor(ir)
     !
     IF (rho0 > rho_min) THEN
       !
@@ -137,6 +150,7 @@ CONTAINS
     REAL(DP) :: w1, w2
     REAL(DP) :: de1, de2
     REAL(DP) :: psir, psii
+    REAL(DP) :: rho1, rho2
     !
     DO ik = 1, nks
       !
@@ -199,7 +213,7 @@ CONTAINS
           !
         END DO
         !
-        ! ... (ef-e)*|psi|^2
+        ! ... |psi|^2 and (ef-e)*|psi|^2
         psic(:) = (0.0_DP, 0.0_DP)
         !
         IF (ibnd < ibnd_end) THEN
@@ -220,7 +234,11 @@ CONTAINS
           psir =  DBLE(psic(ir))
           psii = AIMAG(psic(ir))
           !
-          dtdr(ir) = dtdr(ir) + w1 * de1 * psir * psir + w2 * de2 * psii * psii
+          rho1 = w1 * psir * psir
+          rho2 = w2 * psii * psii
+          !
+          rhor(ir) = rhor(ir) + rho1 + rho2
+          dtdr(ir) = dtdr(ir) + de1 * rho1 + de2 * rho2
         END DO
         !
       END DO
@@ -244,6 +262,7 @@ CONTAINS
     INTEGER  :: ig
     REAL(DP) :: w, de
     REAL(DP) :: psir, psii
+    REAL(DP) :: rho0
     !
     DO ik = 1, nks
       !
@@ -291,7 +310,7 @@ CONTAINS
             !
           END DO
           !
-          ! ... (ef-e)*|psi|^2
+          ! ... |psi|^2 and (ef-e)*|psi|^2
           psic_nc(:, :) = (0.0_DP, 0.0_DP)
           !
           DO ig = 1, npw
@@ -311,7 +330,10 @@ CONTAINS
               psir =  DBLE(psic_nc(ir, ipol))
               psii = AIMAG(psic_nc(ir, ipol))
               !
-              dtdr(ir) = dtdr(ir) + w * de * (psir * psir + psii * psii)
+              rho0 = w * (psir * psir + psii * psii)
+              !
+              rhor(ir) = rhor(ir) + rho0
+              dtdr(ir) = dtdr(ir) + de * rho0
             END DO
             !
           END DO
@@ -341,7 +363,7 @@ CONTAINS
             !
           END DO
           !
-          ! ... (ef-e)*|psi|^2
+          ! ... |psi|^2 and (ef-e)*|psi|^2
           psic = (0.0_DP, 0.0_DP)
           !
           DO ig = 1, npw
@@ -354,7 +376,10 @@ CONTAINS
             psir =  DBLE(psic(ir))
             psii = AIMAG(psic(ir))
             !
-            dtdr(ir) = dtdr(ir) + w * de * (psir * psir + psii * psii)
+            rho0 = w * (psir * psir + psii * psii)
+            !
+            rhor(ir) = rhor(ir) + rho0
+            dtdr(ir) = dtdr(ir) + de * rho0
           END DO
           !
         END IF

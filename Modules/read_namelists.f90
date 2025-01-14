@@ -134,6 +134,7 @@ MODULE read_namelists_module
        trism = .FALSE.
        tsannp = .FALSE.
        tkinetic = .FALSE.
+       kin_nprint = 5
        !
        saverho = .TRUE.
        memory = 'default'
@@ -911,6 +912,7 @@ MODULE read_namelists_module
        CALL mp_bcast( trism,         ionode_id, intra_image_comm )
        CALL mp_bcast( tsannp,        ionode_id, intra_image_comm )
        CALL mp_bcast( tkinetic,      ionode_id, intra_image_comm )
+       CALL mp_bcast( kin_nprint,    ionode_id, intra_image_comm )
        CALL mp_bcast( vdw_table_name,ionode_id, intra_image_comm )
        CALL mp_bcast( memory,        ionode_id, intra_image_comm )
        CALL mp_bcast( input_xml_schema_file, ionode_id, intra_image_comm )
