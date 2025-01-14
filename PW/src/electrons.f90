@@ -602,11 +602,6 @@ SUBROUTINE electrons_scf ( printout, exxen )
         !
         ! ... diagonalization of the KS hamiltonian
         !
-        IF ( do_kinetic ) THEN
-           IF ( kinetic_nprint > 0 .AND. MOD(iter - 1, kinetic_nprint) == 0 ) &
-           CALL kinetic_print( .FALSE., iter )
-        END IF
-        !
         IF ( lelfield ) THEN
            CALL c_bands_efield( iter )
         ELSE
@@ -815,6 +810,13 @@ SUBROUTINE electrons_scf ( printout, exxen )
            !
            IF ( lgcscf ) THEN
               CALL gcscf_set_nelec( charge )
+           END IF
+           !
+           ! ... print Kinetic Energy Density
+           !
+           IF ( do_kinetic ) THEN
+              IF ( kinetic_nprint > 0 .AND. MOD(iter - 1, kinetic_nprint) == 0 ) &
+              CALL kinetic_print( .FALSE., iter )
            END IF
            !
         ELSE 
