@@ -159,7 +159,7 @@ CONTAINS
       !
     END IF
     !
-    IF (dfftp%nr1  /= dffts%nr1  .OR. dfftp%nr2  /= dffts%nr2  .OR. dfftp%nr3  /= dffts%nr3 .OR. \
+    IF (dfftp%nr1  /= dffts%nr1  .OR. dfftp%nr2  /= dffts%nr2  .OR. dfftp%nr3  /= dffts%nr3 .OR. &
         dfftp%nr1x /= dffts%nr1x .OR. dfftp%nr2x /= dffts%nr2x .OR. dfftp%nr3x /= dffts%nr3x) THEN
       !
       CALL errore('kinetic_print', 'Kinetic Energy Density does not support dual FFT-mesh', 1)
