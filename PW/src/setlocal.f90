@@ -34,8 +34,9 @@ SUBROUTINE setlocal
   USE martyna_tuckerman, ONLY : wg_corr_loc, do_comp_mt
   USE esm,               ONLY : esm_local, esm_bc, do_comp_esm
   USE qmmm,              ONLY : qmmm_add_esf
-  USE Coul_cut_2D,       ONLY : do_cutoff_2D, cutoff_local 
+  USE Coul_cut_2D,       ONLY : do_cutoff_2D, cutoff_local
   USE rism_module,       ONLY : lrism, rism_setlocal
+  USE kinetic_module,    ONLY : do_kinetic, kinetic_add_perturb
   !
   IMPLICIT NONE
   !
@@ -88,7 +89,7 @@ SUBROUTINE setlocal
      !
      CALL cutoff_local( aux )
      !
-  ENDIF 
+  ENDIF
   !
   ! ... v_of_0 is (Vloc)(G=0)
   !
@@ -103,7 +104,7 @@ SUBROUTINE setlocal
   !
   vltot(:) =  DBLE( aux(:) )
   !
-  ! ... If required add an electric field to the local potential 
+  ! ... If required add an electric field to the local potential
   !
   IF ( tefield .AND. ( .NOT. dipfield ) )  &
       CALL add_efield( vltot, etotefield, rho%of_r, .TRUE. )
@@ -136,6 +137,14 @@ SUBROUTINE setlocal
           !
           CALL rism_setlocal(vltot)
       END IF
+  END IF
+  !
+  ! ... set the perturbation potential for Kinetic Energy Density
+  !
+  IF (do_kinetic) THEN
+    !
+    CALL kinetic_add_perturb(vltot)
+    !
   END IF
   !
   ! ... Save vltot for possible modifications in plugins

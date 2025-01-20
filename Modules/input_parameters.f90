@@ -266,6 +266,8 @@ MODULE input_parameters
 
         LOGICAL :: tkinetic = .FALSE. ! punch data of Kinetic Energy Density. enabled if .true.
 
+        REAL(DP) :: kin_perturb = 0.0_DP ! perturbation potential (Ry) for Kinetic Energy Density.
+
         INTEGER :: kin_nprint = 5     ! scf-iters to punch data of Kinetic Energy Density.
 
         CHARACTER(len=256) :: vdw_table_name = ' '
@@ -291,8 +293,8 @@ MODULE input_parameters
           forc_conv_thr, pseudo_dir, disk_io, tefield, dipfield, lberry,  &
           gdir, nppstr, wf_collect, lelfield, nberrycyc, refg,            &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
-          lfcp, tqmmm, trism, tsannp, tkinetic, kin_nprint, vdw_table_name, &
-          lorbm, memory, point_label_type, input_xml_schema_file, gate
+          lfcp, tqmmm, trism, tsannp, tkinetic, kin_perturb, kin_nprint,  &
+          vdw_table_name, lorbm, memory, point_label_type, input_xml_schema_file, gate
 !
 !=----------------------------------------------------------------------------=!
 !  SYSTEM Namelist Input Parameters

@@ -12,28 +12,32 @@ MODULE kinetic_module
   !
   ! ... the module for Kinetic Energy Density
   !
-  USE cell_base,   ONLY : at, alat, omega
-  USE constants,   ONLY : e2
-  USE fft_base,    ONLY : dffts, dfftp
-  USE kinds,       ONLY : DP
-  USE io_files,    ONLY : tmp_dir, prefix
-  USE io_global,   ONLY : ionode, stdout
-  USE mp,          ONLY : mp_sum, mp_barrier
-  USE mp_bands,    ONLY : intra_bgrp_comm
-  USE mp_images,   ONLY : intra_image_comm
-  USE scatter_mod, ONLY : gather_grid
+  USE cell_base,      ONLY : at, alat, omega
+  USE constants,      ONLY : e2
+  USE fft_base,       ONLY : dffts, dfftp
+  USE fft_types,      ONLY : fft_index_to_3d
+  USE kinds,          ONLY : DP
+  USE io_files,       ONLY : tmp_dir, prefix
+  USE io_global,      ONLY : ionode, stdout
+  USE mp,             ONLY : mp_sum, mp_barrier
+  USE mp_bands,       ONLY : intra_bgrp_comm
+  USE mp_images,      ONLY : intra_image_comm
+  USE random_numbers, ONLY : randy
+  USE scatter_mod,    ONLY : gather_grid
   !
   IMPLICIT NONE
   SAVE
   PRIVATE
   !
-  LOGICAL :: do_kinetic     = .FALSE.
-  INTEGER :: kinetic_nprint = 0
-  INTEGER :: iunkinetic
+  LOGICAL  :: do_kinetic      = .FALSE.
+  REAL(DP) :: kinetic_perturb = 0.0_DP
+  INTEGER  :: kinetic_nprint  = 0
+  INTEGER  :: iunkinetic
   !
   PUBLIC :: do_kinetic
   PUBLIC :: kinetic_nprint
   PUBLIC :: kinetic_print
+  PUBLIC :: kinetic_add_perturb
   !
 CONTAINS
   !
@@ -285,6 +289,40 @@ CONTAINS
     DEALLOCATE(dtdr_g)
     !
   END SUBROUTINE kinetic_print
+  !
+  !----------------------------------------------------------------------------
+  SUBROUTINE kinetic_add_perturb(vltot)
+    !----------------------------------------------------------------------------
+    !
+    ! ... print data for Kinetic Energy Density
+    !
+    IMPLICIT NONE
+    !
+    REAL(DP), INTENT(INOUT) :: vltot(dfftp%nnr)
+    !
+    INTEGER :: ir
+    INTEGER :: i, j, k
+    LOGICAL :: offrange
+    !
+    IF (.NOT. do_kinetic) THEN
+      RETURN
+    END IF
+    !
+    IF (kinetic_perturb <= 0.0_DP) THEN
+      RETURN
+    END IF
+    !
+    DO ir = 1, dfftp%nr1x * dfftp%my_nr2p * dfftp%my_nr3p
+      !
+      CALL fft_index_to_3d(ir, dfftp, i, j, k, offrange)
+      !
+      IF (offrange) CYCLE
+      !
+      vltot(ir) = vltot(ir) + kinetic_perturb * 2.0_DP * (randy() - 0.5_DP)
+      !
+    END DO
+    !
+  END SUBROUTINE kinetic_add_perturb
   !
 END MODULE kinetic_module
 !
