@@ -179,7 +179,7 @@ CONTAINS
       !
     END IF
     !
-    IF (isolv == 4 .AND. .NOT. rmm_conv) THEN
+    IF (isolve == 4 .AND. .NOT. rmm_conv) THEN
       !
       CALL errore('kinetic_print', &
       'diago_rmm_conv must be .TRUE., when calculate Kinetic Energy Density', 1)
