@@ -63,7 +63,7 @@ CONTAINS
     !
     iunkinetic = find_free_unit()
     !
-    IF (idx > 0) THEN
+    IF (idx >= 0) THEN
       !
       WRITE(str, '(I8)') idx
       filename = TRIM(tmp_dir) // TRIM(prefix) // '.ked.' // TRIM(ADJUSTL(str))
@@ -149,14 +149,14 @@ CONTAINS
     IF (PRESENT(idx)) THEN
       idx_ = idx
     ELSE
-      idx_ = 0
+      idx_ = -1
     END IF
     !
     IF (.NOT. do_kinetic) THEN
       RETURN
     END IF
     !
-    IF (ionode .AND. idx_ < 1) THEN
+    IF (ionode .AND. idx_ < 0) THEN
       !
       WRITE(stdout, '()')
       WRITE(stdout, '(5X,"Writing Kinetic Energy Density to file.")')
@@ -208,7 +208,7 @@ CONTAINS
     CALL mp_sum(eneTauL, intra_bgrp_comm)
     CALL mp_sum(eneDtdr, intra_bgrp_comm)
     !
-    IF (ionode .AND. idx_ < 1) THEN
+    IF (ionode .AND. idx_ < 0) THEN
       !
       WRITE(stdout, '()')
       WRITE(stdout, '(5X,"Kinetic energy (by Gradient)  =",F17.8," Ry")') eneTauG

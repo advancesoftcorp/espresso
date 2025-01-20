@@ -816,7 +816,8 @@ SUBROUTINE electrons_scf ( printout, exxen )
            !
            IF ( do_kinetic ) THEN
               IF ( kinetic_nprint > 0 .AND. MOD(iter - 1, kinetic_nprint) == 0 ) &
-              CALL kinetic_print( .FALSE., iter )
+              !CALL kinetic_print( .FALSE., iter )
+              CALL kinetic_print( .TRUE., iter )
            END IF
            !
         ELSE 
