@@ -119,7 +119,7 @@ SUBROUTINE kinetic_sum_band(rhor, tauG, tauL, dtdr, by_veff)
     !
     ! ... dtdr = ef - veff
     !
-    dtdr(1:dffts%nnr) = vrs(1:dffts%nnr, 1) - ef
+    dtdr(1:dffts%nnr) = ef - vrs(1:dffts%nnr, 1)
     !
   ELSE
     !
