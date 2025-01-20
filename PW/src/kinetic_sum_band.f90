@@ -7,7 +7,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------------
-SUBROUTINE kinetic_sum_band(rhor, tauG, tauL, dtdr)
+SUBROUTINE kinetic_sum_band(rhor, tauG, tauL, dtdr, by_veff)
   !--------------------------------------------------------------------------
   !
   ! ... calculate Kinetic Energy Density
@@ -26,6 +26,7 @@ SUBROUTINE kinetic_sum_band(rhor, tauG, tauL, dtdr)
   USE mp_bands,         ONLY : inter_bgrp_comm
   USE mp_pools,         ONLY : inter_pool_comm
   USE noncollin_module, ONLY : noncolin, npol
+  USE scf,              ONLY : vrs
   USE wavefunctions,    ONLY : evc, psic, psic_nc
   USE wvfct,            ONLY : nbnd, npwx, wg, et
   !
@@ -35,6 +36,7 @@ SUBROUTINE kinetic_sum_band(rhor, tauG, tauL, dtdr)
   REAL(DP), INTENT(OUT) :: tauG(dffts%nnr)
   REAL(DP), INTENT(OUT) :: tauL(dffts%nnr)
   REAL(DP), INTENT(OUT) :: dtdr(dffts%nnr)
+  LOGICAL,  INTENT(IN)  :: by_veff
   !
   INTEGER  :: ig, ir
   INTEGER  :: ibnd_start, ibnd_end
@@ -113,23 +115,33 @@ SUBROUTINE kinetic_sum_band(rhor, tauG, tauL, dtdr)
   !
   tauL(:) = tauG(:) - DBLE(aux(:))
   !
-  ! ... dtdr = (-psi Lap psi + (ef-e)*|psi|^2) / rho
-  !
-  DO ir = 1, dffts%nnr
+  IF (by_veff) THEN
     !
-    rho0 = rhor(ir)
+    ! ... dtdr = ef - veff
     !
-    IF (rho0 > rho_min) THEN
-      !
-      dtdr(ir) = (tauL(ir) + dtdr(ir)) / rho0
-      !
-    ELSE
-      !
-      dtdr(ir) = 0.0_DP
-      !
-    END IF
+    dtdr(1:dffts%nnr) = vrs(1:dffts%nnr, 1) - ef
     !
-  END DO
+  ELSE
+    !
+    ! ... dtdr = (-psi Lap psi + (ef-e)*|psi|^2) / rho
+    !
+    DO ir = 1, dffts%nnr
+      !
+      rho0 = rhor(ir)
+      !
+      IF (rho0 > rho_min) THEN
+        !
+        dtdr(ir) = (tauL(ir) + dtdr(ir)) / rho0
+        !
+      ELSE
+        !
+        dtdr(ir) = 0.0_DP
+        !
+      END IF
+      !
+    END DO
+    !
+  END IF
   !
   DEALLOCATE(kplusg)
   DEALLOCATE(aux)

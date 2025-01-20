@@ -188,7 +188,7 @@ CONTAINS
     !
     ! ... calculate Kinetic Energy Density
     !
-    CALL kinetic_sum_band(rhor, tauG, tauL, dtdr)
+    CALL kinetic_sum_band(rhor, tauG, tauL, dtdr, .TRUE.)
     !
     eneTauG = 0.0_DP
     eneTauL = 0.0_DP
