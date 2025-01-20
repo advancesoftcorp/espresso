@@ -1704,6 +1704,8 @@ SUBROUTINE iosys()
   kinetic_perturb = kin_perturb
   kinetic_nprint  = kin_nprint
   !
+  ethr = MIN( ethr, 1.0D-8 )
+  !
   ! ... End of reading input parameters
   !
 #if ! defined (__INTEL_COMPILER) || (__INTEL_COMPILER >= 1300) 
