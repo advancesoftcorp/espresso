@@ -14,11 +14,13 @@ MODULE kinetic_module
   !
   USE cell_base,      ONLY : at, alat, omega
   USE constants,      ONLY : e2
+  USE control_flags,  ONLY : isolve, rmm_conv
   USE fft_base,       ONLY : dffts, dfftp
   USE fft_types,      ONLY : fft_index_to_3d
   USE kinds,          ONLY : DP
   USE io_files,       ONLY : tmp_dir, prefix
   USE io_global,      ONLY : ionode, stdout
+  USE lsda_mod,       ONLY : nspin
   USE mp,             ONLY : mp_sum, mp_barrier
   USE mp_bands,       ONLY : intra_bgrp_comm
   USE mp_images,      ONLY : intra_image_comm
@@ -35,6 +37,7 @@ MODULE kinetic_module
   INTEGER  :: iunkinetic
   !
   PUBLIC :: do_kinetic
+  PUBLIC :: kinetic_perturb
   PUBLIC :: kinetic_nprint
   PUBLIC :: kinetic_print
   PUBLIC :: kinetic_add_perturb
@@ -167,6 +170,19 @@ CONTAINS
         dfftp%nr1x /= dffts%nr1x .OR. dfftp%nr2x /= dffts%nr2x .OR. dfftp%nr3x /= dffts%nr3x) THEN
       !
       CALL errore('kinetic_print', 'Kinetic Energy Density does not support dual FFT-mesh', 1)
+      !
+    END IF
+    !
+    IF (nspin /= 1) THEN
+      !
+      CALL errore('kinetic_print', 'Kinetic Energy Density supports only nspin = 1', 1)
+      !
+    END IF
+    !
+    IF (isolv == 4 .AND. .NOT. rmm_conv) THEN
+      !
+      CALL errore('kinetic_print', &
+      'diago_rmm_conv must be .TRUE., when calculate Kinetic Energy Density', 1)
       !
     END IF
     !
