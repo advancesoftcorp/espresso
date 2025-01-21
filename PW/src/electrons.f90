@@ -855,6 +855,12 @@ SUBROUTINE electrons_scf ( printout, exxen )
            !
            descf = 0._dp
            !
+           ! ... print Kinetic Energy Density
+           !
+           IF ( do_kinetic ) THEN
+              CALL kinetic_print( .TRUE. )
+           END IF
+           !
         ENDIF 
         !
         ! ... if we didn't cycle before we can exit the do-loop
