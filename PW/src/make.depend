@@ -244,6 +244,7 @@ c_bands.o : bp_mod.o
 c_bands.o : buffers.o
 c_bands.o : g_psi_mod.o
 c_bands.o : gcscf_module.o
+c_bands.o : kinetic_module.o
 c_bands.o : ldaU.o
 c_bands.o : pwcom.o
 c_bands.o : scf_mod.o
@@ -449,6 +450,7 @@ electrons.o : exx.o
 electrons.o : fcp_module.o
 electrons.o : gcscf_module.o
 electrons.o : io_rho_xml.o
+electrons.o : kinetic_module.o
 electrons.o : ldaU.o
 electrons.o : loc_scdm.o
 electrons.o : loc_scdm_k.o
@@ -1176,15 +1178,20 @@ iweights.o : ../../Modules/kind.o
 iweights.o : ../../Modules/mp_pools.o
 iweights.o : ../../Modules/noncol.o
 iweights.o : ../../UtilXlib/mp.o
+kinetic_module.o : ../../FFTXlib/fft_types.o
+kinetic_module.o : ../../FFTXlib/scatter_mod.o
 kinetic_module.o : ../../Modules/cell_base.o
 kinetic_module.o : ../../Modules/constants.o
+kinetic_module.o : ../../Modules/control_flags.o
 kinetic_module.o : ../../Modules/fft_base.o
 kinetic_module.o : ../../Modules/io_files.o
 kinetic_module.o : ../../Modules/io_global.o
 kinetic_module.o : ../../Modules/kind.o
+kinetic_module.o : ../../Modules/mp_bands.o
 kinetic_module.o : ../../Modules/mp_images.o
+kinetic_module.o : ../../Modules/random_numbers.o
 kinetic_module.o : ../../UtilXlib/mp.o
-kinetic_module.o : scf_mod.o
+kinetic_module.o : pwcom.o
 kinetic_sum_band.o : ../../FFTXlib/fft_interfaces.o
 kinetic_sum_band.o : ../../Modules/cell_base.o
 kinetic_sum_band.o : ../../Modules/control_flags.o
@@ -2183,6 +2190,7 @@ setlocal.o : ../../UtilXlib/mp.o
 setlocal.o : Coul_cut_2D.o
 setlocal.o : esm.o
 setlocal.o : extfield.o
+setlocal.o : kinetic_module.o
 setlocal.o : martyna_tuckerman.o
 setlocal.o : pwcom.o
 setlocal.o : rism_module.o
@@ -2219,6 +2227,7 @@ setup.o : exx.o
 setup.o : exx_base.o
 setup.o : fcp_module.o
 setup.o : gcscf_module.o
+setup.o : kinetic_module.o
 setup.o : ldaU.o
 setup.o : pwcom.o
 setup.o : rism_module.o
