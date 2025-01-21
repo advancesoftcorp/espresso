@@ -711,9 +711,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
     !
     LOGICAL :: test_exit_cond
     !
-    IF ( lscf .AND. lgcscf ) THEN
+    IF ( lscf .AND. ( lgcscf .OR. do_kinetic ) ) THEN
        !
-       ! ... tight condition for GC-SCF
+       ! ... tight condition for GC-SCF or Kinetic Energy Density
        !
        test_exit_cond = .NOT. ( ( ntry <= 8 ) .AND. ( notconv > 0 ) )
        !
