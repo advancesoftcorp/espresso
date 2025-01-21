@@ -182,6 +182,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                                    allocate_bec_type, deallocate_bec_type
   USE klist,                ONLY : nks, ngk
   USE gcscf_module,         ONLY : lgcscf
+  USE kinetic_module,       ONLY : do_kinetic
   USE mp_bands,             ONLY : nproc_bgrp, intra_bgrp_comm, inter_bgrp_comm, &
                                    my_bgrp_id, nbgrp
   USE mp,                   ONLY : mp_sum, mp_bcast
