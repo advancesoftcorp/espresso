@@ -331,6 +331,11 @@ CONTAINS
       RETURN
     END IF
     !
+    IF (ionode) THEN
+      WRITE(stdout, '()')
+      WRITE(stdout, '(5X,"Perturbed Ionic Charge:")')
+    END IF
+    !
     DO ia = 1, nat
       !
       it = ityp(ia)
@@ -340,6 +345,11 @@ CONTAINS
         fac = MAX(fac, -1.0_DP)
       ELSE
         fac = 0.0_DP
+      END IF
+      !
+      IF (ionode) THEN
+        WRITE(stdout, '(5X,I3,2X,A4,F10.4)') &
+        ia, ADJUSTL(atm(ityp(ia))) // '    ', (1.0_DP + fac) * zv(it)
       END IF
       !
       DO ig = 1, ngm
