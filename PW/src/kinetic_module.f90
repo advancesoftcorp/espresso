@@ -322,6 +322,8 @@ CONTAINS
     INTEGER  :: ia, it
     INTEGER  :: ig
     REAL(DP) :: fac
+    REAL(DP) :: za, ztot
+    REAL(DP) :: qa, qtot
     !
     IF (.NOT. do_kinetic) THEN
       RETURN
@@ -333,8 +335,11 @@ CONTAINS
     !
     IF (ionode) THEN
       WRITE(stdout, '()')
-      WRITE(stdout, '(5X,"Perturbed Ionic Charge:")')
+      WRITE(stdout, '(5X,"Perturbed Atomic Charge:")')
     END IF
+    !
+    ztot = 0.0_DP
+    qtot = 0.0_DP
     !
     DO ia = 1, nat
       !
@@ -347,9 +352,14 @@ CONTAINS
         fac = 0.0_DP
       END IF
       !
+      za = fac * zv(it)
+      qa = (1.0_DP + fac) * zv(it)
+      !
+      ztot = ztot + za
+      qtot = qtot + qa
+      !
       IF (ionode) THEN
-        WRITE(stdout, '(5X,I3,2X,A4,F10.4)') &
-        ia, ADJUSTL(atm(it)) // '    ', (1.0_DP + fac) * zv(it)
+        WRITE(stdout, '(5X,I3,2X,A4,2F10.4)') ia, ADJUSTL(atm(it)) // '    ', za, qa
       END IF
       !
       DO ig = 1, ngm
@@ -363,6 +373,10 @@ CONTAINS
       END DO
       !
     END DO
+    !
+    IF (ionode) THEN
+      WRITE(stdout, '(10X,A4,F10.4)') "sum ", ztot, qtot
+    END IF
     !
   END SUBROUTINE kinetic_add_perturb
   !
