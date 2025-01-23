@@ -21,7 +21,7 @@ MODULE kinetic_module
   USE kinds,          ONLY : DP
   USE io_files,       ONLY : tmp_dir, prefix
   USE io_global,      ONLY : ionode, stdout
-  USE ions_base,      ONLY : nat, ityp, zv
+  USE ions_base,      ONLY : nat, ityp, zv, atm
   USE lsda_mod,       ONLY : nspin
   USE mp,             ONLY : mp_sum, mp_barrier
   USE mp_bands,       ONLY : intra_bgrp_comm
@@ -349,7 +349,7 @@ CONTAINS
       !
       IF (ionode) THEN
         WRITE(stdout, '(5X,I3,2X,A4,F10.4)') &
-        ia, ADJUSTL(atm(ityp(ia))) // '    ', (1.0_DP + fac) * zv(it)
+        ia, ADJUSTL(atm(it)) // '    ', (1.0_DP + fac) * zv(it)
       END IF
       !
       DO ig = 1, ngm
