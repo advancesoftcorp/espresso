@@ -91,6 +91,14 @@ SUBROUTINE setlocal
      !
   ENDIF
   !
+  ! ... set the perturbation potential for Kinetic Energy Density
+  !
+  IF ( do_kinetic ) THEN
+    !
+    CALL kinetic_add_perturb( aux )
+    !
+  END IF
+  !
   ! ... v_of_0 is (Vloc)(G=0)
   !
   v_of_0 = 0.0_DP
@@ -137,14 +145,6 @@ SUBROUTINE setlocal
           !
           CALL rism_setlocal(vltot)
       END IF
-  END IF
-  !
-  ! ... set the perturbation potential for Kinetic Energy Density
-  !
-  IF (do_kinetic) THEN
-    !
-    CALL kinetic_add_perturb(vltot)
-    !
   END IF
   !
   ! ... Save vltot for possible modifications in plugins

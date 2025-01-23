@@ -17,15 +17,18 @@ MODULE kinetic_module
   USE control_flags,  ONLY : isolve, rmm_conv
   USE fft_base,       ONLY : dffts, dfftp
   USE fft_types,      ONLY : fft_index_to_3d
+  USE gvect,          ONLY : ngm, igtongl, mill, eigts1, eigts2, eigts3
   USE kinds,          ONLY : DP
   USE io_files,       ONLY : tmp_dir, prefix
   USE io_global,      ONLY : ionode, stdout
+  USE ions_base,      ONLY : nat, ityp, zv
   USE lsda_mod,       ONLY : nspin
   USE mp,             ONLY : mp_sum, mp_barrier
   USE mp_bands,       ONLY : intra_bgrp_comm
   USE mp_images,      ONLY : intra_image_comm
   USE random_numbers, ONLY : randy
   USE scatter_mod,    ONLY : gather_grid
+  USE vlocal,         ONLY : vloc
   !
   IMPLICIT NONE
   SAVE
@@ -307,18 +310,18 @@ CONTAINS
   END SUBROUTINE kinetic_print
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE kinetic_add_perturb(vltot)
+  SUBROUTINE kinetic_add_perturb(aux)
     !----------------------------------------------------------------------------
     !
-    ! ... print data for Kinetic Energy Density
+    ! ... add perturbation potential to local potential, in G-space
     !
     IMPLICIT NONE
     !
-    REAL(DP), INTENT(INOUT) :: vltot(dfftp%nnr)
+    COMPLEX(DP), INTENT(INOUT) :: aux(dfftp%nnr)
     !
-    INTEGER :: ir
-    INTEGER :: i, j, k
-    LOGICAL :: offrange
+    INTEGER  :: ia, it
+    INTEGER  :: ig
+    REAL(DP) :: fac
     !
     IF (.NOT. do_kinetic) THEN
       RETURN
@@ -328,13 +331,26 @@ CONTAINS
       RETURN
     END IF
     !
-    DO ir = 1, dfftp%nr1x * dfftp%my_nr2p * dfftp%my_nr3p
+    DO ia = 1, nat
       !
-      CALL fft_index_to_3d(ir, dfftp, i, j, k, offrange)
+      it = ityp(ia)
       !
-      IF (offrange) CYCLE
+      IF (zv(it) > 0.0_DP) THEN
+        fac = 2.0_DP * (randy() - 0.5_DP) * kinetic_perturb / zv(it)
+        fac = MAX(fac, -1.0_DP)
+      ELSE
+        fac = 0.0_DP
+      END IF
       !
-      vltot(ir) = vltot(ir) + kinetic_perturb * 2.0_DP * (randy() - 0.5_DP)
+      DO ig = 1, ngm
+        !
+        aux(dfftp%nl(ig)) = aux(dfftp%nl(ig))
+                          + fac * vloc(igtongl(ig), it) &
+                          * eigts1(mill(1, ig), ia) &
+                          * eigts2(mill(2, ig), ia) &
+                          * eigts3(mill(3, ig), ia)
+        !
+      END DO
       !
     END DO
     !

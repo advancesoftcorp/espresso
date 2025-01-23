@@ -266,7 +266,7 @@ MODULE input_parameters
 
         LOGICAL :: tkinetic = .FALSE. ! punch data of Kinetic Energy Density. enabled if .true.
 
-        REAL(DP) :: kin_perturb = 0.0_DP ! perturbation potential (Ry) for Kinetic Energy Density.
+        REAL(DP) :: kin_perturb = 0.0_DP ! scale of perturbation potential for Kinetic Energy Density.
 
         INTEGER :: kin_nprint = 5     ! scf-iters to punch data of Kinetic Energy Density.
 
