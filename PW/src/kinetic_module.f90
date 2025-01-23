@@ -352,8 +352,8 @@ CONTAINS
         fac = 0.0_DP
       END IF
       !
-      za = fac * zv(it)
-      qa = (1.0_DP + fac) * zv(it)
+      qa = fac * zv(it)
+      za = zv(it) + qa
       !
       ztot = ztot + za
       qtot = qtot + qa
@@ -375,7 +375,7 @@ CONTAINS
     END DO
     !
     IF (ionode) THEN
-      WRITE(stdout, '(10X,A4,F10.4)') "sum ", ztot, qtot
+      WRITE(stdout, '(10X,A4,2F10.4)') "sum ", ztot, qtot
     END IF
     !
   END SUBROUTINE kinetic_add_perturb
