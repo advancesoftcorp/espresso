@@ -26,7 +26,6 @@ MODULE kinetic_module
   USE mp,             ONLY : mp_sum, mp_barrier
   USE mp_bands,       ONLY : intra_bgrp_comm
   USE mp_images,      ONLY : intra_image_comm
-  USE random_numbers, ONLY : randy
   USE scatter_mod,    ONLY : gather_grid
   USE vlocal,         ONLY : vloc
   !
@@ -325,12 +324,25 @@ CONTAINS
     REAL(DP) :: za, ztot
     REAL(DP) :: qa, qtot
     !
+    INTEGER  :: seed(2)
+    INTEGER  :: clock
+    REAL(DP) :: rand_value
+    LOGICAL, SAVE :: rand_init = .FALSE.
+    !
     IF (.NOT. do_kinetic) THEN
       RETURN
     END IF
     !
     IF (kinetic_perturb <= 0.0_DP) THEN
       RETURN
+    END IF
+    !
+    IF (.NOT. rand_init) THEN
+      rand_init = .TRUE.
+      CALL system_clock(count=clock)
+      seed(1) = clock
+      seed(2) = clock / 2
+      CALL random_seed(put=seed)
     END IF
     !
     IF (ionode) THEN
@@ -346,7 +358,8 @@ CONTAINS
       it = ityp(ia)
       !
       IF (zv(it) > 0.0_DP) THEN
-        fac = 2.0_DP * (randy() - 0.5_DP) * kinetic_perturb / zv(it)
+        CALL random_number(rand_value)
+        fac = 2.0_DP * (rand_value - 0.5_DP) * kinetic_perturb / zv(it)
         fac = MAX(fac, -1.0_DP)
       ELSE
         fac = 0.0_DP
