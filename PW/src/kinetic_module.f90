@@ -344,7 +344,7 @@ CONTAINS
       !
       DO ig = 1, ngm
         !
-        aux(dfftp%nl(ig)) = aux(dfftp%nl(ig))
+        aux(dfftp%nl(ig)) = aux(dfftp%nl(ig)) &
                           + fac * vloc(igtongl(ig), it) &
                           * eigts1(mill(1, ig), ia) &
                           * eigts2(mill(2, ig), ia) &
