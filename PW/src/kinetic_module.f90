@@ -321,8 +321,11 @@ CONTAINS
     INTEGER  :: ia, it
     INTEGER  :: ig
     REAL(DP) :: fac
-    REAL(DP) :: za, ztot
-    REAL(DP) :: qa, qtot
+    REAL(DP) :: ztot
+    REAL(DP) :: qtot
+    !
+    REAL(DP), ALLOCATABLE :: za(:)
+    REAL(DP), ALLOCATABLE :: qa(:)
     !
     INTEGER  :: seed(2)
     INTEGER  :: clock
@@ -337,13 +340,42 @@ CONTAINS
       RETURN
     END IF
     !
-    IF (.NOT. rand_init) THEN
-      rand_init = .TRUE.
-      CALL system_clock(count=clock)
-      seed(1) = clock
-      seed(2) = clock / 2
-      CALL random_seed(put=seed)
+    ALLOCATE(za(nat))
+    ALLOCATE(qa(nat))
+    za = 0.0_DP
+    qa = 0.0_DP
+    !
+    IF (ionode) THEN
+      !
+      IF (.NOT. rand_init) THEN
+        rand_init = .TRUE.
+        CALL system_clock(count=clock)
+        seed(1) = clock
+        seed(2) = clock / 2
+        CALL random_seed(put=seed)
+      END IF
+      !
+      DO ia = 1, nat
+        !
+        it = ityp(ia)
+        !
+        IF (zv(it) > 0.0_DP) THEN
+          CALL random_number(rand_value)
+          fac = 2.0_DP * (rand_value - 0.5_DP) * kinetic_perturb / zv(it)
+          fac = MAX(fac, -1.0_DP)
+        ELSE
+          fac = 0.0_DP
+        END IF
+        !
+        qa(ia) = fac * zv(it)
+        za(ia) = zv(it) + qa(ia)
+        !
+      END DO
+      !
     END IF
+    !
+    CALL mp_sum(za, intra_image_comm)
+    CALL mp_sum(qa, intra_image_comm)
     !
     IF (ionode) THEN
       WRITE(stdout, '()')
@@ -357,22 +389,16 @@ CONTAINS
       !
       it = ityp(ia)
       !
+      ztot = ztot + za(ia)
+      qtot = qtot + qa(ia)
+      !
+      IF (ionode) &
+      WRITE(stdout, '(5X,I3,2X,A4,2F10.4)') ia, ADJUSTL(atm(it)) // '    ', za(ia), qa(ia)
+      !
       IF (zv(it) > 0.0_DP) THEN
-        CALL random_number(rand_value)
-        fac = 2.0_DP * (rand_value - 0.5_DP) * kinetic_perturb / zv(it)
-        fac = MAX(fac, -1.0_DP)
+        fac = qa(ia) / zv(it)
       ELSE
         fac = 0.0_DP
-      END IF
-      !
-      qa = fac * zv(it)
-      za = zv(it) + qa
-      !
-      ztot = ztot + za
-      qtot = qtot + qa
-      !
-      IF (ionode) THEN
-        WRITE(stdout, '(5X,I3,2X,A4,2F10.4)') ia, ADJUSTL(atm(it)) // '    ', za, qa
       END IF
       !
       DO ig = 1, ngm
@@ -387,9 +413,11 @@ CONTAINS
       !
     END DO
     !
-    IF (ionode) THEN
-      WRITE(stdout, '(10X,A4,2F10.4)') "sum ", ztot, qtot
-    END IF
+    IF (ionode) &
+    WRITE(stdout, '(10X,A4,2F10.4)') "Sum ", ztot, qtot
+    !
+    DEALLOCATE(za)
+    DEALLOCATE(qa)
     !
   END SUBROUTINE kinetic_add_perturb
   !
