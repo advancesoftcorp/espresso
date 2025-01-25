@@ -1706,6 +1706,11 @@ SUBROUTINE iosys()
   !
   IF ( do_kinetic ) ethr = MIN( ethr, 1.0D-8 )
   !
+  IF ( do_kinetic .AND. kinetic_perturb > 0.0_DP ) THEN
+     nosym = .true.
+     CALL infomsg('iosys', 'cannot use symmetry with kin_perturb > 0')
+  ENDIF
+  !
   ! ... End of reading input parameters
   !
 #if ! defined (__INTEL_COMPILER) || (__INTEL_COMPILER >= 1300) 
