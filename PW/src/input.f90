@@ -1707,8 +1707,8 @@ SUBROUTINE iosys()
   IF ( do_kinetic ) ethr = MIN( ethr, 1.0D-8 )
   !
   IF ( do_kinetic .AND. kinetic_perturb > 0.0_DP ) THEN
-     IF ( .NOT. nosym ) THEN
-        nosym = .TRUE.
+     IF ( .NOT. nosym_ ) THEN
+        nosym_ = .TRUE.
         CALL infomsg('iosys', 'cannot use symmetry with kin_perturb > 0')
      END IF
   END IF
