@@ -27,6 +27,7 @@ MODULE kinetic_module
   USE mp_bands,       ONLY : intra_bgrp_comm
   USE mp_images,      ONLY : intra_image_comm
   USE scatter_mod,    ONLY : gather_grid
+  USE scf,            ONLY : rho
   USE vlocal,         ONLY : vloc
   !
   IMPLICIT NONE
@@ -146,7 +147,8 @@ CONTAINS
     REAL(DP), ALLOCATABLE :: tauG(:)
     REAL(DP), ALLOCATABLE :: tauL(:)
     REAL(DP), ALLOCATABLE :: dtdr(:)
-    REAL(DP), ALLOCATABLE :: rhor_g(:)
+    REAL(DP), ALLOCATABLE :: rho1_g(:)
+    REAL(DP), ALLOCATABLE :: rho2_g(:)
     REAL(DP), ALLOCATABLE :: tauG_g(:)
     REAL(DP), ALLOCATABLE :: tauL_g(:)
     REAL(DP), ALLOCATABLE :: dtdr_g(:)
@@ -199,7 +201,8 @@ CONTAINS
     ALLOCATE(tauG(dffts%nnr))
     ALLOCATE(tauL(dffts%nnr))
     ALLOCATE(dtdr(dffts%nnr))
-    ALLOCATE(rhor_g(nfft))
+    ALLOCATE(rho1_g(nfft))
+    ALLOCATE(rho2_g(nfft))
     ALLOCATE(tauG_g(nfft))
     ALLOCATE(tauL_g(nfft))
     ALLOCATE(dtdr_g(nfft))
@@ -236,16 +239,19 @@ CONTAINS
     END IF
     !
 #if defined(__MPI)
-    rhor_g = 0.0_DP
+    rho1_g = 0.0_DP
+    rho2_g = 0.0_DP
     tauG_g = 0.0_DP
     tauL_g = 0.0_DP
     dtdr_g = 0.0_DP
-    CALL gather_grid(dffts, rhor, rhor_g)
-    CALL gather_grid(dffts, tauG, tauG_g)
-    CALL gather_grid(dffts, tauL, tauL_g)
-    CALL gather_grid(dffts, dtdr, dtdr_g)
+    CALL gather_grid(dffts, rhor,           rho1_g)
+    CALL gather_grid(dffts, rho%of_r(:, 1), rho2_g)
+    CALL gather_grid(dffts, tauG,           tauG_g)
+    CALL gather_grid(dffts, tauL,           tauL_g)
+    CALL gather_grid(dffts, dtdr,           dtdr_g)
 #else
-    rhor_g = rhor
+    rho1_g = rhor
+    rho2_g = rho%of_r(:, 1)
     tauG_g = tauG
     tauL_g = tauL
     dtdr_g = dtdr
@@ -273,8 +279,11 @@ CONTAINS
         WRITE(iunkinetic, "(I8)") 0
       END IF
       !
-      WRITE(iunkinetic, '("#Charge")')
-      CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP, rhor_g)
+      WRITE(iunkinetic, '("#Charge (IN)")')
+      CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP, rho1_g)
+      !
+      WRITE(iunkinetic, '("#Charge (OUT)")')
+      CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP, rho2_g)
       !
       WRITE(iunkinetic, '("#Kinetic Energy Density (by Gradient)")')
       CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP / e2, tauG_g)
@@ -301,7 +310,8 @@ CONTAINS
     DEALLOCATE(tauG)
     DEALLOCATE(tauL)
     DEALLOCATE(dtdr)
-    DEALLOCATE(rhor_g)
+    DEALLOCATE(rho1_g)
+    DEALLOCATE(rho2_g)
     DEALLOCATE(tauG_g)
     DEALLOCATE(tauL_g)
     DEALLOCATE(dtdr_g)
