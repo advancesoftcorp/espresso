@@ -280,10 +280,10 @@ CONTAINS
       END IF
       !
       WRITE(iunkinetic, '("#Charge (IN)")')
-      CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP, rho1_g)
+      CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP, rho2_g)
       !
       WRITE(iunkinetic, '("#Charge (OUT)")')
-      CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP, rho2_g)
+      CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP, rho1_g)
       !
       WRITE(iunkinetic, '("#Kinetic Energy Density (by Gradient)")')
       CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP / e2, tauG_g)
