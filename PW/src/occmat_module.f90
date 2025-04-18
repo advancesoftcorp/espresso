@@ -12,9 +12,13 @@ MODULE occmat_module
   !
   ! ... the module for Occupation Matrix
   !
-  USE ions_base,        ONLY : nat
+  USE cell_base,        ONLY : at, alat
+  USE io_files,         ONLY : tmp_dir, prefix
+  USE io_global,        ONLY : ionode, stdout
+  USE ions_base,        ONLY : nat, atm, ityp, tau
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_sum
+  USE mp_images,        ONLY : intra_image_comm
   USE noncollin_module, ONLY : noncolin
   USE uspp_param,       ONLY : nhm
   !
@@ -103,6 +107,8 @@ CONTAINS
     !
     IMPLICIT NONE
     !
+    INTEGER :: ia, it
+    !
     REAL(DP), ALLOCATABLE :: becsum(:,:) ! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
     !
     IF (.NOT. do_occmat) THEN
@@ -128,11 +134,50 @@ CONTAINS
     !
     ! ... calculate Occupation Matrix
     !
-    CALL occmat_sum_band()
+    CALL occmat_sum_band(becsum)
     !
-    ! TODO
-    ! TODO
-    ! TODO
+    ! ... print data, in Hartree/Bohr unit
+    !
+    CALL occmat_open()
+    !
+    IF (ionode) THEN
+      !
+      ! ... Lattice
+      WRITE(iunoccmat, '("#Lattice")')
+      WRITE(iunoccmat, '(3E25.16)') alat * at(1, 1), alat * at(2, 1), alat * at(3, 1)
+      WRITE(iunoccmat, '(3E25.16)') alat * at(1, 2), alat * at(2, 2), alat * at(3, 2)
+      WRITE(iunoccmat, '(3E25.16)') alat * at(1, 3), alat * at(2, 3), alat * at(3, 3)
+      !
+      ! ... Atoms
+      WRITE(iunoccmat, '("#Number of Atoms")')
+      WRITE(iunoccmat, '(I5)') nat
+      WRITE(iunoccmat, '("#Atoms")')
+      !
+      DO ia = 1, nat
+        !
+        it = ityp(ia)
+        !
+        WRITE(iunoccmat, '(I5,A6,3E25.16)') ia, atm(it), &
+        alat * tau(1, ia), alat * tau(2, ia), alat * tau(3, ia)
+        !
+      END DO
+      !
+      ! ... Occupation Matrix
+      WRITE(iunoccmat, '("#Occupation Matrix (only s and p orbital)")')
+      !
+      DO ia = 1, nat
+        !
+        ! TODO
+        ! TODO
+        ! TODO
+        !
+      END DO
+      !
+    END IF
+    !
+    CALL occmat_close()
+    !
+    CALL mp_barrier(intra_image_comm)
     !
     ! ... deallocate memory
     !
