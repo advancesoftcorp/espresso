@@ -15,18 +15,20 @@ SUBROUTINE occmat_sum_band(becsum)
   USE becmod,        ONLY : becp, allocate_bec_type, deallocate_bec_type
   USE buffers,       ONLY : get_buffer
   USE io_files,      ONLY : iunwfc, nwordwfc
+  USE ions_base,     ONLY : nat
   USE kinds,         ONLY : DP
   USE klist,         ONLY : nks, xk, ngk, igk_k
   USE mp,            ONLY : mp_sum
   USE mp_bands,      ONLY : inter_bgrp_comm, intra_bgrp_comm
   USE mp_pools,      ONLY : inter_pool_comm
   USE uspp,          ONLY : nkb, vkb
+  USE uspp_param,    ONLY : nhm
   USE wavefunctions, ONLY : evc
   USE wvfct,         ONLY : nbnd
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(OUT) :: becsum(:,:)
+  REAL(DP), INTENT(OUT) :: becsum(nhm, nhm, nat)
   !
   INTEGER :: ik, npw
   INTEGER :: ibnd_start, ibnd_end, this_bgrp_nbnd
@@ -35,7 +37,7 @@ SUBROUTINE occmat_sum_band(becsum)
   !
   this_bgrp_nbnd = ibnd_end - ibnd_start + 1
   !
-  becsum(:, :) = 0.0_DP
+  becsum = 0.0_DP
   !
   CALL allocate_bec_type(nkb, this_bgrp_nbnd, becp, intra_bgrp_comm)
   !
@@ -70,7 +72,7 @@ SUBROUTINE occmat_sum_bec(ik, ibnd_start, ibnd_end, this_bgrp_nbnd, becsum)
   USE kinds,         ONLY : DP
   USE klist,         ONLY : ngk
   USE uspp,          ONLY : nkb, vkb, indv_ijkb0
-  USE uspp_param,    ONLY : upf, nh
+  USE uspp_param,    ONLY : upf, nh, nhm
   USE wavefunctions, ONLY : evc
   USE wvfct,         ONLY : wg
   !
@@ -80,11 +82,11 @@ SUBROUTINE occmat_sum_bec(ik, ibnd_start, ibnd_end, this_bgrp_nbnd, becsum)
   INTEGER,  INTENT(IN)  :: ibnd_start
   INTEGER,  INTENT(IN)  :: ibnd_end
   INTEGER,  INTENT(IN)  :: this_bgrp_nbnd
-  REAL(DP), INTENT(OUT) :: becsum(:,:)
+  REAL(DP), INTENT(OUT) :: becsum(nhm, nhm, nat)
   !
   INTEGER :: npw, ikb
   INTEGER :: na, nt
-  INTEGER :: ih, jh, ijh
+  INTEGER :: ih, nht
   INTEGER :: ibnd, jbnd, ibnd_loc, nbnd_loc
   !
   REAL(DP),    ALLOCATABLE :: auxg  (:,:)
@@ -98,19 +100,21 @@ SUBROUTINE occmat_sum_bec(ik, ibnd_start, ibnd_end, this_bgrp_nbnd, becsum)
   !
   DO nt = 1, ntyp
     !
-    IF (.NOT. upf(nt)%tvanp) CYCLE
+    IF (upf(nt)%tcoulombp) CYCLE
+    !
+    nht = nh(nt)
     !
     ! ... allocate memory
     !
     IF (gamma_only) THEN
       nbnd_loc = becp%nbnd_loc
-      ALLOCATE(auxg (nbnd_loc, nh(nt)))
+      ALLOCATE(auxg (nbnd_loc, nht))
     ELSE
-      ALLOCATE(auxk1(ibnd_start:ibnd_end, nh(nt)))
-      ALLOCATE(auxk2(ibnd_start:ibnd_end, nh(nt)))
+      ALLOCATE(auxk1(ibnd_start:ibnd_end, nht))
+      ALLOCATE(auxk2(ibnd_start:ibnd_end, nht))
     END IF
     !
-    ALLOCATE (aux_gk(nh(nt), nh(nt)))
+    ALLOCATE (aux_gk(nht, nht))
     !
     ! ... In becp=<vkb_i|psi_j> terms corresponding to atom na of type nt
     !     run from index i=indv_ijkb0(na)+1 to i=indv_ijkb0(na)+nh(nt)
@@ -125,7 +129,7 @@ SUBROUTINE occmat_sum_bec(ik, ibnd_start, ibnd_end, this_bgrp_nbnd, becsum)
       IF (gamma_only) THEN
         !
 !$omp parallel do default(shared), private(ih, ikb, ibnd, ibnd_loc)
-        DO ih = 1, nh(nt)
+        DO ih = 1, nht
           ikb = indv_ijkb0(na) + ih
           DO ibnd_loc = 1, nbnd_loc
             ibnd = (ibnd_start - 1) + ibnd_loc + becp%ibnd_begin - 1
@@ -134,14 +138,14 @@ SUBROUTINE occmat_sum_bec(ik, ibnd_start, ibnd_end, this_bgrp_nbnd, becsum)
         END DO
 !$omp end parallel do
         !
-        CALL DGEMM('N', 'N', nh(nt), nh(nt), nbnd_loc, &
+        CALL DGEMM('N', 'N', nht, nht, nbnd_loc, &
                    1.0_DP, becp%r(indv_ijkb0(na) + 1, 1), nkb, auxg, nbnd_loc, &
-                   0.0_DP, aux_gk, nh(nt))
+                   0.0_DP, aux_gk, nht)
         !
       ELSE
         !
 !$omp parallel do default(shared), private(ih, ikb, ibnd, jbnd)
-        DO ih = 1, nh(nt)
+        DO ih = 1, nht
           ikb = indv_ijkb0(na) + ih
           DO jbnd = 1, this_bgrp_nbnd ! ibnd_start, ibnd_end
             ibnd = ibnd_start + jbnd - 1
@@ -152,25 +156,15 @@ SUBROUTINE occmat_sum_bec(ik, ibnd_start, ibnd_end, this_bgrp_nbnd, becsum)
 !$omp end parallel do
         !
         ! only the real part is computed
-        CALL DGEMM('C', 'N', nh(nt), nh(nt), 2 * this_bgrp_nbnd, &
+        CALL DGEMM('C', 'N', nht, nht, 2 * this_bgrp_nbnd, &
                    1.0_DP, auxk1, 2 * this_bgrp_nbnd, auxk2, 2 * this_bgrp_nbnd, &
-                   0.0_DP, aux_gk, nh(nt))
+                   0.0_DP, aux_gk, nht)
         !
       END IF
       !
       ! ... copy output from GEMM into desired format
       !
-      ijh = 0
-      !
-      DO ih = 1, nh(nt)
-        DO jh = ih, nh(nt)
-          !
-          ijh = ijh + 1
-          !
-          becsum(ijh, na) = becsum(ijh, na) + aux_gk(ih, jh)
-          !
-        END DO
-      END DO
+      becsum(1:nht, 1:nht, na) = becsum(1:nht, 1:nht, na) + aux_gk(:, :)
       !
     END DO
     !

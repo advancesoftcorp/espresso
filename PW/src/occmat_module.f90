@@ -15,12 +15,12 @@ MODULE occmat_module
   USE cell_base,        ONLY : at, alat
   USE io_files,         ONLY : tmp_dir, prefix
   USE io_global,        ONLY : ionode, stdout
-  USE ions_base,        ONLY : nat, atm, ityp, tau
+  USE ions_base,        ONLY : nat, atm, ntyp => nsp, ityp, tau
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_sum
   USE mp_images,        ONLY : intra_image_comm
   USE noncollin_module, ONLY : noncolin
-  USE uspp_param,       ONLY : nhm
+  USE uspp_param,       ONLY : upf, nhm
   !
   IMPLICIT NONE
   SAVE
@@ -107,8 +107,12 @@ CONTAINS
     !
     IMPLICIT NONE
     !
-    INTEGER :: ia, it
+    INTEGER  :: ia, it
+    INTEGER  :: ib, jb
+    INTEGER  :: iorb, jorb
+    REAL(DP) :: becsum_t
     !
+    INTEGER,  ALLOCATABLE :: i_beta(:,:)
     REAL(DP), ALLOCATABLE :: becsum(:,:) ! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
     !
     IF (.NOT. do_occmat) THEN
@@ -130,7 +134,8 @@ CONTAINS
     !
     ! ... allocate memory
     !
-    ALLOCATE(becsum(nhm * (nhm + 1) / 2, nat)) ! w/o spin
+    ALLOCATE(i_beta(4, ntyp))
+    ALLOCATE(becsum(nhm, nhm, nat)) ! w/o spin
     !
     ! ... calculate Occupation Matrix
     !
@@ -163,13 +168,41 @@ CONTAINS
       END DO
       !
       ! ... Occupation Matrix
-      WRITE(iunoccmat, '("#Occupation Matrix (only s and p orbital)")')
+      WRITE(iunoccmat, '("#Occupation Matrix (only s+p orbital)")')
+      !
+      DO it = 1, ntyp
+        !
+        CALL index_of_beta(it, i_beta(:, it))
+        !
+      END DO
       !
       DO ia = 1, nat
         !
-        ! TODO
-        ! TODO
-        ! TODO
+        it = ityp(ia)
+        !
+        WRITE(iunoccmat, '(I5)') ia
+        !
+        DO iorb = 1, 4
+          !
+          ib = i_beta(iorb, it)
+          !
+          DO jorb = 1, 4
+            !
+            jb = i_beta(jorb, it)
+            !
+            IF (ib > 0 .AND. jb > 0) THEN
+              becsum_t = becsum(ib, jb, na)
+            ELSE
+              becsum_t = 0.0_DP
+            END IF
+            !
+            WRITE(iunoccmat, '(E25.16)', advance='no') becsum_t
+            !
+          END DO
+          !
+          WRITE(iunoccmat, '()')
+          !
+        END DO
         !
       END DO
       !
@@ -181,8 +214,56 @@ CONTAINS
     !
     ! ... deallocate memory
     !
+    DEALLOCATE(iorb_s)
+    DEALLOCATE(iorb_p)
     DEALLOCATE(becsum)
     !
   END SUBROUTINE occmat_print
+  !
+  !----------------------------------------------------------------------------
+  SUBROUTINE index_of_beta(it, i_beta)
+    !----------------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(IN)  :: it
+    INTEGER, INTENT(OUT) :: i_beta(4)
+    !
+    INTEGER :: ib
+    INTEGER :: l
+    INTEGER :: nht
+    !
+    INTEGER, PARAMETER :: i_s  = 1
+    INTEGER, PARAMETER :: i_px = 2
+    INTEGER, PARAMETER :: i_py = 3
+    INTEGER, PARAMETER :: i_pz = 4
+    !
+    i_beta(1:4) = 0
+    !
+    IF (upf(it)%tcoulombp) RETURN
+    !
+    nht = 0
+    !
+    DO ib = 1, upf(it)%nbeta
+      !
+      l = upf(it)%lll(ib)
+      !
+      IF (l == 0) THEN
+        !
+        i_beta(i_s)  = nht + 1 ! s
+        !
+      ELSE IF (l == 1) THEN
+        !
+        i_beta(i_pz) = nht + 1 ! pz
+        i_beta(i_px) = nht + 2 ! px
+        i_beta(i_py) = nht + 3 ! py
+        !
+      END IF
+      !
+      nht = nht + 2 * l + 1
+      !
+    END DO
+    !
+  END SUBROUTINE index_of_beta
   !
 END MODULE occmat_module
