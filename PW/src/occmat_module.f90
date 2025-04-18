@@ -22,7 +22,7 @@ MODULE occmat_module
   USE mp_images,        ONLY : intra_image_comm
   USE noncollin_module, ONLY : noncolin
   USE spin_orb,         ONLY : lspinorb
-  USE uspp,             ONLY : dvan
+  USE uspp,             ONLY : dvan, okvan
   USE uspp_param,       ONLY : upf, nhm
   !
   IMPLICIT NONE
@@ -139,6 +139,12 @@ CONTAINS
     IF (lspinorb) THEN
       !
       CALL errore('occmat_print', 'Occupation Matrix does not support lspinorb', 1)
+      !
+    END IF
+    !
+    IF (okvan) THEN
+      !
+      CALL errore('occmat_print', 'Occupation Matrix supports only NCPP, not USPP/PAW.', 1)
       !
     END IF
     !
