@@ -11,6 +11,7 @@ MODULE occmat_module
   !--------------------------------------------------------------------------
   !
   ! ... the module for Occupation Matrix
+  ! ... [NOTE] this module support only ``NCPP``
   !
   USE cell_base,        ONLY : at, alat
   USE io_files,         ONLY : tmp_dir, prefix
@@ -20,6 +21,8 @@ MODULE occmat_module
   USE mp,               ONLY : mp_sum, mp_barrier
   USE mp_images,        ONLY : intra_image_comm
   USE noncollin_module, ONLY : noncolin
+  USE spin_orb,         ONLY : lspinorb
+  USE uspp,             ONLY : dvan
   USE uspp_param,       ONLY : upf, nhm
   !
   IMPLICIT NONE
@@ -108,11 +111,12 @@ CONTAINS
     IMPLICIT NONE
     !
     INTEGER  :: ia, it
-    INTEGER  :: ib, jb
+    INTEGER  :: ih, jh
     INTEGER  :: iorb, jorb
-    REAL(DP) :: becsum_t
+    REAL(DP) :: occnum
+    REAL(DP) :: occmat(4, 4)
     !
-    INTEGER,  ALLOCATABLE :: i_beta(:,:)
+    INTEGER,  ALLOCATABLE :: indx_h(:,:)
     REAL(DP), ALLOCATABLE :: becsum(:,:,:) ! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
     !
     IF (.NOT. do_occmat) THEN
@@ -132,9 +136,15 @@ CONTAINS
       !
     END IF
     !
+    IF (lspinorb) THEN
+      !
+      CALL errore('occmat_print', 'Occupation Matrix does not support lspinorb', 1)
+      !
+    END IF
+    !
     ! ... allocate memory
     !
-    ALLOCATE(i_beta(4, ntyp))
+    ALLOCATE(indx_h(4, ntyp))
     ALLOCATE(becsum(nhm, nhm, nat)) ! w/o spin
     !
     ! ... calculate Occupation Matrix
@@ -172,7 +182,7 @@ CONTAINS
       !
       DO it = 1, ntyp
         !
-        CALL index_of_beta(it, i_beta(:, it))
+        CALL index_of_beta(it, indx_h(:, it))
         !
       END DO
       !
@@ -180,27 +190,37 @@ CONTAINS
         !
         it = ityp(ia)
         !
-        WRITE(iunoccmat, '(I5)') ia
-        !
         DO iorb = 1, 4
           !
-          ib = i_beta(iorb, it)
+          ih = indx_h(iorb, it)
           !
           DO jorb = 1, 4
             !
-            jb = i_beta(jorb, it)
+            jh = indx_h(jorb, it)
             !
-            IF (ib > 0 .AND. jb > 0) THEN
-              becsum_t = becsum(ib, jb, ia)
+            IF (ih > 0 .AND. jh > 0) THEN
+              occmat(iorb, jorb) = becsum(ih, jh, ia) * dvan(ih, ih, it) * dvan(jh, jh, it)
             ELSE
-              becsum_t = 0.0_DP
+              occmat(iorb, jorb) = 0.0_DP
             END IF
-            !
-            WRITE(iunoccmat, '(E25.16)', advance='no') becsum_t
             !
           END DO
           !
-          WRITE(iunoccmat, '()')
+        END DO
+        !
+        occnum = 0.0_DP
+        !
+        DO iorb = 1, 4
+          !
+          occnum = occnum + occmat(iorb, iorb)
+          !
+        END DO
+        !
+        WRITE(iunoccmat, '("   iatom:", I5, "  trace:", E25.16)') ia, occnum
+        !
+        DO iorb = 1, 4
+          !
+          WRITE(iunoccmat, '(4E25.16)') (occmat(iorb, jorb), jorb = 1, 4)
           !
         END DO
         !
@@ -214,19 +234,19 @@ CONTAINS
     !
     ! ... deallocate memory
     !
-    DEALLOCATE(i_beta)
+    DEALLOCATE(indx_h)
     DEALLOCATE(becsum)
     !
   END SUBROUTINE occmat_print
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE index_of_beta(it, i_beta)
+  SUBROUTINE index_of_beta(it, indx_h)
     !----------------------------------------------------------------------------
     !
     IMPLICIT NONE
     !
     INTEGER, INTENT(IN)  :: it
-    INTEGER, INTENT(OUT) :: i_beta(4)
+    INTEGER, INTENT(OUT) :: indx_h(4)
     !
     INTEGER :: ib
     INTEGER :: l
@@ -237,7 +257,7 @@ CONTAINS
     INTEGER, PARAMETER :: i_py = 3
     INTEGER, PARAMETER :: i_pz = 4
     !
-    i_beta(1:4) = 0
+    indx_h(1:4) = 0
     !
     IF (upf(it)%tcoulombp) RETURN
     !
@@ -249,19 +269,19 @@ CONTAINS
       !
       IF (l == 0) THEN
         !
-        IF (i_beta(i_s) == 0) THEN
+        IF (indx_h(i_s) == 0) THEN
           !
-          i_beta(i_s) = nht + 1 ! s
+          indx_h(i_s) = nht + 1 ! s
           !
         END IF
         !
       ELSE IF (l == 1) THEN
         !
-        IF (i_beta(i_pz) == 0) THEN
+        IF (indx_h(i_pz) == 0) THEN
           !
-          i_beta(i_pz) = nht + 1 ! pz
-          i_beta(i_px) = nht + 2 ! px
-          i_beta(i_py) = nht + 3 ! py
+          indx_h(i_pz) = nht + 1 ! pz
+          indx_h(i_px) = nht + 2 ! px
+          indx_h(i_py) = nht + 3 ! py
           !
         END IF
         !
