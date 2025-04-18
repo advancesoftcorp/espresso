@@ -17,7 +17,7 @@ MODULE occmat_module
   USE io_global,        ONLY : ionode, stdout
   USE ions_base,        ONLY : nat, atm, ntyp => nsp, ityp, tau
   USE kinds,            ONLY : DP
-  USE mp,               ONLY : mp_sum
+  USE mp,               ONLY : mp_sum, mp_barrier
   USE mp_images,        ONLY : intra_image_comm
   USE noncollin_module, ONLY : noncolin
   USE uspp_param,       ONLY : upf, nhm
