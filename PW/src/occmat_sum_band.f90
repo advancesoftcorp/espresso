@@ -167,11 +167,7 @@ SUBROUTINE occmat_sum_bec(ik, ibnd_start, ibnd_end, this_bgrp_nbnd, becsum)
           !
           ijh = ijh + 1
           !
-          IF (jh == ih) THEN
-            becsum(ijh, na) = becsum(ijh, na) + aux_gk(ih, jh)
-          ELSE
-            becsum(ijh, na) = becsum(ijh, na) + aux_gk(ih, jh) * 2.0_DP
-          END IF
+          becsum(ijh, na) = becsum(ijh, na) + aux_gk(ih, jh)
           !
         END DO
       END DO
