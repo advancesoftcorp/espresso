@@ -113,7 +113,7 @@ CONTAINS
     REAL(DP) :: becsum_t
     !
     INTEGER,  ALLOCATABLE :: i_beta(:,:)
-    REAL(DP), ALLOCATABLE :: becsum(:,:) ! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
+    REAL(DP), ALLOCATABLE :: becsum(:,:,:) ! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
     !
     IF (.NOT. do_occmat) THEN
       RETURN
@@ -191,7 +191,7 @@ CONTAINS
             jb = i_beta(jorb, it)
             !
             IF (ib > 0 .AND. jb > 0) THEN
-              becsum_t = becsum(ib, jb, na)
+              becsum_t = becsum(ib, jb, ia)
             ELSE
               becsum_t = 0.0_DP
             END IF
@@ -214,8 +214,7 @@ CONTAINS
     !
     ! ... deallocate memory
     !
-    DEALLOCATE(iorb_s)
-    DEALLOCATE(iorb_p)
+    DEALLOCATE(i_beta)
     DEALLOCATE(becsum)
     !
   END SUBROUTINE occmat_print
