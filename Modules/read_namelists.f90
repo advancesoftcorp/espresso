@@ -136,6 +136,7 @@ MODULE read_namelists_module
        tkinetic = .FALSE.
        kin_perturb = 0.0_DP
        kin_nprint = 5
+       toccmat = .FALSE.
        !
        saverho = .TRUE.
        memory = 'default'
@@ -915,6 +916,7 @@ MODULE read_namelists_module
        CALL mp_bcast( tkinetic,      ionode_id, intra_image_comm )
        CALL mp_bcast( kin_perturb,   ionode_id, intra_image_comm )
        CALL mp_bcast( kin_nprint,    ionode_id, intra_image_comm )
+       CALL mp_bcast( toccmat,       ionode_id, intra_image_comm )
        CALL mp_bcast( vdw_table_name,ionode_id, intra_image_comm )
        CALL mp_bcast( memory,        ionode_id, intra_image_comm )
        CALL mp_bcast( input_xml_schema_file, ionode_id, intra_image_comm )

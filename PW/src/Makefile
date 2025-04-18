@@ -158,6 +158,8 @@ new_nsg.o \
 new_occ.o \
 ns_adj.o \
 non_scf.o \
+occmat_module.o \
+occmat_sum_band.o \
 offset_atom_wfc.o \
 openfil.o \
 orthoatwfc.o \

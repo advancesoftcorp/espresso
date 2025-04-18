@@ -451,6 +451,7 @@ electrons.o : fcp_module.o
 electrons.o : gcscf_module.o
 electrons.o : io_rho_xml.o
 electrons.o : kinetic_module.o
+electrons.o : occmat_module.o
 electrons.o : ldaU.o
 electrons.o : loc_scdm.o
 electrons.o : loc_scdm_k.o
@@ -1130,6 +1131,7 @@ input.o : exx_base.o
 input.o : fcp_module.o
 input.o : gcscf_module.o
 input.o : kinetic_module.o
+input.o : occmat_module.o
 input.o : ldaU.o
 input.o : loc_scdm.o
 input.o : martyna_tuckerman.o
