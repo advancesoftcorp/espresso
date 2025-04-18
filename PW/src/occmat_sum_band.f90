@@ -121,7 +121,7 @@ SUBROUTINE occmat_sum_bec(ik, ibnd_start, ibnd_end, this_bgrp_nbnd, becsum)
     !
     DO na = 1, nat
       !
-      IF (ityp(na) /= np) CYCLE
+      IF (ityp(na) /= nt) CYCLE
       !
       ! ... sum over bands: \sum_i <psi_i|beta_l><beta_m|psi_i> w_i
       !     copy into aux1, aux2 the needed data to perform a GEMM
