@@ -250,13 +250,21 @@ CONTAINS
       !
       IF (l == 0) THEN
         !
-        i_beta(i_s)  = nht + 1 ! s
+        IF (i_beta(i_s) == 0) THEN
+          !
+          i_beta(i_s) = nht + 1 ! s
+          !
+        END IF
         !
       ELSE IF (l == 1) THEN
         !
-        i_beta(i_pz) = nht + 1 ! pz
-        i_beta(i_px) = nht + 2 ! px
-        i_beta(i_py) = nht + 3 ! py
+        IF (i_beta(i_pz) == 0) THEN
+          !
+          i_beta(i_pz) = nht + 1 ! pz
+          i_beta(i_px) = nht + 2 ! px
+          i_beta(i_py) = nht + 3 ! py
+          !
+        END IF
         !
       END IF
       !
