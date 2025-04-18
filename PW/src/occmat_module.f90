@@ -12,9 +12,11 @@ MODULE occmat_module
   !
   ! ... the module for Occupation Matrix
   !
+  USE ions_base,        ONLY : nat
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_sum
   USE noncollin_module, ONLY : noncolin
+  USE uspp_param,       ONLY : nhm
   !
   IMPLICIT NONE
   SAVE
@@ -101,6 +103,8 @@ CONTAINS
     !
     IMPLICIT NONE
     !
+    REAL(DP), ALLOCATABLE :: becsum(:,:) ! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
+    !
     IF (.NOT. do_occmat) THEN
       RETURN
     END IF
@@ -118,6 +122,10 @@ CONTAINS
       !
     END IF
     !
+    ! ... allocate memory
+    !
+    ALLOCATE(becsum(nhm * (nhm + 1) / 2, nat)) ! w/o spin
+    !
     ! ... calculate Occupation Matrix
     !
     CALL occmat_sum_band()
@@ -125,6 +133,10 @@ CONTAINS
     ! TODO
     ! TODO
     ! TODO
+    !
+    ! ... deallocate memory
+    !
+    DEALLOCATE(becsum)
     !
   END SUBROUTINE occmat_print
   !

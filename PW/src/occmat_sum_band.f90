@@ -7,399 +7,189 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------------
-SUBROUTINE occmat_sum_band(rhor, tauG, tauL, dtdr, by_veff)
+SUBROUTINE occmat_sum_band(becsum)
   !--------------------------------------------------------------------------
   !
   ! ... calculate Occupation Matrix
   !
-  USE buffers,          ONLY : get_buffer
-  USE cell_base,        ONLY : omega, tpiba, tpiba2
-  USE control_flags,    ONLY : gamma_only
-  USE ener,             ONLY : ef
-  USE fft_base,         ONLY : dffts
-  USE fft_interfaces,   ONLY : fwfft, invfft
-  USE gvect,            ONLY : g, gg, gstart
-  USE io_files,         ONLY : iunwfc, nwordwfc
-  USE kinds,            ONLY : DP
-  USE klist,            ONLY : nks, ngk, xk, igk_k
-  USE mp,               ONLY : mp_sum
-  USE mp_bands,         ONLY : inter_bgrp_comm
-  USE mp_pools,         ONLY : inter_pool_comm
-  USE noncollin_module, ONLY : noncolin, npol
-  USE scf,              ONLY : vrs
-  USE wavefunctions,    ONLY : evc, psic, psic_nc
-  USE wvfct,            ONLY : nbnd, npwx, wg, et
+  USE becmod,        ONLY : becp, allocate_bec_type, deallocate_bec_type
+  USE buffers,       ONLY : get_buffer
+  USE io_files,      ONLY : iunwfc, nwordwfc
+  USE kinds,         ONLY : DP
+  USE klist,         ONLY : nks, xk, ngk, igk_k
+  USE mp,            ONLY : mp_sum
+  USE mp_bands,      ONLY : inter_bgrp_comm, intra_bgrp_comm
+  USE mp_pools,      ONLY : inter_pool_comm
+  USE uspp,          ONLY : nkb, vkb
+  USE wavefunctions, ONLY : evc
+  USE wvfct,         ONLY : nbnd
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(OUT) :: rhor(dffts%nnr)
-  REAL(DP), INTENT(OUT) :: tauG(dffts%nnr)
-  REAL(DP), INTENT(OUT) :: tauL(dffts%nnr)
-  REAL(DP), INTENT(OUT) :: dtdr(dffts%nnr)
-  LOGICAL,  INTENT(IN)  :: by_veff
+  REAL(DP), INTENT(OUT) :: becsum(:,:)
   !
-  INTEGER  :: ig, ir
-  INTEGER  :: ibnd_start, ibnd_end
-  REAL(DP) :: fac
-  REAL(DP) :: rho0
-  !
-  REAL(DP),    ALLOCATABLE :: kplusg(:)
-  COMPLEX(DP), ALLOCATABLE :: aux(:)
-  !
-  REAL(DP),    PARAMETER   :: rho_min = 1.0E-16_DP
+  INTEGER :: ik, npw
+  INTEGER :: ibnd_start, ibnd_end, this_bgrp_nbnd
   !
   CALL divide(inter_bgrp_comm, nbnd, ibnd_start, ibnd_end)
   !
-  ALLOCATE(kplusg(npwx))
-  ALLOCATE(aux(dffts%nnr))
+  this_bgrp_nbnd = ibnd_end - ibnd_start + 1
   !
-  rhor(:) = 0.0_DP
-  tauG(:) = 0.0_DP
-  tauL(:) = 0.0_DP
-  dtdr(:) = 0.0_DP
+  becsum(:, :) = 0.0_DP
   !
-  ! ... calculate rhor = |psi|^2
-  ! ... and       tauG = |grad psi|^2
-  ! ... and       dtdr = (ef-e)*|psi|^2
+  CALL allocate_bec_type(nkb, this_bgrp_nbnd, becp, intra_bgrp_comm)
   !
-  IF (gamma_only) THEN
+  DO ik = 1, nks
     !
-    CALL sum_band_gamma()
+    npw = ngk(ik)
     !
-  ELSE
+    IF (nks > 1) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
     !
-    CALL sum_band_k()
+    IF (nkb > 0) CALL init_us_2 (npw, igk_k(1, ik), xk(1, ik), vkb)
     !
-  END IF
-  !
-  CALL mp_sum(rhor, inter_pool_comm)
-  CALL mp_sum(rhor, inter_bgrp_comm)
-  !
-  CALL mp_sum(tauG, inter_pool_comm)
-  CALL mp_sum(tauG, inter_bgrp_comm)
-  !
-  CALL mp_sum(dtdr, inter_pool_comm)
-  CALL mp_sum(dtdr, inter_bgrp_comm)
-  !
-  ! ... tauL = -psi Lap psi = |grad psi|^2 - (1/2)*Lap rho
-  !
-  aux(:) = rhor(:)
-  !
-  CALL fwfft('Rho', aux, dffts)
-  !
-  IF (gstart > 1) THEN
-    !
-    aux(dffts%nl(1)) = (0.0_DP, 0.0_DP)
-    !
-  END IF
-  !
-  fac = -0.5_DP * tpiba2
-  !
-  DO ig = gstart, dffts%ngm
-    !
-    aux(dffts%nl(ig)) = fac * gg(ig) * aux(dffts%nl(ig))
+    CALL occmat_sum_bec(ik, ibnd_start, ibnd_end, this_bgrp_nbnd, becsum)
     !
   END DO
   !
-  IF (gamma_only) THEN
-    !
-    DO ig = gstart, dffts%ngm
-      !
-      aux(dffts%nlm(ig)) = CONJG(aux(dffts%nl(ig)))
-      !
-    END DO
-    !
-  END IF
+  CALL deallocate_bec_type(becp)
   !
-  CALL invfft('Rho', aux, dffts)
+  CALL mp_sum(becsum, inter_bgrp_comm)
+  CALL mp_sum(becsum, inter_pool_comm)
   !
-  tauL(:) = tauG(:) - DBLE(aux(:))
+END SUBROUTINE occmat_sum_band
+!
+!--------------------------------------------------------------------------
+SUBROUTINE occmat_sum_bec(ik, ibnd_start, ibnd_end, this_bgrp_nbnd, becsum)
+  !----------------------------------------------------------------------------
   !
-  IF (by_veff) THEN
+  ! ... calculate Occupation Matrix, for a k-point
+  !
+  USE becmod,        ONLY : becp, calbec
+  USE control_flags, ONLY : gamma_only
+  USE ions_base,     ONLY : nat, ntyp => nsp, ityp
+  USE kinds,         ONLY : DP
+  USE klist,         ONLY : ngk
+  USE uspp,          ONLY : nkb, vkb, indv_ijkb0
+  USE uspp_param,    ONLY : upf, nh
+  USE wavefunctions, ONLY : evc
+  USE wvfct,         ONLY : wg
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(IN)  :: ik
+  INTEGER,  INTENT(IN)  :: ibnd_start
+  INTEGER,  INTENT(IN)  :: ibnd_end
+  INTEGER,  INTENT(IN)  :: this_bgrp_nbnd
+  REAL(DP), INTENT(OUT) :: becsum(:,:)
+  !
+  INTEGER :: npw, ikb
+  INTEGER :: na, nt
+  INTEGER :: ih, jh, ijh
+  INTEGER :: ibnd, jbnd, ibnd_loc, nbnd_loc
+  !
+  REAL(DP),    ALLOCATABLE :: auxg  (:,:)
+  REAL(DP),    ALLOCATABLE :: aux_gk(:,:)
+  COMPLEX(DP), ALLOCATABLE :: auxk1 (:,:)
+  COMPLEX(DP), ALLOCATABLE :: auxk2 (:,:)
+  !
+  npw = ngk(ik)
+  !
+  CALL calbec(npw, vkb, evc(:, ibnd_start:ibnd_end), becp)
+  !
+  DO nt = 1, ntyp
     !
-    ! ... dtdr = ef - veff
+    IF (.NOT. upf(nt)%tvanp) CYCLE
     !
-    dtdr(1:dffts%nnr) = ef - vrs(1:dffts%nnr, 1)
+    ! ... allocate memory
     !
-  ELSE
+    IF (gamma_only) THEN
+      nbnd_loc = becp%nbnd_loc
+      ALLOCATE(auxg (nbnd_loc, nh(nt)))
+    ELSE
+      ALLOCATE(auxk1(ibnd_start:ibnd_end, nh(nt)))
+      ALLOCATE(auxk2(ibnd_start:ibnd_end, nh(nt)))
+    END IF
     !
-    ! ... dtdr = (-psi Lap psi + (ef-e)*|psi|^2) / rho
+    ALLOCATE (aux_gk(nh(nt), nh(nt)))
     !
-    DO ir = 1, dffts%nnr
+    ! ... In becp=<vkb_i|psi_j> terms corresponding to atom na of type nt
+    !     run from index i=indv_ijkb0(na)+1 to i=indv_ijkb0(na)+nh(nt)
+    !
+    DO na = 1, nat
       !
-      rho0 = rhor(ir)
+      IF (ityp(na) /= np) CYCLE
       !
-      IF (rho0 > rho_min) THEN
+      ! ... sum over bands: \sum_i <psi_i|beta_l><beta_m|psi_i> w_i
+      !     copy into aux1, aux2 the needed data to perform a GEMM
+      !
+      IF (gamma_only) THEN
         !
-        dtdr(ir) = (tauL(ir) + dtdr(ir)) / rho0
+!$omp parallel do default(shared), private(ih, ikb, ibnd, ibnd_loc)
+        DO ih = 1, nh(nt)
+          ikb = indv_ijkb0(na) + ih
+          DO ibnd_loc = 1, nbnd_loc
+            ibnd = (ibnd_start - 1) + ibnd_loc + becp%ibnd_begin - 1
+            auxg(ibnd_loc, ih) = wg(ibnd, ik) * becp%r(ikb, ibnd_loc)
+          END DO
+        END DO
+!$omp end parallel do
+        !
+        CALL DGEMM('N', 'N', nh(nt), nh(nt), nbnd_loc, &
+                   1.0_DP, becp%r(indv_ijkb0(na) + 1, 1), nkb, auxg, nbnd_loc, &
+                   0.0_DP, aux_gk, nh(nt))
         !
       ELSE
         !
-        dtdr(ir) = 0.0_DP
+!$omp parallel do default(shared), private(ih, ikb, ibnd, jbnd)
+        DO ih = 1, nh(nt)
+          ikb = indv_ijkb0(na) + ih
+          DO jbnd = 1, this_bgrp_nbnd ! ibnd_start, ibnd_end
+            ibnd = ibnd_start + jbnd - 1
+            auxk1(ibnd, ih) = becp%k(ikb, jbnd)
+            auxk2(ibnd, ih) = wg(ibnd, ik) * becp%k(ikb, jbnd)
+          END DO
+        END DO
+!$omp end parallel do
+        !
+        ! only the real part is computed
+        CALL DGEMM('C', 'N', nh(nt), nh(nt), 2 * this_bgrp_nbnd, &
+                   1.0_DP, auxk1, 2 * this_bgrp_nbnd, auxk2, 2 * this_bgrp_nbnd, &
+                   0.0_DP, aux_gk, nh(nt))
         !
       END IF
       !
-    END DO
-    !
-  END IF
-  !
-  DEALLOCATE(kplusg)
-  DEALLOCATE(aux)
-  !
-CONTAINS
-  !
-  !--------------------------------------------------------------------------
-  SUBROUTINE sum_band_gamma()
-    !--------------------------------------------------------------------------
-    !
-    IMPLICIT NONE
-    !
-    INTEGER  :: ik
-    INTEGER  :: npw
-    INTEGER  :: ibnd
-    INTEGER  :: ix
-    INTEGER  :: ir
-    REAL(DP) :: w1, w2
-    REAL(DP) :: de1, de2
-    REAL(DP) :: psir, psii
-    REAL(DP) :: rho1, rho2
-    !
-    DO ik = 1, nks
+      ! ... copy output from GEMM into desired format
       !
-      npw = ngk(ik)
+      ijh = 0
       !
-      IF (nks > 1) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
-      !
-      DO ibnd = ibnd_start, ibnd_end, 2
-        !
-        w1 = wg(ibnd, ik) / omega
-        de1 = ef - et(ibnd, ik)
-        !
-        IF (ibnd < ibnd_end) THEN
+      DO ih = 1, nh(nt)
+        DO jh = ih, nh(nt)
           !
-          w2 = wg(ibnd + 1, ik) / omega
-          de2 = ef - et(ibnd + 1, ik)
+          ijh = ijh + 1
           !
-        ELSE
-          !
-          w2 = w1
-          de2 = de1
-          !
-        END IF
-        !
-        ! ... |grad psi|^2
-        DO ix = 1, 3
-          !
-          psic(:) = (0.0_DP, 0.0_DP)
-          !
-          kplusg(1:npw) = (xk(ix, ik) + g(ix, 1:npw)) * tpiba
-          !
-          IF (ibnd < ibnd_end) THEN
-            !
-            psic(dffts%nl(1:npw))  = CMPLX(0.0_DP,  kplusg(1:npw), kind=DP) * &
-                                   & (evc(1:npw, ibnd) + &
-                                   & (0.0_DP, 1.0_DP) * evc(1:npw, ibnd + 1))
-            !
-            psic(dffts%nlm(1:npw)) = CMPLX(0.0_DP, -kplusg(1:npw), kind=DP) * &
-                                   & CONJG(evc(1:npw, ibnd) - &
-                                   & (0.0_DP, 1.0_DP) * evc(1:npw, ibnd + 1))
-            !
+          IF (jh == ih) THEN
+            becsum(ijh, na) = becsum(ijh, na) + aux_gk(ih, jh)
           ELSE
-            !
-            psic(dffts%nl(1:npw))  = CMPLX(0.0_DP,  kplusg(1:npw), kind=DP) * &
-                                   & evc(1:npw, ibnd)
-            !
-            psic(dffts%nlm(1:npw)) = CMPLX(0.0_DP, -kplusg(1:npw), kind=DP) * &
-                                   & CONJG(evc(1:npw, ibnd))
-            !
+            becsum(ijh, na) = becsum(ijh, na) + aux_gk(ih, jh) * 2.0_DP
           END IF
           !
-          CALL invfft('Wave', psic, dffts)
-          !
-          DO ir = 1, dffts%nnr
-            psir =  DBLE(psic(ir))
-            psii = AIMAG(psic(ir))
-            !
-            tauG(ir) = tauG(ir) + w1 * psir * psir + w2 * psii * psii
-          END DO
-          !
         END DO
-        !
-        ! ... |psi|^2 and (ef-e)*|psi|^2
-        psic(:) = (0.0_DP, 0.0_DP)
-        !
-        IF (ibnd < ibnd_end) THEN
-          !
-          psic(dffts%nl(1:npw))  =       evc(1:npw, ibnd) + (0.0_DP, 1.0_DP) * evc(1:npw, ibnd + 1)
-          psic(dffts%nlm(1:npw)) = CONJG(evc(1:npw, ibnd) - (0.0_DP, 1.0_DP) * evc(1:npw, ibnd + 1))
-          !
-        ELSE
-          !
-          psic(dffts%nl(1:npw))  =       evc(1:npw, ibnd)
-          psic(dffts%nlm(1:npw)) = CONJG(evc(1:npw, ibnd))
-          !
-        END IF
-        !
-        CALL invfft('Wave', psic, dffts)
-        !
-        DO ir = 1, dffts%nnr
-          psir =  DBLE(psic(ir))
-          psii = AIMAG(psic(ir))
-          !
-          rho1 = w1 * psir * psir
-          rho2 = w2 * psii * psii
-          !
-          rhor(ir) = rhor(ir) + rho1 + rho2
-          dtdr(ir) = dtdr(ir) + de1 * rho1 + de2 * rho2
-        END DO
-        !
       END DO
       !
     END DO
     !
-  END SUBROUTINE sum_band_gamma
+    ! ... deallocate memory
+    !
+    IF (gamma_only) THEN
+      DEALLOCATE(auxg)
+    ELSE
+      DEALLOCATE(auxk1)
+      DEALLOCATE(auxk2)
+    END IF
+    !
+    DEALLOCATE(aux_gk)
+    !
+  END DO
   !
-  !--------------------------------------------------------------------------
-  SUBROUTINE sum_band_k()
-    !--------------------------------------------------------------------------
-    !
-    IMPLICIT NONE
-    !
-    INTEGER  :: ik
-    INTEGER  :: npw
-    INTEGER  :: ibnd
-    INTEGER  :: ipol
-    INTEGER  :: ix
-    INTEGER  :: ir
-    INTEGER  :: ig
-    REAL(DP) :: w, de
-    REAL(DP) :: psir, psii
-    REAL(DP) :: rho0
-    !
-    DO ik = 1, nks
-      !
-      npw = ngk(ik)
-      !
-      IF (nks > 1) CALL get_buffer(evc, nwordwfc, iunwfc, ik)
-      !
-      DO ibnd = ibnd_start, ibnd_end
-        !
-        w = wg(ibnd, ik) / omega
-        de = ef - et(ibnd, ik)
-        !
-        IF (noncolin) THEN
-          !
-          ! ... |grad psi|^2
-          DO ix = 1, 3
-            !
-            psic_nc(:, :) = (0.0_DP, 0.0_DP)
-            !
-            kplusg(1:npw) = (xk(ix, ik) + g(ix, igk_k(1:npw, ik))) * tpiba
-            !
-            DO ig = 1, npw
-              psic_nc(dffts%nl(igk_k(ig, ik)), 1) = CMPLX(0.0_DP, kplusg(ig), kind=DP) * &
-                                                  & evc(ig       , ibnd)
-            END DO
-            !
-            DO ig = 1, npw
-              psic_nc(dffts%nl(igk_k(ig, ik)), 2) = CMPLX(0.0_DP, kplusg(ig), kind=DP) * &
-                                                  & evc(ig + npwx, ibnd)
-            END DO
-            !
-            CALL invfft('Wave', psic_nc(:, 1), dffts)
-            CALL invfft('Wave', psic_nc(:, 2), dffts)
-            !
-            DO ipol = 1, npol
-              !
-              DO ir = 1, dffts%nnr
-                psir =  DBLE(psic_nc(ir, ipol))
-                psii = AIMAG(psic_nc(ir, ipol))
-                !
-                tauG(ir) = tauG(ir) + w * (psir * psir + psii * psii)
-              END DO
-              !
-            END DO
-            !
-          END DO
-          !
-          ! ... |psi|^2 and (ef-e)*|psi|^2
-          psic_nc(:, :) = (0.0_DP, 0.0_DP)
-          !
-          DO ig = 1, npw
-            psic_nc(dffts%nl(igk_k(ig, ik)), 1) = evc(ig, ibnd)
-          END DO
-          !
-          DO ig = 1, npw
-            psic_nc(dffts%nl(igk_k(ig, ik)), 2) = evc(ig + npwx, ibnd)
-          END DO
-          !
-          CALL invfft('Wave', psic_nc(:, 1), dffts)
-          CALL invfft('Wave', psic_nc(:, 2), dffts)
-          !
-          DO ipol = 1, npol
-            !
-            DO ir = 1, dffts%nnr
-              psir =  DBLE(psic_nc(ir, ipol))
-              psii = AIMAG(psic_nc(ir, ipol))
-              !
-              rho0 = w * (psir * psir + psii * psii)
-              !
-              rhor(ir) = rhor(ir) + rho0
-              dtdr(ir) = dtdr(ir) + de * rho0
-            END DO
-            !
-          END DO
-          !
-        ELSE
-          !
-          ! ... |grad psi|^2
-          DO ix = 1, 3
-            !
-            psic = (0.0_DP, 0.0_DP)
-            !
-            kplusg(1:npw) = (xk(ix, ik) + g(ix, igk_k(1:npw, ik))) * tpiba
-            !
-            DO ig = 1, npw
-              psic(dffts%nl(igk_k(ig, ik))) = CMPLX(0.0_DP, kplusg(ig), kind=DP) * &
-                                            & evc(ig, ibnd)
-            END DO
-            !
-            CALL invfft('Wave', psic, dffts)
-            !
-            DO ir = 1, dffts%nnr
-              psir =  DBLE(psic(ir))
-              psii = AIMAG(psic(ir))
-              !
-              tauG(ir) = tauG(ir) + w * (psir * psir + psii * psii)
-            END DO
-            !
-          END DO
-          !
-          ! ... |psi|^2 and (ef-e)*|psi|^2
-          psic = (0.0_DP, 0.0_DP)
-          !
-          DO ig = 1, npw
-            psic(dffts%nl(igk_k(ig, ik))) = evc(ig, ibnd)
-          END DO
-          !
-          CALL invfft('Wave', psic, dffts)
-          !
-          DO ir = 1, dffts%nnr
-            psir =  DBLE(psic(ir))
-            psii = AIMAG(psic(ir))
-            !
-            rho0 = w * (psir * psir + psii * psii)
-            !
-            rhor(ir) = rhor(ir) + rho0
-            dtdr(ir) = dtdr(ir) + de * rho0
-          END DO
-          !
-        END IF
-        !
-      END DO
-      !
-    END DO
-    !
-  END SUBROUTINE sum_band_k
-  !
-END SUBROUTINE occmat_sum_band
+END SUBROUTINE occmat_sum_bec
+
