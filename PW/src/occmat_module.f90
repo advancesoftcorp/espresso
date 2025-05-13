@@ -259,9 +259,9 @@ CONTAINS
     INTEGER :: nht
     !
     INTEGER, PARAMETER :: i_s  = 1
-    INTEGER, PARAMETER :: i_px = 2
-    INTEGER, PARAMETER :: i_py = 3
-    INTEGER, PARAMETER :: i_pz = 4
+    INTEGER, PARAMETER :: i_py = 2
+    INTEGER, PARAMETER :: i_pz = 3
+    INTEGER, PARAMETER :: i_px = 4
     !
     indx_h(1:4) = 0
     !
