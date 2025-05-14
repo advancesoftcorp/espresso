@@ -196,6 +196,7 @@ CONTAINS
         !
         it = ityp(ia)
         !
+        ! QE's Ylm [z, -x, -y] --> Standard Ylm [x, y, z]
         DO iorb = 1, 4
           !
           ih = indx_h(iorb, it)
@@ -213,6 +214,11 @@ CONTAINS
           END DO
           !
         END DO
+        !
+        occmat(2, :) = -1.0_DP * occmat(2, :) ! -x -> x
+        occmat(3, :) = -1.0_DP * occmat(3, :) ! -y -> y
+        occmat(:, 2) = -1.0_DP * occmat(:, 2) ! -x -> x
+        occmat(:, 3) = -1.0_DP * occmat(:, 3) ! -y -> y
         !
         occnum = 0.0_DP
         !
