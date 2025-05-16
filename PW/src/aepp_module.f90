@@ -194,6 +194,8 @@ CONTAINS
       !
       CALL errore('aepp_initialize', 'cannot open file: ' // TRIM(filename), ios)
       !
+      RETURN
+      !
     END IF
     !
 #if defined(__MPI)
