@@ -68,6 +68,7 @@ SUBROUTINE clean_pw( lflag )
   USE dftd3_qe,             ONLY : dftd3_clean
   !
   USE rism_module,          ONLY : deallocate_rism
+  USE aepp_module,          ONLY : aepp_finalize
   !
   IMPLICIT NONE
   !
@@ -213,6 +214,10 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays for RISM
   !
   CALL deallocate_rism( lflag )
+  !
+  ! ... arrays for AEPP
+  !
+  CALL aepp_finalize()
   !
   CALL plugin_clean( 'PW', lflag )
   !
