@@ -119,6 +119,14 @@ addusstress.o : ../../upflib/uspp.o
 addusstress.o : pwcom.o
 addusstress.o : realus.o
 addusstress.o : scf_mod.o
+aepp_module.o : ../../FFTXlib/scatter_mod.o
+aepp_module.o : ../../Modules/constants.o
+aepp_module.o : ../../Modules/fft_base.o
+aepp_module.o : ../../Modules/io_files.o
+aepp_module.o : ../../Modules/io_global.o
+aepp_module.o : ../../Modules/kind.o
+aepp_module.o : ../../Modules/mp_images.o
+aepp_module.o : ../../UtilXlib/mp.o
 allocate_fft.o : ../../Modules/control_flags.o
 allocate_fft.o : ../../Modules/fft_base.o
 allocate_fft.o : ../../Modules/funct.o
@@ -286,6 +294,7 @@ clean_pw.o : ../../upflib/pseudo_types.o
 clean_pw.o : ../../upflib/radial_grids.o
 clean_pw.o : ../../upflib/uspp.o
 clean_pw.o : Coul_cut_2D.o
+clean_pw.o : aepp_module.o
 clean_pw.o : atomic_wfc_mod.o
 clean_pw.o : bp_mod.o
 clean_pw.o : dynamics_module.o
@@ -938,6 +947,7 @@ h_psi.o : ../../Modules/noncol.o
 h_psi.o : ../../Modules/recvec.o
 h_psi.o : ../../UtilXlib/mp.o
 h_psi.o : ../../upflib/uspp.o
+h_psi.o : aepp_module.o
 h_psi.o : bp_mod.o
 h_psi.o : exx.o
 h_psi.o : ldaU.o
@@ -1121,6 +1131,7 @@ input.o : ../../dft-d3/api.o
 input.o : ../../dft-d3/dftd3_qe.o
 input.o : Coul_cut_2D.o
 input.o : a2fmod.o
+input.o : aepp_module.o
 input.o : atomic_wfc_mod.o
 input.o : bp_mod.o
 input.o : dynamics_module.o
@@ -1463,6 +1474,7 @@ occmat_module.o : ../../Modules/mp_images.o
 occmat_module.o : ../../Modules/noncol.o
 occmat_module.o : ../../UtilXlib/mp.o
 occmat_module.o : ../../upflib/uspp.o
+occmat_module.o : pwcom.o
 occmat_sum_band.o : ../../Modules/becmod.o
 occmat_sum_band.o : ../../Modules/control_flags.o
 occmat_sum_band.o : ../../Modules/io_files.o
@@ -2212,6 +2224,7 @@ setlocal.o : ../../Modules/qmmm.o
 setlocal.o : ../../Modules/recvec.o
 setlocal.o : ../../UtilXlib/mp.o
 setlocal.o : Coul_cut_2D.o
+setlocal.o : aepp_module.o
 setlocal.o : esm.o
 setlocal.o : extfield.o
 setlocal.o : kinetic_module.o
