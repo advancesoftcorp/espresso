@@ -20,6 +20,7 @@ add_vhub_to_deeq.o \
 addusdens.o \
 addusforce.o \
 addusstress.o \
+aepp_module.o \
 allocate_fft.o \
 allocate_locpot.o \
 allocate_nlpot.o \
