@@ -121,17 +121,18 @@ CONTAINS
     INTEGER  :: ios
     INTEGER  :: nat, ia
     INTEGER  :: nr1, nr2, nr3
-    INTEGER  :: ir1, ir2
+    INTEGER  :: ir1, ir2, ir3, ir
     REAL(DP) :: xyz(3)
     !
     REAL(DP), ALLOCATABLE :: vaux (:)
-    REAL(DP), ALLOCATABLE :: vcube(:,:,:)
+    REAL(DP), ALLOCATABLE :: vcube(:)
     !
     INTEGER, EXTERNAL :: find_free_unit
     !
     ios = 0
     !
     ALLOCATE(vaux(dfftp%nr1x * dfftp%nr2x * dfftp%nr3x))
+    vaux = 0.0_DP
     !
     IF (ionode) THEN
       !
@@ -139,7 +140,7 @@ CONTAINS
       !
       OPEN(unit=iun, file=filename, status='old', form='formatted', action='read', iostat=ios)
       !
-      IF (ios /= 0) THEN
+      IF (ios /= 0) THEN ! opened
         !
         READ(iun, '()')
         READ(iun, '()')
@@ -148,39 +149,53 @@ CONTAINS
         READ(iun, *) nr2, xyz
         READ(iun, *) nr3, xyz
         !
-        DO ia = 1, ABS(nat)
+        IF (nr1 /= dfftp%nr1 .OR. nr2 /= dfftp%nr2 .OR. nr3 /= dfftp%nr3) THEN
           !
-          READ(iun, '()')
+          ios = 1
           !
-        END DO
+          CALL infomsg('aepp_initialize', 'incorrect FFT-mesh at: ' // TRIM(filename))
+          !
+        END IF
         !
-        ALLOCATE(vcube(nr1, nr2, nr3))
-        !
-        DO ir1 = 1, nr1
+        IF (ios /= 0) THEN ! correct mesh
           !
-          DO ir2 = 1, nr2
+          DO ia = 1, ABS(nat)
             !
-            READ(iun, *, iostat=ios) vcube(ir1, ir2, 1:nr3)
+            READ(iun, '()')
+            !
+          END DO
+          !
+          ALLOCATE(vcube(nr3))
+          !
+          DO ir1 = 1, nr1
+            !
+            DO ir2 = 1, nr2
+              !
+              READ(iun, *, iostat=ios) vcube(1:nr3)
+              !
+              IF (ios /= 0) CYCLE
+              !
+              DO ir3 = 1, nr3
+                !
+                ir = ir1 + (ir2 - 1) * dfftp%nr1 + (ir3 - 1) * dfftp%nr1 * dfftp%nr2
+                !
+                vaux(ir) = e2 * vcube(ir3) ! Hartree -> Rydberg
+                !
+              END DO
+              !
+            END DO
             !
             IF (ios /= 0) CYCLE
             !
           END DO
           !
-          IF (ios /= 0) CYCLE
+          DEALLOCATE(vcube)
           !
-        END DO
+        END IF ! correct mesh
         !
         CLOSE(unit=iun)
         !
-        vcube = e2 * vcube
-        !
-        ! TODO
-        ! TODO interpolate vcube -> vaux
-        ! TODO
-        !
-        DEALLOCATE(vcube)
-        !
-      END IF
+      END IF ! opened
       !
     END IF
     !
