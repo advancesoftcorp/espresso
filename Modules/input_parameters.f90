@@ -272,6 +272,8 @@ MODULE input_parameters
 
         LOGICAL :: toccmat = .FALSE.  ! punch data of Occupation Matrix. enabled if .true.
 
+        LOGICAL :: taepp = .FALSE.    ! read effective local potential of AEPP. enabled if .true.
+
         CHARACTER(len=256) :: vdw_table_name = ' '
 
         CHARACTER(len=10) :: point_label_type='SC'
@@ -296,7 +298,7 @@ MODULE input_parameters
           gdir, nppstr, wf_collect, lelfield, nberrycyc, refg,            &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
           lfcp, tqmmm, trism, tsannp, tkinetic, kin_perturb, kin_nprint,  &
-          toccmat, vdw_table_name, lorbm, memory, point_label_type,       &
+          toccmat, taepp, vdw_table_name, lorbm, memory, point_label_type,&
           input_xml_schema_file, gate
 !
 !=----------------------------------------------------------------------------=!

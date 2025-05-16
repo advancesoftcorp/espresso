@@ -7,11 +7,11 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------------
-MODULE occmat_module
+MODULE aepp_module
   !--------------------------------------------------------------------------
   !
-  ! ... the module for Occupation Matrix
-  ! ... [NOTE] this module support only ``NCPP``
+  ! ... the module for Adaptive Effective Pseudo-Potential (AEPP),
+  ! ... while effective local potential is read from external file.
   !
   USE cell_base,        ONLY : at, alat
   USE io_files,         ONLY : tmp_dir, prefix
@@ -29,8 +29,8 @@ MODULE occmat_module
   SAVE
   PRIVATE
   !
-  LOGICAL :: do_occmat = .FALSE.
-  INTEGER :: iunoccmat
+  LOGICAL :: do_aepp = .FALSE.
+  INTEGER :: iunaepp
   !
   PUBLIC :: do_occmat
   PUBLIC :: occmat_print
@@ -305,4 +305,4 @@ CONTAINS
     !
   END SUBROUTINE index_of_beta
   !
-END MODULE occmat_module
+END MODULE aepp_module
