@@ -55,7 +55,7 @@ CONTAINS
       !
     END IF
     !
-    IF (LEN(TRIM(filaepp) == 0) THEN
+    IF (LEN(TRIM(filaepp)) == 0) THEN
       !
       filaepp = TRIM(tmp_dir) // TRIM(prefix) // '.aepp'
       !
@@ -115,7 +115,8 @@ CONTAINS
     !
     IMPLICIT NONE
     !
-    REAL(DP), INTENT(OUT) :: v(dfftp%nnr)
+    CHARACTER(LEN=*), INTENT(IN)  :: filename
+    REAL(DP),         INTENT(OUT) :: v(dfftp%nnr)
     !
     INTEGER  :: iun
     INTEGER  :: ios
