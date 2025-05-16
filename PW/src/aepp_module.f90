@@ -132,6 +132,7 @@ CONTAINS
     ios = 0
     !
     ALLOCATE(vaux(dfftp%nr1x * dfftp%nr2x * dfftp%nr3x))
+    !
     vaux = 0.0_DP
     !
     IF (ionode) THEN
