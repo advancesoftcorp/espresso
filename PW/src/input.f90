@@ -222,7 +222,7 @@ SUBROUTINE iosys()
 
   USE occmat_module,         ONLY : do_occmat
 
-  USE aepp_module,           ONLY : do_aepp
+  USE aepp_module,           ONLY : do_aepp, filaepp
 
   USE vlocal,        ONLY : starting_charge_ => starting_charge
   !
@@ -237,7 +237,7 @@ SUBROUTINE iosys()
                                lfcp, vdw_table_name, memory, max_seconds,      &
                                tqmmm, efield_phase, gate, trism, tsannp,       &
                                tkinetic, kin_perturb, kin_nprint, toccmat,     &
-                               taepp, max_xml_steps
+                               taepp, aepp_file, max_xml_steps
 
   !
   ! ... SYSTEM namelist
@@ -1725,6 +1725,7 @@ SUBROUTINE iosys()
   ! ... set variables for AEPP
   !
   do_aepp = taepp
+  filaepp = aepp_file
   !
   ! ... End of reading input parameters
   !

@@ -13,296 +13,197 @@ MODULE aepp_module
   ! ... the module for Adaptive Effective Pseudo-Potential (AEPP),
   ! ... while effective local potential is read from external file.
   !
-  USE cell_base,        ONLY : at, alat
-  USE io_files,         ONLY : tmp_dir, prefix
-  USE io_global,        ONLY : ionode, stdout
-  USE ions_base,        ONLY : nat, atm, ntyp => nsp, ityp, tau
-  USE kinds,            ONLY : DP
-  USE mp,               ONLY : mp_sum, mp_barrier
-  USE mp_images,        ONLY : intra_image_comm
-  USE noncollin_module, ONLY : noncolin
-  USE spin_orb,         ONLY : lspinorb
-  USE uspp,             ONLY : dvan, okvan
-  USE uspp_param,       ONLY : upf, nhm
+  USE constants,   ONLY : e2
+  USE fft_base,    ONLY : dfftp
+  USE io_files,    ONLY : tmp_dir, prefix
+  USE io_global,   ONLY : ionode
+  USE kinds,       ONLY : DP
+  USE mp,          ONLY : mp_sum, mp_barrier
+  USE mp_images,   ONLY : intra_image_comm
+  USE scatter_mod, ONLY : scatter_grid
   !
   IMPLICIT NONE
   SAVE
   PRIVATE
   !
-  LOGICAL :: do_aepp = .FALSE.
-  INTEGER :: iunaepp
+  LOGICAL               :: do_aepp   = .FALSE.
+  LOGICAL               :: has_vaepp = .FALSE.
+  CHARACTER(LEN=256)    :: filaepp   = ''
+  REAL(DP), ALLOCATABLE :: vaepp(:)
   !
-  PUBLIC :: do_occmat
-  PUBLIC :: occmat_print
+  PUBLIC :: do_aepp
+  PUBLIC :: filaepp
+  PUBLIC :: aepp_initialize
+  PUBLIC :: aepp_finalize
+  PUBLIC :: aepp_add_vloc
   !
 CONTAINS
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE occmat_open()
+  SUBROUTINE aepp_initialize()
     !----------------------------------------------------------------------------
     !
-    ! ... open file of Occupation Matrix
+    ! ... read effective local potential from file
     !
     IMPLICIT NONE
     !
-    INTEGER            :: ios
-    CHARACTER(LEN=8)   :: str
-    CHARACTER(LEN=256) :: filename
+    IF (.NOT. do_aepp) RETURN
     !
-    INTEGER, EXTERNAL  :: find_free_unit
-    !
-    IF (.NOT. do_occmat) THEN
-      RETURN
-    END IF
-    !
-    iunoccmat = find_free_unit()
-    !
-    filename = TRIM(tmp_dir) // TRIM(prefix) // '.occ'
-    !
-    IF (ionode) THEN
+    IF (has_vaepp) THEN
       !
-      OPEN(unit=iunoccmat, file=TRIM(filename), &
-         & status='unknown', form='formatted', action='write', iostat=ios)
-      !
-      ios = ABS(ios)
-      !
-    ELSE
-      !
-      ios = 0
+      CALL aepp_finalize()
       !
     END IF
     !
-    CALL mp_sum(ios, intra_image_comm)
+    IF (LEN(TRIM(filaepp) == 0) THEN
+      !
+      filaepp = TRIM(tmp_dir) // TRIM(prefix) // '.aepp'
+      !
+    END IF
     !
-    CALL errore('occmat_open', 'cannot open file: ' // TRIM(filename), ios)
+    ALLOCATE(vaepp(dfftp%nnr))
     !
-  END SUBROUTINE occmat_open
+    CALL read_cube_file(filaepp, vaepp)
+    !
+    has_vaepp = .TRUE.
+    !
+  END SUBROUTINE aepp_initialize
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE occmat_close()
+  SUBROUTINE aepp_finalize()
     !----------------------------------------------------------------------------
     !
-    ! ... close file of Occupation Matrix
+    ! ... release effective local potential
     !
     IMPLICIT NONE
     !
-    LOGICAL :: opnd
+    IF (.NOT. do_aepp) RETURN
     !
-    IF (.NOT. do_occmat) THEN
-      RETURN
-    END IF
+    IF (.NOT. has_vaepp) RETURN
     !
-    IF (ionode) THEN
-      !
-      INQUIRE(unit=iunoccmat, opened=opnd)
-      !
-      IF (opnd) CLOSE(unit=iunoccmat)
-      !
-    END IF
+    DEALLOCATE(vaepp)
     !
-  END SUBROUTINE occmat_close
+    has_vaepp = .FALSE.
+    !
+  END SUBROUTINE aepp_finalize
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE occmat_print()
+  SUBROUTINE aepp_add_vloc(vloc)
     !----------------------------------------------------------------------------
     !
-    ! ... print data for Occupation Matrix
+    ! ... add effective local potential
     !
     IMPLICIT NONE
     !
-    INTEGER  :: ia, it
-    INTEGER  :: ih, jh
-    INTEGER  :: iorb, jorb
-    REAL(DP) :: occnum
-    REAL(DP) :: occmat(4, 4)
+    REAL(DP), INTENT(INOUT) :: vloc(dfftp%nnr)
     !
-    INTEGER,  ALLOCATABLE :: indx_h(:,:)
-    REAL(DP), ALLOCATABLE :: becsum(:,:,:) ! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
+    IF (.NOT. do_aepp) RETURN
     !
-    IF (.NOT. do_occmat) THEN
-      RETURN
+    IF (.NOT. has_vaepp) THEN
+      !
+      CALL aepp_initialize()
+      !
     END IF
+    !
+    vloc = vloc + vaepp
+    !
+  END SUBROUTINE aepp_add_vloc
+  !
+  !----------------------------------------------------------------------------
+  SUBROUTINE read_cube_file(filename, v)
+    !----------------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    !
+    REAL(DP), INTENT(OUT) :: v(dfftp%nnr)
+    !
+    INTEGER  :: iun
+    INTEGER  :: ios
+    INTEGER  :: nat, ia
+    INTEGER  :: nr1, nr2, nr3
+    INTEGER  :: ir1, ir2
+    REAL(DP) :: xyz(3)
+    !
+    REAL(DP), ALLOCATABLE :: vaux (:)
+    REAL(DP), ALLOCATABLE :: vcube(:,:,:)
+    !
+    INTEGER, EXTERNAL :: find_free_unit
+    !
+    ios = 0
+    !
+    ALLOCATE(vaux(dfftp%nr1x * dfftp%nr2x * dfftp%nr3x))
     !
     IF (ionode) THEN
       !
-      WRITE(stdout, '()')
-      WRITE(stdout, '(5X,"Writing Occupation Matrix to file.")')
+      iun = find_free_unit()
       !
-    END IF
-    !
-    IF (noncolin) THEN
+      OPEN(unit=iun, file=filename, status='old', form='formatted', action='read', iostat=ios)
       !
-      CALL errore('occmat_print', 'Occupation Matrix does not support noncolin', 1)
-      !
-    END IF
-    !
-    IF (lspinorb) THEN
-      !
-      CALL errore('occmat_print', 'Occupation Matrix does not support lspinorb', 1)
-      !
-    END IF
-    !
-    IF (okvan) THEN
-      !
-      CALL errore('occmat_print', 'Occupation Matrix supports only NCPP, not USPP/PAW.', 1)
-      !
-    END IF
-    !
-    ! ... allocate memory
-    !
-    ALLOCATE(indx_h(4, ntyp))
-    ALLOCATE(becsum(nhm, nhm, nat)) ! w/o spin
-    !
-    ! ... calculate Occupation Matrix
-    !
-    CALL occmat_sum_band(becsum)
-    !
-    ! ... print data, in Hartree/Bohr unit
-    !
-    CALL occmat_open()
-    !
-    IF (ionode) THEN
-      !
-      ! ... Lattice
-      WRITE(iunoccmat, '("#Lattice")')
-      WRITE(iunoccmat, '(3E25.16)') alat * at(1, 1), alat * at(2, 1), alat * at(3, 1)
-      WRITE(iunoccmat, '(3E25.16)') alat * at(1, 2), alat * at(2, 2), alat * at(3, 2)
-      WRITE(iunoccmat, '(3E25.16)') alat * at(1, 3), alat * at(2, 3), alat * at(3, 3)
-      !
-      ! ... Atoms
-      WRITE(iunoccmat, '("#Number of Atoms")')
-      WRITE(iunoccmat, '(I5)') nat
-      WRITE(iunoccmat, '("#Atoms")')
-      !
-      DO ia = 1, nat
+      IF (ios /= 0) THEN
         !
-        it = ityp(ia)
+        READ(iun, '()')
+        READ(iun, '()')
+        READ(iun, *) nat, xyz
+        READ(iun, *) nr1, xyz
+        READ(iun, *) nr2, xyz
+        READ(iun, *) nr3, xyz
         !
-        WRITE(iunoccmat, '(I5,A6,3E25.16)') ia, atm(it), &
-        alat * tau(1, ia), alat * tau(2, ia), alat * tau(3, ia)
-        !
-      END DO
-      !
-      ! ... Occupation Matrix
-      WRITE(iunoccmat, '("#Occupation Matrix (only s+p orbital)")')
-      !
-      DO it = 1, ntyp
-        !
-        CALL index_of_beta(it, indx_h(:, it))
-        !
-      END DO
-      !
-      DO ia = 1, nat
-        !
-        it = ityp(ia)
-        !
-        ! QE's Ylm [z, -x, -y] --> Standard Ylm [x, y, z]
-        DO iorb = 1, 4
+        DO ia = 1, ABS(nat)
           !
-          ih = indx_h(iorb, it)
+          READ(iun, '()')
           !
-          DO jorb = 1, 4
+        END DO
+        !
+        ALLOCATE(vcube(nr1, nr2, nr3))
+        !
+        DO ir1 = 1, nr1
+          !
+          DO ir2 = 1, nr2
             !
-            jh = indx_h(jorb, it)
+            READ(iun, *, iostat=ios) vcube(ir1, ir2, 1:nr3)
             !
-            IF (ih > 0 .AND. jh > 0) THEN
-              occmat(iorb, jorb) = becsum(ih, jh, ia) * dvan(ih, ih, it) * dvan(jh, jh, it)
-            ELSE
-              occmat(iorb, jorb) = 0.0_DP
-            END IF
+            IF (ios /= 0) CYCLE
             !
           END DO
           !
-        END DO
-        !
-        occmat(2, :) = -1.0_DP * occmat(2, :) ! -x -> x
-        occmat(3, :) = -1.0_DP * occmat(3, :) ! -y -> y
-        occmat(:, 2) = -1.0_DP * occmat(:, 2) ! -x -> x
-        occmat(:, 3) = -1.0_DP * occmat(:, 3) ! -y -> y
-        !
-        occnum = 0.0_DP
-        !
-        DO iorb = 1, 4
-          !
-          occnum = occnum + occmat(iorb, iorb)
+          IF (ios /= 0) CYCLE
           !
         END DO
         !
-        WRITE(iunoccmat, '("   iatom:", I5, "  trace:", E25.16)') ia, occnum
+        CLOSE(unit=iun)
         !
-        DO iorb = 1, 4
-          !
-          WRITE(iunoccmat, '(4E25.16)') (occmat(iorb, jorb), jorb = 1, 4)
-          !
-        END DO
+        vcube = e2 * vcube
         !
-      END DO
-      !
-    END IF
-    !
-    CALL occmat_close()
-    !
-    CALL mp_barrier(intra_image_comm)
-    !
-    ! ... deallocate memory
-    !
-    DEALLOCATE(indx_h)
-    DEALLOCATE(becsum)
-    !
-  END SUBROUTINE occmat_print
-  !
-  !----------------------------------------------------------------------------
-  SUBROUTINE index_of_beta(it, indx_h)
-    !----------------------------------------------------------------------------
-    !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(IN)  :: it
-    INTEGER, INTENT(OUT) :: indx_h(4)
-    !
-    INTEGER :: ib
-    INTEGER :: l
-    INTEGER :: nht
-    !
-    INTEGER, PARAMETER :: i_s  = 1
-    INTEGER, PARAMETER :: i_px = 2
-    INTEGER, PARAMETER :: i_py = 3
-    INTEGER, PARAMETER :: i_pz = 4
-    !
-    indx_h(1:4) = 0
-    !
-    IF (upf(it)%tcoulombp) RETURN
-    !
-    nht = 0
-    !
-    DO ib = 1, upf(it)%nbeta
-      !
-      l = upf(it)%lll(ib)
-      !
-      IF (l == 0) THEN
+        ! TODO
+        ! TODO interpolate vcube -> vaux
+        ! TODO
         !
-        IF (indx_h(i_s) == 0) THEN
-          !
-          indx_h(i_s) = nht + 1 ! s
-          !
-        END IF
-        !
-      ELSE IF (l == 1) THEN
-        !
-        IF (indx_h(i_pz) == 0) THEN
-          !
-          indx_h(i_pz) = nht + 1 ! pz
-          indx_h(i_px) = nht + 2 ! px
-          indx_h(i_py) = nht + 3 ! py
-          !
-        END IF
+        DEALLOCATE(vcube)
         !
       END IF
       !
-      nht = nht + 2 * l + 1
-      !
-    END DO
+    END IF
     !
-  END SUBROUTINE index_of_beta
+    CALL mp_barrier(intra_image_comm)
+    !
+    CALL mp_sum(ios, intra_image_comm)
+    !
+    IF (ios /= 0) THEN
+      !
+      DEALLOCATE(vaux)
+      !
+      CALL errore('aepp_initialize', 'cannot open file: ' // TRIM(filename), ios)
+      !
+    END IF
+    !
+#if defined(__MPI)
+    CALL scatter_grid(dfftp, vaux, v)
+#else
+    v = vaux
+#endif
+    !
+    DEALLOCATE(vaux)
+    !
+  END SUBROUTINE read_cube_file
   !
 END MODULE aepp_module
