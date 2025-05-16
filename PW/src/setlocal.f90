@@ -37,6 +37,7 @@ SUBROUTINE setlocal
   USE Coul_cut_2D,       ONLY : do_cutoff_2D, cutoff_local
   USE rism_module,       ONLY : lrism, rism_setlocal
   USE kinetic_module,    ONLY : do_kinetic, kinetic_add_perturb
+  USE aepp_module,       ONLY : do_aepp, aepp_add_vloc
   !
   IMPLICIT NONE
   !
@@ -94,9 +95,9 @@ SUBROUTINE setlocal
   ! ... set the perturbation potential for Kinetic Energy Density
   !
   IF ( do_kinetic ) THEN
-    !
-    CALL kinetic_add_perturb( aux )
-    !
+     !
+     CALL kinetic_add_perturb( aux )
+     !
   END IF
   !
   ! ... v_of_0 is (Vloc)(G=0)
@@ -126,6 +127,14 @@ SUBROUTINE setlocal
   !  in a QM/MM calculation to the local potential
   !
   CALL qmmm_add_esf( vltot, dfftp )
+  !
+  ! ... add AEPP
+  !
+  IF ( do_aepp ) THEN
+     !
+     CALL aepp_add_vloc( vltot )
+     !
+  END IF
   !
   ! ... set the local potential to rism_module
   !
