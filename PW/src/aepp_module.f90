@@ -142,7 +142,7 @@ CONTAINS
       !
       OPEN(unit=iun, file=filename, status='old', form='formatted', action='read', iostat=ios)
       !
-      IF (ios /= 0) THEN ! opened
+      IF (ios == 0) THEN ! opened
         !
         READ(iun, '()')
         READ(iun, '()')
@@ -159,7 +159,7 @@ CONTAINS
           !
         END IF
         !
-        IF (ios /= 0) THEN ! correct mesh
+        IF (ios == 0) THEN ! correct mesh
           !
           DO ia = 1, ABS(nat)
             !
