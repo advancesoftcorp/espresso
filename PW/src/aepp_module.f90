@@ -179,7 +179,7 @@ CONTAINS
                 ir = ir1 + (ir2 - 1) * dfftp%nr1x + (ir3 - 1) * dfftp%nr1x * dfftp%nr2x
                 jr = ir1 + (ir2 - 1) * dfftp%nr1  + (ir3 - 1) * dfftp%nr1  * dfftp%nr2
                 !
-                vaux(ir) = e2 * vcube(jr) ! Hartree -> Rydberg
+                vaux(ir) = e2 * vcub(jr) ! Hartree -> Rydberg
                 !
               END DO
               !
