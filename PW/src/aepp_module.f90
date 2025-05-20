@@ -122,17 +122,18 @@ CONTAINS
     INTEGER  :: ios
     INTEGER  :: nat, ia
     INTEGER  :: nr1, nr2, nr3
-    INTEGER  :: ir1, ir2, ir3, ir
+    INTEGER  :: ir1, ir2, ir3, ir, jr
     REAL(DP) :: xyz(3)
     !
-    REAL(DP), ALLOCATABLE :: vaux (:)
-    REAL(DP), ALLOCATABLE :: vcube(:)
+    REAL(DP), ALLOCATABLE :: vaux(:)
+    REAL(DP), ALLOCATABLE :: vcub(:)
     !
     INTEGER, EXTERNAL :: find_free_unit
     !
     ios = 0
     !
     ALLOCATE(vaux(dfftp%nr1x * dfftp%nr2x * dfftp%nr3x))
+    ALLOCATE(vcub(dfftp%nr1  * dfftp%nr2  * dfftp%nr3 ))
     !
     vaux = 0.0_DP
     !
@@ -167,27 +168,24 @@ CONTAINS
             !
           END DO
           !
-          ALLOCATE(vcube(nr3))
+          READ(iun, *) vcub(:)
           !
           DO ir1 = 1, nr1
             !
             DO ir2 = 1, nr2
               !
-              READ(iun, *) vcube(1:nr3)
-              !
               DO ir3 = 1, nr3
                 !
                 ir = ir1 + (ir2 - 1) * dfftp%nr1x + (ir3 - 1) * dfftp%nr1x * dfftp%nr2x
+                jr = ir1 + (ir2 - 1) * dfftp%nr1  + (ir3 - 1) * dfftp%nr1  * dfftp%nr2
                 !
-                vaux(ir) = e2 * vcube(ir3) ! Hartree -> Rydberg
+                vaux(ir) = e2 * vcube(jr) ! Hartree -> Rydberg
                 !
               END DO
               !
             END DO
             !
           END DO
-          !
-          DEALLOCATE(vcube)
           !
         END IF ! correct mesh
         !
@@ -218,6 +216,7 @@ CONTAINS
 #endif
     !
     DEALLOCATE(vaux)
+    DEALLOCATE(vcub)
     !
   END SUBROUTINE read_cube_file
   !
