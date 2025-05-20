@@ -136,6 +136,7 @@ CONTAINS
     ALLOCATE(vcub(dfftp%nr1  * dfftp%nr2  * dfftp%nr3 ))
     !
     vaux = 0.0_DP
+    vcub = 0.0_DP
     !
     IF (ionode) THEN
       !
@@ -202,6 +203,7 @@ CONTAINS
     IF (ios /= 0) THEN
       !
       DEALLOCATE(vaux)
+      DEALLOCATE(vcub)
       !
       CALL errore('aepp_initialize', 'cannot open file: ' // TRIM(filename), ios)
       !
