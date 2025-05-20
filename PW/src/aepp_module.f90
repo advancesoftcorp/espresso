@@ -173,21 +173,17 @@ CONTAINS
             !
             DO ir2 = 1, nr2
               !
-              READ(iun, *, iostat=ios) vcube(1:nr3)
-              !
-              IF (ios /= 0) CYCLE
+              READ(iun, *) vcube(1:nr3)
               !
               DO ir3 = 1, nr3
                 !
-                ir = ir1 + (ir2 - 1) * dfftp%nr1 + (ir3 - 1) * dfftp%nr1 * dfftp%nr2
+                ir = ir1 + (ir2 - 1) * dfftp%nr1x + (ir3 - 1) * dfftp%nr1x * dfftp%nr2x
                 !
                 vaux(ir) = e2 * vcube(ir3) ! Hartree -> Rydberg
                 !
               END DO
               !
             END DO
-            !
-            IF (ios /= 0) CYCLE
             !
           END DO
           !
