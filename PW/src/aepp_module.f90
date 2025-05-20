@@ -122,7 +122,7 @@ CONTAINS
     INTEGER  :: ios
     INTEGER  :: nat, ia
     INTEGER  :: nr1, nr2, nr3
-    INTEGER  :: ir1, ir2, ir3, ir, jr
+    INTEGER  :: ir2, ir3, ir, jr
     REAL(DP) :: xyz(3)
     !
     REAL(DP), ALLOCATABLE :: vaux(:)
@@ -171,18 +171,14 @@ CONTAINS
           !
           READ(iun, *) vcub(:)
           !
-          DO ir1 = 1, nr1
+          DO ir3 = 1, nr3
             !
             DO ir2 = 1, nr2
               !
-              DO ir3 = 1, nr3
-                !
-                ir = ir1 + (ir2 - 1) * dfftp%nr1x + (ir3 - 1) * dfftp%nr1x * dfftp%nr2x
-                jr = ir1 + (ir2 - 1) * dfftp%nr1  + (ir3 - 1) * dfftp%nr1  * dfftp%nr2
-                !
-                vaux(ir) = e2 * vcub(jr) ! Hartree -> Rydberg
-                !
-              END DO
+              ir = (ir2 - 1) * dfftp%nr1x + (ir3 - 1) * dfftp%nr1x * dfftp%nr2x
+              jr = (ir2 - 1) * dfftp%nr1  + (ir3 - 1) * dfftp%nr1  * dfftp%nr2
+              !
+              vaux(ir+1:ir+nr1) = e2 * vcub(jr+1:jr+nr1) ! Hartree -> Rydberg
               !
             END DO
             !
