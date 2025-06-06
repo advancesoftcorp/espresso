@@ -344,13 +344,13 @@ CONTAINS
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT(IN)  :: it
-    INTEGER, INTENT(OUT) :: rot(nhm, nhm)
+    INTEGER,  INTENT(IN)  :: it
+    REAL(DP), INTENT(OUT) :: rot(nhm, nhm)
     !
     INTEGER :: ib
     INTEGER :: l
     INTEGER :: nht
-    INTEGER :: i1, i2, i3, i4, i5,
+    INTEGER :: i1, i2, i3, i4, i5
     !
     REAL(DP), PARAMETER :: ROOT3 = DSQRT(3.0_DP)
     !
