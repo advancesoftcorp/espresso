@@ -22,7 +22,7 @@ MODULE occmat_module
   USE noncollin_module, ONLY : noncolin
   USE spin_orb,         ONLY : lspinorb
   USE uspp,             ONLY : dvan, okvan
-  USE uspp_param,       ONLY : upf, nhm
+  USE uspp_param,       ONLY : upf, nh, nhm
   !
   IMPLICIT NONE
   SAVE
@@ -113,7 +113,6 @@ CONTAINS
     INTEGER  :: ia, it
     INTEGER  :: ih, jh
     INTEGER  :: iorb, jorb
-    REAL(DP) :: occnum
     REAL(DP) :: occmat(4, 4)
     !
     INTEGER,  ALLOCATABLE :: indx_h(:,:)
@@ -142,9 +141,9 @@ CONTAINS
       !
     END IF
     !
-    IF (okvan) THEN
+    IF (fhi98_mat .AND. okvan) THEN
       !
-      CALL errore('occmat_print', 'Occupation Matrix supports only NCPP, not USPP/PAW.', 1)
+      CALL errore('occmat_print', 'Occupation Matrix of FHI98-type supports only NCPP, not USPP/PAW.', 1)
       !
     END IF
     !
@@ -184,59 +183,11 @@ CONTAINS
       END DO
       !
       ! ... Occupation Matrix
-      WRITE(iunoccmat, '("#Occupation Matrix (only s+p orbital)")')
-      !
-      DO it = 1, ntyp
-        !
-        CALL index_of_beta(it, indx_h(:, it))
-        !
-      END DO
-      !
-      DO ia = 1, nat
-        !
-        it = ityp(ia)
-        !
-        ! QE's Ylm [z, -x, -y] --> Standard Ylm [x, y, z]
-        DO iorb = 1, 4
-          !
-          ih = indx_h(iorb, it)
-          !
-          DO jorb = 1, 4
-            !
-            jh = indx_h(jorb, it)
-            !
-            IF (ih > 0 .AND. jh > 0) THEN
-              occmat(iorb, jorb) = becsum(ih, jh, ia) * dvan(ih, ih, it) * dvan(jh, jh, it)
-            ELSE
-              occmat(iorb, jorb) = 0.0_DP
-            END IF
-            !
-          END DO
-          !
-        END DO
-        !
-        occmat(2, :) = -1.0_DP * occmat(2, :) ! -x -> x
-        occmat(3, :) = -1.0_DP * occmat(3, :) ! -y -> y
-        occmat(:, 2) = -1.0_DP * occmat(:, 2) ! -x -> x
-        occmat(:, 3) = -1.0_DP * occmat(:, 3) ! -y -> y
-        !
-        occnum = 0.0_DP
-        !
-        DO iorb = 1, 4
-          !
-          occnum = occnum + occmat(iorb, iorb)
-          !
-        END DO
-        !
-        WRITE(iunoccmat, '("   iatom:", I5, "  trace:", E25.16)') ia, occnum
-        !
-        DO iorb = 1, 4
-          !
-          WRITE(iunoccmat, '(4E25.16)') (occmat(iorb, jorb), jorb = 1, 4)
-          !
-        END DO
-        !
-      END DO
+      IF (fhi98_mat) THEN
+        CALL fhi98_mat_print(becsum)
+      ELSE
+        CALL normalmat_print(becsum)
+      END IF
       !
     END IF
     !
@@ -250,6 +201,215 @@ CONTAINS
     DEALLOCATE(becsum)
     !
   END SUBROUTINE occmat_print
+  !
+  !----------------------------------------------------------------------------
+  SUBROUTINE normalmat_print(becsum)
+    !----------------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    !
+    REAL(DP), INTENT(IN) :: becsum(nhm, nhm, nat)
+    !
+    INTEGER :: ia, it
+    INTEGER :: ih, jh, nht
+    !
+    REAL(DP), ALLOCATABLE :: occmat(:,:)
+    REAL(DP), ALLOCATABLE :: tmpmat(:,:)
+    REAL(DP), ALLOCATABLE :: rotylm(:,:,:)
+    !
+    ! ... allocate memory
+    !
+    ALLOCATE(occmat(nhm, nhm))
+    ALLOCATE(tmpmat(nhm, nhm))
+    ALLOCATE(rotylm(nhm, nhm, ntyp))
+    !
+    ! ... print data
+    !
+    WRITE(iunoccmat, '("#Occupation Matrix")')
+    !
+    DO it = 1, ntyp
+      !
+      CALL rotation_ylm(it, rotylm(:, :, it))
+      !
+    END DO
+    !
+    DO ia = 1, nat
+      !
+      it = ityp(ia)
+      !
+      nht = nh(it)
+      !
+      occmat(1:nht, 1:nht) = becsum(1:nht, 1:nht, ia)
+      !
+      CALL DGEMM("N", "N", nht, nht, nht, 1.0_DP, &
+                rotylm, nhm, occmat, nhm, 0.0_DP, tmpmat, nhm)
+      !
+      CALL DGEMM("N", "T", nht, nht, nht, 1.0_DP, &
+                tmpmat, nhm, rotylm, nhm, 0.0_DP, occmat, nhm)
+      !
+      WRITE(iunoccmat, '("   iatom:", I5, "  nbasis:", I5)') ia, nht
+      !
+      DO ih = 1, nht
+        !
+        WRITE(iunoccmat, '(64E25.16)') (occmat(ih, jh), jh = 1, nht)
+        !
+      END DO
+      !
+    END DO
+    !
+    ! ... deallocate memory
+    !
+    DEALLOCATE(occmat)
+    DEALLOCATE(tmpmat)
+    DEALLOCATE(rotylm)
+    !
+  END SUBROUTINE normalmat_print
+  !
+  !----------------------------------------------------------------------------
+  SUBROUTINE fhi98_mat_print(becsum)
+    !----------------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    !
+    REAL(DP), INTENT(IN) :: becsum(nhm, nhm, nat)
+    !
+    INTEGER  :: ia, it
+    INTEGER  :: ih, jh
+    INTEGER  :: iorb, jorb
+    REAL(DP) :: occmat(4, 4)
+    !
+    INTEGER,  ALLOCATABLE :: indx_h(:,:)
+    !
+    ! ... allocate memory
+    !
+    ALLOCATE(indx_h(4, ntyp))
+    !
+    ! ... print data
+    !
+    WRITE(iunoccmat, '("#Occupation Matrix (only s+p orbital)")')
+    !
+    DO it = 1, ntyp
+      !
+      CALL index_of_beta(it, indx_h(:, it))
+      !
+    END DO
+    !
+    DO ia = 1, nat
+      !
+      it = ityp(ia)
+      !
+      ! QE's Ylm [z, -x, -y] --> Standard Ylm [x, y, z]
+      DO iorb = 1, 4
+        !
+        ih = indx_h(iorb, it)
+        !
+        DO jorb = 1, 4
+          !
+          jh = indx_h(jorb, it)
+          !
+          IF (ih > 0 .AND. jh > 0) THEN
+            occmat(iorb, jorb) = becsum(ih, jh, ia) * dvan(ih, ih, it) * dvan(jh, jh, it)
+          ELSE
+            occmat(iorb, jorb) = 0.0_DP
+          END IF
+          !
+        END DO
+        !
+      END DO
+      !
+      occmat(2, :) = -1.0_DP * occmat(2, :) ! -x -> x
+      occmat(3, :) = -1.0_DP * occmat(3, :) ! -y -> y
+      occmat(:, 2) = -1.0_DP * occmat(:, 2) ! -x -> x
+      occmat(:, 3) = -1.0_DP * occmat(:, 3) ! -y -> y
+      !
+      WRITE(iunoccmat, '("   iatom:", I5, "  nbasis:", I5)') ia, 4
+      !
+      DO iorb = 1, 4
+        !
+        WRITE(iunoccmat, '(4E25.16)') (occmat(iorb, jorb), jorb = 1, 4)
+        !
+      END DO
+      !
+    END DO
+    !
+    ! ... deallocate memory
+    !
+    DEALLOCATE(indx_h)
+    !
+  END SUBROUTINE fhi98_mat_print
+  !
+  !----------------------------------------------------------------------------
+  SUBROUTINE rotation_ylm(it, rot)
+    !----------------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(IN)  :: it
+    INTEGER, INTENT(OUT) :: rot(nhm, nhm)
+    !
+    INTEGER :: ib
+    INTEGER :: l
+    INTEGER :: nht
+    INTEGER :: i1, i2, i3, i4, i5,
+    !
+    REAL(DP), PARAMETER :: ROOT3 = DSQRT(3.0_DP)
+    !
+    rot(:, :) = 0.0_DP
+    !
+    nht = 0
+    !
+    DO ib = 1, upf(it)%nbeta
+      !
+      l = upf(it)%lll(ib)
+      !
+      IF (l == 0) THEN
+        !
+        i1 = nht + 1
+        !
+        rot(i1, i1) = +1.0_DP
+        !
+      ELSE IF (l == 1) THEN
+        !
+        i1 = nht + 1
+        i2 = nht + 2
+        i3 = nht + 3
+        !
+        ! { z, -x, -y } -> { x, y, z }
+        !
+        rot(i1, i2) = -1.0_DP ! -> x
+        rot(i2, i3) = -1.0_DP ! -> y
+        rot(i3, i1) =  1.0_DP ! -> z
+        !
+      ELSE IF (l == 2) THEN
+        !
+        i1 = nht + 1
+        i2 = nht + 2
+        i3 = nht + 3
+        i4 = nht + 4
+        i5 = nht + 5
+        !
+        ! { (3z2-r2)/(2*sqrt(3)), -xz, -yz, (x2-y2)/2, xy }
+        ! -> { xz, xy, (3y2-r2)/(2*sqrt(3)), yz, (z2-x2)/2 }
+        !
+        rot(i1, i2) = -1.0_DP ! -> xz
+        rot(i2, i5) =  1.0_DP ! -> xy
+        rot(i3, i1) = -0.5_DP ! -> (3y2-r2)/(2*sqrt(3)) = (-1/2)*(3z2-r2)/(2*sqrt(3)) - (sqrt(3)/2)*(x2-y2)/2
+        rot(i3, i4) = -0.5_DP * ROOT3
+        rot(i4, i3) = -1.0_DP ! -> yz
+        rot(i5, i1) =  0.5_DP * ROOT3
+        rot(i5, i4) = -0.5_DP ! -> (z2-x2)/2 = (sqrt(3)/2)*(3z2-r2)/(2*sqrt(3)) - (1/2)*(x2-y2)/2
+        !
+      ELSE
+        !
+        CALL errore('occmat_print', 'Occupation Matrix does not support the case of l >= 3', 1)
+        !
+      END IF
+      !
+      nht = nht + 2 * l + 1
+      !
+    END DO
+    !
+  END SUBROUTINE rotation_ylm
   !
   !----------------------------------------------------------------------------
   SUBROUTINE index_of_beta(it, indx_h)
