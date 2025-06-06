@@ -11,7 +11,6 @@ MODULE occmat_module
   !--------------------------------------------------------------------------
   !
   ! ... the module for Occupation Matrix
-  ! ... [NOTE] this module support only ``NCPP``
   !
   USE cell_base,        ONLY : at, alat
   USE io_files,         ONLY : tmp_dir, prefix
