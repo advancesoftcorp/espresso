@@ -32,6 +32,7 @@ SUBROUTINE newq( vr, deeq, skip_vltot )
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
+  USE aepp_module,          ONLY : do_aepp, aepp_add_vloc
   !
   IMPLICIT NONE
   !
@@ -54,6 +55,9 @@ SUBROUTINE newq( vr, deeq, skip_vltot )
   REAL(DP), ALLOCATABLE :: ylmk0(:,:), qmod(:), deeaux(:,:)
   ! spherical harmonics, modulus of G
   REAL(DP) :: fact
+  !
+  REAL(DP), ALLOCATABLE :: vltot_(:)
+  ! tempolary vltot for AEPP
   !
   IF ( gamma_only ) THEN
      fact = 2.0_dp
@@ -91,6 +95,16 @@ SUBROUTINE newq( vr, deeq, skip_vltot )
            psic(ig) = vr(ig,is)
         ENDDO
 !$omp end parallel do
+     ELSE IF ( do_aepp ) THEN
+        ALLOCATE( vltot_(dfftp%nnr) )
+        vltot_(1:dfftp%nnr) = vltot(1:dfftp%nnr)
+        CALL aepp_add_vloc( vltot_, .TRUE. )
+!$omp parallel do default(shared) private(ig)
+        DO ig = 1, dfftp%nnr
+           psic(ig) = vltot_(ig) + vr(ig,is)
+        ENDDO
+!$omp end parallel do
+        DEALLOCATE( vltot_ )
      ELSE
 !$omp parallel do default(shared) private(ig)
         DO ig = 1, dfftp%nnr
