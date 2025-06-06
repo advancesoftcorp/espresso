@@ -88,14 +88,17 @@ CONTAINS
   END SUBROUTINE aepp_finalize
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE aepp_add_vloc(vloc)
+  SUBROUTINE aepp_add_vloc(vloc, minus)
     !----------------------------------------------------------------------------
     !
     ! ... add effective local potential
     !
     IMPLICIT NONE
     !
-    REAL(DP), INTENT(INOUT) :: vloc(dfftp%nnr)
+    REAL(DP),          INTENT(INOUT) :: vloc(dfftp%nnr)
+    LOGICAL, OPTIONAL, INTENT(IN)    :: minus
+    !
+    REAL(DP) :: fac
     !
     IF (.NOT. do_aepp) RETURN
     !
@@ -105,7 +108,13 @@ CONTAINS
       !
     END IF
     !
-    vloc = vloc + vaepp
+    fac = 1.0_DP
+    !
+    IF (PRESENT(minus)) THEN
+      IF (minus) fac = -1.0_DP
+    END IF
+    !
+    vloc = vloc + fac * vaepp
     !
   END SUBROUTINE aepp_add_vloc
   !
