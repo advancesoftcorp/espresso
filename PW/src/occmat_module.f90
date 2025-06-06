@@ -401,7 +401,7 @@ CONTAINS
         !
       ELSE
         !
-        CALL errore('occmat_print', 'Occupation Matrix does not support the case of l >= 3', 1)
+        CALL errore('occmat_print', 'Occupation Matrix does not support the case of l >= 3', l)
         !
       END IF
       !
