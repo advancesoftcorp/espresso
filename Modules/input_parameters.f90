@@ -272,6 +272,8 @@ MODULE input_parameters
 
         LOGICAL :: toccmat = .FALSE.  ! punch data of Occupation Matrix. enabled if .true.
 
+        LOGICAL :: occmat_fhi98 = .FALSE.  ! FHI98-type basis for Occupation Matrix.
+
         LOGICAL :: taepp = .FALSE.    ! read effective local potential of AEPP. enabled if .true.
 
         CHARACTER(len=256) :: aepp_file = '' ! file name of AEPP
@@ -300,8 +302,8 @@ MODULE input_parameters
           gdir, nppstr, wf_collect, lelfield, nberrycyc, refg,            &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
           lfcp, tqmmm, trism, tsannp, tkinetic, kin_perturb, kin_nprint,  &
-          toccmat, taepp, aepp_file, vdw_table_name, lorbm, memory,       &
-          point_label_type, input_xml_schema_file, gate
+          toccmat, occmat_fhi98, taepp, aepp_file, vdw_table_name, lorbm, &
+          memory, point_label_type, input_xml_schema_file, gate
 !
 !=----------------------------------------------------------------------------=!
 !  SYSTEM Namelist Input Parameters

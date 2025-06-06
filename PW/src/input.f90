@@ -220,7 +220,7 @@ SUBROUTINE iosys()
 
   USE kinetic_module,        ONLY : do_kinetic, kinetic_perturb, kinetic_nprint
 
-  USE occmat_module,         ONLY : do_occmat
+  USE occmat_module,         ONLY : do_occmat, fhi98_mat
 
   USE aepp_module,           ONLY : do_aepp, filaepp
 
@@ -237,7 +237,7 @@ SUBROUTINE iosys()
                                lfcp, vdw_table_name, memory, max_seconds,      &
                                tqmmm, efield_phase, gate, trism, tsannp,       &
                                tkinetic, kin_perturb, kin_nprint, toccmat,     &
-                               taepp, aepp_file, max_xml_steps
+                               occmat_fhi98, taepp, aepp_file, max_xml_steps
 
   !
   ! ... SYSTEM namelist
@@ -1721,6 +1721,7 @@ SUBROUTINE iosys()
   ! ... set variables for Occupation Matrix
   !
   do_occmat = toccmat
+  fhi98_mat = occmat_fhi98
   !
   ! ... set variables for AEPP
   !

@@ -137,6 +137,7 @@ MODULE read_namelists_module
        kin_perturb = 0.0_DP
        kin_nprint = 5
        toccmat = .FALSE.
+       occmat_fhi98 = .FALSE.
        taepp = .FALSE.
        aepp_file = ''
        !
@@ -919,6 +920,7 @@ MODULE read_namelists_module
        CALL mp_bcast( kin_perturb,   ionode_id, intra_image_comm )
        CALL mp_bcast( kin_nprint,    ionode_id, intra_image_comm )
        CALL mp_bcast( toccmat,       ionode_id, intra_image_comm )
+       CALL mp_bcast( occmat_fhi98,  ionode_id, intra_image_comm )
        CALL mp_bcast( taepp,         ionode_id, intra_image_comm )
        CALL mp_bcast( aepp_file,     ionode_id, intra_image_comm )
        CALL mp_bcast( vdw_table_name,ionode_id, intra_image_comm )

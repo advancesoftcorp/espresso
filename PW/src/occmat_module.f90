@@ -30,6 +30,7 @@ MODULE occmat_module
   PRIVATE
   !
   LOGICAL :: do_occmat = .FALSE.
+  LOGICAL :: fhi98_mat = .FALSE.
   INTEGER :: iunoccmat
   !
   PUBLIC :: do_occmat
