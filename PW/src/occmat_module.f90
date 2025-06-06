@@ -33,6 +33,7 @@ MODULE occmat_module
   INTEGER :: iunoccmat
   !
   PUBLIC :: do_occmat
+  PUBLIC :: fhi98_mat
   PUBLIC :: occmat_print
   !
 CONTAINS
