@@ -101,7 +101,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
                                      calbec_rs_gamma, add_vuspsir_gamma, invfft_orbital_k,  &
                                      fwfft_orbital_k, calbec_rs_k, add_vuspsir_k,           & 
                                      v_loc_psir_inplace
-  USE aepp_module,             ONLY: do_aepp
   USE fft_base,                ONLY: dffts
   USE exx,                     ONLY: use_ace, vexx, vexxace_gamma, vexxace_k
   USE funct,                   ONLY: exx_is_active
@@ -165,7 +164,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
            ! ... psic -> vrs * psic (psic overwritten will become hpsi)
            CALL v_loc_psir_inplace( ibnd, m ) 
            ! ... psic (hpsi) -> psic + vusp
-           IF (.NOT. do_aepp) CALL  add_vuspsir_gamma( ibnd, m )
+           CALL  add_vuspsir_gamma( ibnd, m )
            ! ... transform psic back in reciprocal space and add it to hpsi
            CALL fwfft_orbital_gamma( hpsi, ibnd, m, add_to_orbital=.TRUE. )
         ENDDO
@@ -200,7 +199,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
            ! ... psic -> vrs * psic (psic overwritten will become hpsi)
            CALL v_loc_psir_inplace( ibnd, m )
            ! ... psic (hpsi) -> psic + vusp
-           IF (.NOT. do_aepp) CALL  add_vuspsir_k( ibnd, m )
+           CALL  add_vuspsir_k( ibnd, m )
            ! ... transform psic back in reciprocal space and add it to hpsi
            CALL fwfft_orbital_k( hpsi, ibnd, m, add_to_orbital=.TRUE. )
            !
@@ -222,7 +221,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      CALL start_clock( 'h_psi:calbec' )
      CALL calbec( n, vkb, psi, becp, m )
      CALL stop_clock( 'h_psi:calbec' )
-     IF (.NOT. do_aepp) CALL add_vuspsi( lda, n, m, hpsi )
+     CALL add_vuspsi( lda, n, m, hpsi )
      !
   ENDIF
   !
