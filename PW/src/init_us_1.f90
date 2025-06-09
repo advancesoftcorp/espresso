@@ -207,7 +207,7 @@ subroutine init_us_1
               do is1=1,2
                  do is2=1,2
                     ijs=ijs+1
-                    if (.not. do_aepp)
+                    if (.not. do_aepp) then
                        dvan_so(ih,jh,ijs,nt) = upf(nt)%dion(vi,vj) * &
                                                fcoef(ih,jh,is1,is2,nt)
                     endif
@@ -216,7 +216,7 @@ subroutine init_us_1
               enddo
            enddo
         enddo
-     else if (.not. do_aepp)
+     else if (.not. do_aepp) then
         do ih = 1, nh (nt)
           do jh = 1, nh (nt)
             if (nhtol (ih, nt) == nhtol (jh, nt) .and. &
