@@ -243,10 +243,10 @@ CONTAINS
       occmat(1:nht, 1:nht) = becsum(1:nht, 1:nht, ia)
       !
       CALL DGEMM("N", "N", nht, nht, nht, 1.0_DP, &
-                rotylm(it), nhm, occmat, nhm, 0.0_DP, tmpmat, nhm)
+                rotylm(:,:,it), nhm, occmat, nhm, 0.0_DP, tmpmat, nhm)
       !
       CALL DGEMM("N", "T", nht, nht, nht, 1.0_DP, &
-                tmpmat, nhm, rotylm(it), nhm, 0.0_DP, occmat, nhm)
+                tmpmat, nhm, rotylm(:,:,it), nhm, 0.0_DP, occmat, nhm)
       !
       WRITE(iunoccmat, '("   iatom:", I5, "  nbasis:", I5)') ia, nht
       !
