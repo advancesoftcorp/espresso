@@ -220,6 +220,9 @@ SUBROUTINE iosys()
 
   USE kinetic_module,        ONLY : do_kinetic, kinetic_perturb, kinetic_nprint
 
+  USE nonloc_module,         ONLY : do_nonloc, nonloc_perturb, nonloc_nprint, &
+                                    nonloc_kin_tf, nonloc_kin_vw
+
   USE occmat_module,         ONLY : do_occmat, fhi98_mat
 
   USE aepp_module,           ONLY : do_aepp, filaepp
@@ -236,8 +239,10 @@ SUBROUTINE iosys()
                                nberrycyc, efield_cart, lecrpa,                 &
                                lfcp, vdw_table_name, memory, max_seconds,      &
                                tqmmm, efield_phase, gate, trism, tsannp,       &
-                               tkinetic, kin_perturb, kin_nprint, toccmat,     &
-                               occmat_fhi98, taepp, aepp_file, max_xml_steps
+                               tkinetic, kin_perturb, kin_nprint,              &
+                               tnonloc, nl_perturb, nl_nprint, nl_kin_tf,      &
+                               nl_kin_vw, toccmat, occmat_fhi98,               &
+                               taepp, aepp_file, max_xml_steps
 
   !
   ! ... SYSTEM namelist
@@ -1715,6 +1720,27 @@ SUBROUTINE iosys()
      IF ( .NOT. nosym_ ) THEN
         nosym_ = .TRUE.
         CALL infomsg('iosys', 'cannot use symmetry with kin_perturb > 0')
+     END IF
+  END IF
+  !
+  ! ... set variables for Non-Local Energy Derivative
+  !
+  do_nonloc      = tnonloc
+  nonloc_kin_tf  = nl_kin_tf
+  nonloc_kin_vw  = nl_kin_vw
+  nonloc_perturb = nl_perturb
+  nonloc_nprint  = nl_nprint
+  !
+  IF ( do_nonloc .AND. do_kinetic ) THEN
+     CALL errore('iosys', 'cannot set tkinetic and tnonloc, simultaneously', 1)
+  END IF
+  !
+  IF ( do_nonloc ) ethr = MIN( ethr, 1.0D-8 )
+  !
+  IF ( do_nonloc .AND. nonloc_perturb > 0.0_DP ) THEN
+     IF ( .NOT. nosym_ ) THEN
+        nosym_ = .TRUE.
+        CALL infomsg('iosys', 'cannot use symmetry with nl_perturb > 0')
      END IF
   END IF
   !

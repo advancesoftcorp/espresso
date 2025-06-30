@@ -426,6 +426,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE plugin_variables,     ONLY : plugin_etot
   !
   USE kinetic_module,       ONLY : do_kinetic, kinetic_nprint, kinetic_print
+  USE nonloc_module,        ONLY : do_nonloc, nonloc_nprint, nonloc_print
   USE occmat_module,        ONLY : do_occmat, occmat_print
   !
   IMPLICIT NONE
@@ -565,7 +566,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
         !
         IF ( iter == 2 ) THEN
            !
-           IF ( do_kinetic ) THEN
+           IF ( do_kinetic .OR. do_nonloc ) THEN
               ethr = 1.D-8
            ELSE IF ( lgcscf ) THEN
               ethr = 1.D-5
@@ -771,7 +772,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                &    "too large:",/,5X,                      &
                                & "Diagonalizing with lowered threshold",/)' )
               !
-              IF ( do_kinetic ) THEN
+              IF ( do_kinetic .OR. do_nonloc ) THEN
                  ethr = MIN( ethr, 0.1D0*dr2 / MAX( 1.D0, nelec ) )
               ELSE
                  ethr = 0.1D0*dr2 / MAX( 1.D0, nelec )
@@ -823,8 +824,14 @@ SUBROUTINE electrons_scf ( printout, exxen )
            !
            IF ( do_kinetic ) THEN
               IF ( kinetic_nprint > 0 .AND. MOD(iter - 1, kinetic_nprint) == 0 ) &
-              !CALL kinetic_print( .FALSE., iter )
               CALL kinetic_print( .TRUE., iter )
+           END IF
+           !
+           ! ... print Non-Local Energy Derivative
+           !
+           IF ( do_nonloc ) THEN
+              IF ( nonloc_nprint > 0 .AND. MOD(iter - 1, nonloc_nprint) == 0 ) &
+              CALL nonloc_print( iter )
            END IF
            !
         ELSE
@@ -860,6 +867,12 @@ SUBROUTINE electrons_scf ( printout, exxen )
            !
            IF ( do_kinetic ) THEN
               CALL kinetic_print( .TRUE. )
+           END IF
+           !
+           ! ... print Non-Local Energy Derivative
+           !
+           IF ( do_nonloc ) THEN
+              CALL nonloc_print()
            END IF
            !
            ! ... print Occupation Matrix

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2024 AdvanceSoft Corp.
+! Copyright (C) 2025 AdvanceSoft Corp.
 !
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -7,48 +7,39 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------------
-MODULE kinetic_module
+MODULE nonloc_module
   !--------------------------------------------------------------------------
   !
-  ! ... the module for Kinetic Energy Density
+  ! ... the module for Non-Local Energy Derivative
   !
-  USE cell_base,      ONLY : at, alat, omega
-  USE constants,      ONLY : e2
-  USE control_flags,  ONLY : isolve, rmm_conv
-  USE fft_base,       ONLY : dffts, dfftp
-  USE fft_types,      ONLY : fft_index_to_3d
-  USE kinds,          ONLY : DP
-  USE io_files,       ONLY : tmp_dir, prefix
-  USE io_global,      ONLY : ionode, stdout
-  USE lsda_mod,       ONLY : nspin
-  USE mp,             ONLY : mp_sum, mp_barrier
-  USE mp_bands,       ONLY : intra_bgrp_comm
-  USE mp_images,      ONLY : intra_image_comm
-  USE scatter_mod,    ONLY : gather_grid
-  USE scf,            ONLY : rho
+  USE kinds, ONLY : DP
   !
   IMPLICIT NONE
   SAVE
   PRIVATE
   !
-  LOGICAL  :: do_kinetic      = .FALSE.
-  REAL(DP) :: kinetic_perturb = 0.0_DP
-  INTEGER  :: kinetic_nprint  = 0
-  INTEGER  :: iunkinetic
+  LOGICAL  :: do_nonloc      = .FALSE.
+  REAL(DP) :: nonloc_kin_tf  = 1.0_DP
+  REAL(DP) :: nonloc_kin_vw  = 0.2_DP
+  REAL(DP) :: nonloc_perturb = 0.0_DP
+  INTEGER  :: nonloc_nprint  = 0
+  INTEGER  :: iunnonloc
   !
-  PUBLIC :: do_kinetic
-  PUBLIC :: kinetic_perturb
-  PUBLIC :: kinetic_nprint
-  PUBLIC :: kinetic_print
-  PUBLIC :: kinetic_add_perturb
+  PUBLIC :: do_nonloc
+  PUBLIC :: nonloc_coef_tf
+  PUBLIC :: nonloc_coef_vw
+  PUBLIC :: nonloc_perturb
+  PUBLIC :: nonloc_nprint
+  PUBLIC :: nonloc_print
+  PUBLIC :: nonloc_add_perturb
   !
 CONTAINS
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE kinetic_open(idx)
+  SUBROUTINE nonloc_open(idx)
     !----------------------------------------------------------------------------
     !
-    ! ... open file of Kinetic Energy Density
+    ! ... open file of Non-Local Energy Derivative
     !
     IMPLICIT NONE
     !
@@ -60,26 +51,26 @@ CONTAINS
     !
     INTEGER, EXTERNAL  :: find_free_unit
     !
-    IF (.NOT. do_kinetic) THEN
+    IF (.NOT. do_nonloc) THEN
       RETURN
     END IF
     !
-    iunkinetic = find_free_unit()
+    iunnonloc = find_free_unit()
     !
     IF (idx >= 0) THEN
       !
       WRITE(str, '(I8)') idx
-      filename = TRIM(tmp_dir) // TRIM(prefix) // '.ked.' // TRIM(ADJUSTL(str))
+      filename = TRIM(tmp_dir) // TRIM(prefix) // '.nld.' // TRIM(ADJUSTL(str))
       !
     ELSE
       !
-      filename = TRIM(tmp_dir) // TRIM(prefix) // '.ked'
+      filename = TRIM(tmp_dir) // TRIM(prefix) // '.nld'
       !
     END IF
     !
     IF (ionode) THEN
       !
-      OPEN(unit=iunkinetic, file=TRIM(filename), &
+      OPEN(unit=iunnonloc, file=TRIM(filename), &
          & status='unknown', form='formatted', action='write', iostat=ios)
       !
       ios = ABS(ios)
@@ -92,43 +83,42 @@ CONTAINS
     !
     CALL mp_sum(ios, intra_image_comm)
     !
-    CALL errore('kinetic_open', 'cannot open file: ' // TRIM(filename), ios)
+    CALL errore('nonloc_open', 'cannot open file: ' // TRIM(filename), ios)
     !
-  END SUBROUTINE kinetic_open
+  END SUBROUTINE nonloc_open
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE kinetic_close()
+  SUBROUTINE nonloc_close()
     !----------------------------------------------------------------------------
     !
-    ! ... close file of Kinetic Energy Density
+    ! ... close file of Non-Local Energy Derivative
     !
     IMPLICIT NONE
     !
     LOGICAL :: opnd
     !
-    IF (.NOT. do_kinetic) THEN
+    IF (.NOT. do_nonloc) THEN
       RETURN
     END IF
     !
     IF (ionode) THEN
       !
-      INQUIRE(unit=iunkinetic, opened=opnd)
+      INQUIRE(unit=iunnonloc, opened=opnd)
       !
-      IF (opnd) CLOSE(unit=iunkinetic)
+      IF (opnd) CLOSE(unit=iunnonloc)
       !
     END IF
     !
-  END SUBROUTINE kinetic_close
+  END SUBROUTINE nonloc_close
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE kinetic_print(with_dtdr, idx)
+  SUBROUTINE nonloc_print(idx)
     !----------------------------------------------------------------------------
     !
-    ! ... print data for Kinetic Energy Density
+    ! ... print data for Non-Local Energy Derivative
     !
     IMPLICIT NONE
     !
-    LOGICAL,           INTENT(IN) :: with_dtdr
     INTEGER, OPTIONAL, INTENT(IN) :: idx
     !
     INTEGER  :: idx_
@@ -156,34 +146,27 @@ CONTAINS
       idx_ = -1
     END IF
     !
-    IF (.NOT. do_kinetic) THEN
+    IF (.NOT. do_nonloc) THEN
       RETURN
     END IF
     !
     IF (ionode .AND. idx_ < 0) THEN
       !
       WRITE(stdout, '()')
-      WRITE(stdout, '(5X,"Writing Kinetic Energy Density to file.")')
-      !
-    END IF
-    !
-    IF (dfftp%nr1  /= dffts%nr1  .OR. dfftp%nr2  /= dffts%nr2  .OR. dfftp%nr3  /= dffts%nr3 .OR. &
-        dfftp%nr1x /= dffts%nr1x .OR. dfftp%nr2x /= dffts%nr2x .OR. dfftp%nr3x /= dffts%nr3x) THEN
-      !
-      CALL errore('kinetic_print', 'Kinetic Energy Density does not support dual FFT-mesh', 1)
+      WRITE(stdout, '(5X,"Writing Non-Local Energy Derivative to file.")')
       !
     END IF
     !
     IF (nspin /= 1) THEN
       !
-      CALL errore('kinetic_print', 'Kinetic Energy Density supports only nspin = 1', 1)
+      CALL errore('nonloc_print', 'Non-Local Energy Derivative supports only nspin = 1', 1)
       !
     END IF
     !
     IF (isolve == 4 .AND. .NOT. rmm_conv) THEN
       !
-      CALL errore('kinetic_print', &
-      'diago_rmm_conv must be .TRUE., when calculate Kinetic Energy Density', 1)
+      CALL errore('nonloc_print', &
+      'diago_rmm_conv must be .TRUE., when calculate Non-Local Energy Derivative', 1)
       !
     END IF
     !
@@ -313,10 +296,10 @@ CONTAINS
     DEALLOCATE(tauL_g)
     DEALLOCATE(dtdr_g)
     !
-  END SUBROUTINE kinetic_print
+  END SUBROUTINE nonloc_print
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE kinetic_add_perturb(aux)
+  SUBROUTINE nonloc_add_perturb(aux)
     !----------------------------------------------------------------------------
     !
     ! ... add perturbation potential to local potential, in G-space
@@ -325,50 +308,17 @@ CONTAINS
     !
     COMPLEX(DP), INTENT(INOUT) :: aux(dfftp%nnr)
     !
-    IF (.NOT. do_kinetic) THEN
+    IF (.NOT. do_nonloc) THEN
       RETURN
     END IF
     !
-    IF (kinetic_perturb > 0.0_DP) THEN
+    IF (nonloc_perturb > 0.0_DP) THEN
       !
-      CALL add_local_perturb(kinetic_perturb, aux)
+      CALL add_local_perturb(nonloc_perturb, aux)
       !
     END IF
     !
-  END SUBROUTINE kinetic_add_perturb
+  END SUBROUTINE nonloc_add_perturb
   !
-END MODULE kinetic_module
-!
-!----------------------------------------------------------------------------
-SUBROUTINE density_print(iun, nr1x, nr2x, nr3x, fac, rhor)
-  !----------------------------------------------------------------------------
-  !
-  USE fft_base, ONLY : dffts
-  USE kinds,    ONLY : DP
-  !
-  IMPLICIT NONE
-  !
-  INTEGER,  INTENT(IN) :: iun
-  INTEGER,  INTENT(IN) :: nr1x, nr2x, nr3x
-  REAL(DP), INTENT(IN) :: fac
-  REAL(DP), INTENT(IN) :: rhor(nr1x, nr2x, nr3x)
-  !
-  INTEGER :: i1,  i2,  i3
-  INTEGER :: nr1, nr2, nr3
-  !
-  nr1 = dffts%nr1
-  nr2 = dffts%nr2
-  nr3 = dffts%nr3
-  !
-  DO i1 = 1, nr1
-    !
-    DO i2 = 1, nr2
-      !
-      WRITE(iun,'(6E25.16)') (fac * rhor(i1, i2, i3), i3 = 1, nr3)
-      !
-    END DO
-    !
-  END DO
-  !
-END SUBROUTINE density_print
+END MODULE nonloc_module
 

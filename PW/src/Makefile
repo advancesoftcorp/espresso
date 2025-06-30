@@ -15,6 +15,7 @@ add_bfield.o \
 add_efield.o \
 add_vuspsi.o \
 add_gatefield.o \
+add_local_perturb.o \
 add_paw_to_deeq.o \
 add_vhub_to_deeq.o \
 addusdens.o \
@@ -159,6 +160,7 @@ new_nsg.o \
 new_occ.o \
 ns_adj.o \
 non_scf.o \
+nonlocal_module.o \
 occmat_module.o \
 occmat_sum_band.o \
 offset_atom_wfc.o \

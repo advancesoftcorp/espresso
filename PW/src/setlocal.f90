@@ -37,6 +37,7 @@ SUBROUTINE setlocal
   USE Coul_cut_2D,       ONLY : do_cutoff_2D, cutoff_local
   USE rism_module,       ONLY : lrism, rism_setlocal
   USE kinetic_module,    ONLY : do_kinetic, kinetic_add_perturb
+  USE nonloc_module,     ONLY : do_nonloc, nonloc_add_perturb
   USE aepp_module,       ONLY : do_aepp, aepp_add_vloc
   !
   IMPLICIT NONE
@@ -97,6 +98,14 @@ SUBROUTINE setlocal
   IF ( do_kinetic ) THEN
      !
      CALL kinetic_add_perturb( aux )
+     !
+  END IF
+  !
+  ! ... set the perturbation potential for Non-Local Energy Derivative
+  !
+  IF ( do_nonloc ) THEN
+     !
+     CALL nonloc_add_perturb( aux )
      !
   END IF
   !

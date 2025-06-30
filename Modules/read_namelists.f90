@@ -136,6 +136,11 @@ MODULE read_namelists_module
        tkinetic = .FALSE.
        kin_perturb = 0.0_DP
        kin_nprint = 5
+       tnonloc = .FALSE.
+       nl_kin_tf = 1.0_DP
+       nl_kin_vw = 0.2_DP
+       nl_perturb = 0.0_DP
+       nl_nprint = 5
        toccmat = .FALSE.
        occmat_fhi98 = .FALSE.
        taepp = .FALSE.
@@ -919,6 +924,11 @@ MODULE read_namelists_module
        CALL mp_bcast( tkinetic,      ionode_id, intra_image_comm )
        CALL mp_bcast( kin_perturb,   ionode_id, intra_image_comm )
        CALL mp_bcast( kin_nprint,    ionode_id, intra_image_comm )
+       CALL mp_bcast( tnonloc,       ionode_id, intra_image_comm )
+       CALL mp_bcast( nl_kin_tf,     ionode_id, intra_image_comm )
+       CALL mp_bcast( nl_kin_vw,     ionode_id, intra_image_comm )
+       CALL mp_bcast( nl_perturb,    ionode_id, intra_image_comm )
+       CALL mp_bcast( nl_nprint,     ionode_id, intra_image_comm )
        CALL mp_bcast( toccmat,       ionode_id, intra_image_comm )
        CALL mp_bcast( occmat_fhi98,  ionode_id, intra_image_comm )
        CALL mp_bcast( taepp,         ionode_id, intra_image_comm )
