@@ -402,7 +402,17 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud, fa
   !
   IF ( ns == 1 .AND. PRESENT(fact_kin) ) THEN
      !
+     ALLOCATE( grho2(length,ns) )
+     grho2 = 0.0_DP
+     !
+     DO k = 1, length
+        IF ( ABS(rho(k,1)) > rho_threshold ) &
+          grho2(k,1) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
+     ENDDO
+     !
      CALL kin_vw( length, fact_kin, ABS(rho(:,1)), grho2(:,1), ex, v1x(:,1), v2x(:,1) )
+     !
+     DEALLOCATE( grho2 )
      !
   END IF
   !
