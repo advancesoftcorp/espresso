@@ -53,7 +53,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   REAL(DP), PARAMETER :: epsr = 1.D-6, epsg = 1.D-10
   !
   !
-  IF ( .NOT. dft_is_gradient() ) RETURN
+  IF ( .NOT. ( dft_is_gradient() .OR. do_nonloc ) ) RETURN
   !
   etxcgc = 0.0_DP
   vtxcgc = 0.0_DP

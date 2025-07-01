@@ -65,7 +65,7 @@ SUBROUTINE add_local_perturb(perturb, aux)
       !
       IF (zv(it) > 0.0_DP) THEN
         CALL random_number(rand_value)
-        fac = 2.0_DP * (rand_value - 0.5_DP) * kinetic_perturb / zv(it)
+        fac = 2.0_DP * (rand_value - 0.5_DP) * perturb / zv(it)
         fac = MAX(fac, -1.0_DP)
       ELSE
         fac = 0.0_DP
