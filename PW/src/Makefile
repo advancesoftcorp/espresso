@@ -160,8 +160,8 @@ new_nsg.o \
 new_occ.o \
 ns_adj.o \
 non_scf.o \
-nonlocal_energy.o \
-nonlocal_module.o \
+nonloc_energy.o \
+nonloc_module.o \
 occmat_module.o \
 occmat_sum_band.o \
 offset_atom_wfc.o \
