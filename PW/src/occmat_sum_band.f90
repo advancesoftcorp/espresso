@@ -18,7 +18,7 @@ SUBROUTINE occmat_sum_band(becsum)
   USE ions_base,     ONLY : nat
   USE kinds,         ONLY : DP
   USE klist,         ONLY : nks, xk, ngk, igk_k
-  USE mp,            ONLY : mp_sum
+  USE mp,            ONLY : mp_sum, mp_get_comm_null
   USE mp_bands,      ONLY : inter_bgrp_comm, intra_bgrp_comm
   USE mp_pools,      ONLY : inter_pool_comm
   USE uspp,          ONLY : nkb, vkb
@@ -52,6 +52,8 @@ SUBROUTINE occmat_sum_band(becsum)
     CALL occmat_sum_bec(ik, ibnd_start, ibnd_end, this_bgrp_nbnd, becsum)
     !
   END DO
+  !
+  IF (becp%comm /= mp_get_comm_null()) CALL mp_sum(becsum, becp%comm)
   !
   CALL deallocate_bec_type(becp)
   !

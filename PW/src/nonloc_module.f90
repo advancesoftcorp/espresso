@@ -12,7 +12,20 @@ MODULE nonloc_module
   !
   ! ... the module for Non-Local Energy Derivative
   !
-  USE kinds, ONLY : DP
+  USE cell_base,     ONLY : at, alat
+  USE constants,     ONLY : e2
+  USE control_flags, ONLY : isolve, rmm_conv
+  USE ener,          ONLY : ef
+  USE fft_base,      ONLY : dffts, dfftp
+  USE io_files,      ONLY : tmp_dir, prefix
+  USE io_global,     ONLY : ionode, stdout
+  USE ions_base,     ONLY : nat, ityp, atm, tau
+  USE kinds,         ONLY : DP
+  USE mp,            ONLY : mp_sum, mp_barrier
+  USE mp_images,     ONLY : intra_image_comm
+  USE scatter_mod,   ONLY : gather_grid
+  USE scf,           ONLY : vrs
+  USE uspp_param,    ONLY : nhm
   !
   IMPLICIT NONE
   SAVE
@@ -122,23 +135,16 @@ CONTAINS
     INTEGER, OPTIONAL, INTENT(IN) :: idx
     !
     INTEGER  :: idx_
-    INTEGER  :: ir
+    INTEGER  :: ia
+    INTEGER  :: i1, i2, i3
+    INTEGER  :: nr1, nr2, nr3
     INTEGER  :: nr1x, nr2x, nr3x
     INTEGER  :: nfft
-    REAL(DP) :: fac
-    REAL(DP) :: eneTauG
-    REAL(DP) :: eneTauL
-    REAL(DP) :: eneDtdr
     !
-    REAL(DP), ALLOCATABLE :: rhor(:)
-    REAL(DP), ALLOCATABLE :: tauG(:)
-    REAL(DP), ALLOCATABLE :: tauL(:)
-    REAL(DP), ALLOCATABLE :: dtdr(:)
-    REAL(DP), ALLOCATABLE :: rho1_g(:)
-    REAL(DP), ALLOCATABLE :: rho2_g(:)
-    REAL(DP), ALLOCATABLE :: tauG_g(:)
-    REAL(DP), ALLOCATABLE :: tauL_g(:)
-    REAL(DP), ALLOCATABLE :: dtdr_g(:)
+    REAL(DP), ALLOCATABLE :: becsum(:,:,:) ! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
+    REAL(DP), ALLOCATABLE :: eneNL (:)
+    REAL(DP), ALLOCATABLE :: dvdr  (:)
+    REAL(DP), ALLOCATABLE :: dvdr_g(:)
     !
     IF (PRESENT(idx)) THEN
       idx_ = idx
@@ -153,7 +159,7 @@ CONTAINS
     IF (ionode .AND. idx_ < 0) THEN
       !
       WRITE(stdout, '()')
-      WRITE(stdout, '(5X,"Writing Non-Local Energy Derivative to file.")')
+      WRITE(stdout, '(5X,"Writing Non-Local Energy and its Derivative to file.")')
       !
     END IF
     !
@@ -172,129 +178,99 @@ CONTAINS
     !
     ! ... allocate memory
     !
+    nr1  = dffts%nr1
+    nr2  = dffts%nr2
+    nr3  = dffts%nr3
     nr1x = dffts%nr1x
     nr2x = dffts%nr2x
     nr3x = dffts%nr3x
     nfft = nr1x * nr2x * nr3x
     !
-    ALLOCATE(rhor(dffts%nnr))
-    ALLOCATE(tauG(dffts%nnr))
-    ALLOCATE(tauL(dffts%nnr))
-    ALLOCATE(dtdr(dffts%nnr))
-    ALLOCATE(rho1_g(nfft))
-    ALLOCATE(rho2_g(nfft))
-    ALLOCATE(tauG_g(nfft))
-    ALLOCATE(tauL_g(nfft))
-    ALLOCATE(dtdr_g(nfft))
+    ALLOCATE(becsum(nhm, nhm, nat)) ! w/o spin
+    ALLOCATE(eneNL (nat))
+    ALLOCATE(dvdr  (dffts%nnr))
+    ALLOCATE(dvdr_g(nfft))
     !
-    ! ... calculate Kinetic Energy Density
+    ! ... calculate Non-Local Energy and its Derivative
     !
-    CALL kinetic_sum_band(rhor, tauG, tauL, dtdr, .TRUE.)
+    CALL occmat_sum_band(becsum)
     !
-    eneTauG = 0.0_DP
-    eneTauL = 0.0_DP
-    eneDtdr = 0.0_DP
-    !
-    fac = omega / DBLE(dffts%nr1 * dffts%nr2 * dffts%nr3)
-    !
-    DO ir = 1, dffts%nnr
-      !
-      eneTauG = eneTauG + fac * tauG(ir)
-      eneTauL = eneTauL + fac * tauL(ir)
-      eneDtdr = eneDtdr + fac * dtdr(ir) * rhor(ir)
-      !
-    END DO
-    !
-    CALL mp_sum(eneTauG, intra_bgrp_comm)
-    CALL mp_sum(eneTauL, intra_bgrp_comm)
-    CALL mp_sum(eneDtdr, intra_bgrp_comm)
+    CALL nonloc_energy(eneNL, becsum)
     !
     IF (ionode .AND. idx_ < 0) THEN
       !
       WRITE(stdout, '()')
-      WRITE(stdout, '(5X,"Kinetic energy (by Gradient)  =",F17.8," Ry")') eneTauG
-      WRITE(stdout, '(5X,"Kinetic energy (by Laplacian) =",F17.8," Ry")') eneTauL
-      WRITE(stdout, '(5X,"Integral [ dT/drho * rho ]    =",F17.8," Ry")') eneDtdr
+      WRITE(stdout, '(5X,A)') '  # atom     Enl (Ry)'
+      !
+      DO ia = 1, nat
+        !
+        WRITE(stdout, '(5X,I3,2X,A4,0PE14.5)') &
+        & ia, ADJUSTL(atm(ityp(ia))) // '    ', eneNL(ia)
+        !
+      END DO
       !
     END IF
     !
+    dvdr(1:dffts%nnr) = ef - vrs(1:dffts%nnr, 1)
+    !
 #if defined(__MPI)
-    rho1_g = 0.0_DP
-    rho2_g = 0.0_DP
-    tauG_g = 0.0_DP
-    tauL_g = 0.0_DP
-    dtdr_g = 0.0_DP
-    CALL gather_grid(dffts, rhor,           rho1_g)
-    CALL gather_grid(dffts, rho%of_r(:, 1), rho2_g)
-    CALL gather_grid(dffts, tauG,           tauG_g)
-    CALL gather_grid(dffts, tauL,           tauL_g)
-    CALL gather_grid(dffts, dtdr,           dtdr_g)
+    dvdr_g = 0.0_DP
+    CALL gather_grid(dffts, dvdr, dvdr_g)
 #else
-    rho1_g = rhor
-    rho2_g = rho%of_r(:, 1)
-    tauG_g = tauG
-    tauL_g = tauL
-    dtdr_g = dtdr
+    dvdr_g = dvdr
 #endif
     !
     ! ... print data, in Hartree unit
     !
-    CALL kinetic_open(idx_)
+    CALL nonloc_open(idx_)
     !
     IF (ionode) THEN
       !
-      WRITE(iunkinetic, '("#Mesh")')
-      WRITE(iunkinetic, "(3I8)") dffts%nr1, dffts%nr2, dffts%nr3
+      WRITE(iunnonloc, '("#Mesh")')
+      WRITE(iunnonloc, "(3I8)") nr1, nr2, nr3
       !
-      WRITE(iunkinetic, '("#Lattice")')
-      WRITE(iunkinetic, '(3E25.16)') alat * at(1, 1), alat * at(2, 1), alat * at(3, 1)
-      WRITE(iunkinetic, '(3E25.16)') alat * at(1, 2), alat * at(2, 2), alat * at(3, 2)
-      WRITE(iunkinetic, '(3E25.16)') alat * at(1, 3), alat * at(2, 3), alat * at(3, 3)
+      WRITE(iunnonloc, '("#Lattice")')
+      WRITE(iunnonloc, '(3E25.16)') alat * at(1, 1), alat * at(2, 1), alat * at(3, 1)
+      WRITE(iunnonloc, '(3E25.16)') alat * at(1, 2), alat * at(2, 2), alat * at(3, 2)
+      WRITE(iunnonloc, '(3E25.16)') alat * at(1, 3), alat * at(2, 3), alat * at(3, 3)
       !
-      WRITE(iunkinetic, '("#Including Kinetic Energy Derivative")')
+      WRITE(iunnonloc, '("#Number of Atoms")')
+      WRITE(iunnonloc, '(I5)') nat
+      WRITE(iunnonloc, '("#Atoms")')
       !
-      IF (with_dtdr) THEN
-        WRITE(iunkinetic, "(I8)") 1
-      ELSE
-        WRITE(iunkinetic, "(I8)") 0
-      END IF
-      !
-      WRITE(iunkinetic, '("#Charge (IN)")')
-      CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP, rho2_g)
-      !
-      WRITE(iunkinetic, '("#Charge (OUT)")')
-      CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP, rho1_g)
-      !
-      WRITE(iunkinetic, '("#Kinetic Energy Density (by Gradient)")')
-      CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP / e2, tauG_g)
-      !
-      WRITE(iunkinetic, '("#Kinetic Energy Density (by Laplacian)")')
-      CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP / e2, tauL_g)
-      !
-      IF (with_dtdr) THEN
+      DO ia = 1, nat
         !
-        WRITE(iunkinetic, '("#Kinetic Energy Derivative")')
-        CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP / e2, dtdr_g)
+        it = ityp(ia)
         !
-      END IF
+        WRITE(iunnonloc, '(I5,A6,4E25.16)') ia, atm(it), &
+        alat * tau(1, ia), alat * tau(2, ia), alat * tau(3, ia), eneNL(ia) / e2
+        !
+      END DO
+      !
+      WRITE(iunnonloc, '("#Non-Local Energy Derivative")')
+      !
+      DO i1 = 1, nr1
+        !
+        DO i2 = 1, nr2
+          !
+          WRITE(iunnonloc,'(6E25.16)') (dvdr_g(i1, i2, i3) / e2, i3 = 1, nr3)
+          !
+        END DO
+        !
+      END DO
       !
     END IF
     !
-    CALL kinetic_close()
+    CALL nonloc_close()
     !
     CALL mp_barrier(intra_image_comm)
     !
     ! ... deallocate memory
     !
-    DEALLOCATE(rhor)
-    DEALLOCATE(tauG)
-    DEALLOCATE(tauL)
-    DEALLOCATE(dtdr)
-    DEALLOCATE(rho1_g)
-    DEALLOCATE(rho2_g)
-    DEALLOCATE(tauG_g)
-    DEALLOCATE(tauL_g)
-    DEALLOCATE(dtdr_g)
+    DEALLOCATE(becsum)
+    DEALLOCATE(eneNL)
+    DEALLOCATE(dvdr)
+    DEALLOCATE(dvdr_g)
     !
   END SUBROUTINE nonloc_print
   !

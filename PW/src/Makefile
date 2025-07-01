@@ -160,6 +160,7 @@ new_nsg.o \
 new_occ.o \
 ns_adj.o \
 non_scf.o \
+nonlocal_energy.o \
 nonlocal_module.o \
 occmat_module.o \
 occmat_sum_band.o \
