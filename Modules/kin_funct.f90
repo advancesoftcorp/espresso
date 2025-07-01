@@ -45,6 +45,8 @@ CONTAINS
     INTEGER  :: ir
     REAL(DP) :: r, r23
     !
+    IF ( fact <= 0.0_DP ) RETURN
+    !
 !$omp parallel do default(shared) private(ir, r, r23)
     DO ir = 1, length
        !
@@ -88,6 +90,8 @@ CONTAINS
     !
     INTEGER  :: ir
     REAL(DP) :: r, gr
+    !
+    IF ( fact <= 0.0_DP ) RETURN
     !
 !$omp parallel do default(shared) private(ir, r, gr)
     DO ir = 1, length
