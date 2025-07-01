@@ -402,7 +402,7 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud, fa
   !
   IF ( ns == 1 .AND. PRESENT(fact_kin) ) THEN
      !
-     CALL kin_vw( length, fact_kin, ABS(rho:,1), grho2(:,1), ex, v1x(:,1), v2x(:,1) )
+     CALL kin_vw( length, fact_kin, ABS(rho(:,1)), grho2(:,1), ex, v1x(:,1), v2x(:,1) )
      !
   END IF
   !

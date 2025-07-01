@@ -263,7 +263,7 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out, fact_
   !
   IF ( sr_d == 1 .AND. PRESENT(fact_kin) ) THEN
      !
-     CALL kin_tf( length, fact_kin, ABS(rho_in(:,1)), ex_out(:,1), vx_out(:,1) )
+     CALL kin_tf( length, fact_kin, ABS(rho_in(:,1)), ex_out, vx_out(:,1) )
      !
   END IF
   !
