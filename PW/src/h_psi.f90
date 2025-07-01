@@ -104,6 +104,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE fft_base,                ONLY: dffts
   USE exx,                     ONLY: use_ace, vexx, vexxace_gamma, vexxace_k
   USE funct,                   ONLY: exx_is_active
+  USE nonloc_module,           ONLY: do_nonloc
   USE fft_helper_subroutines
   !
   IMPLICIT NONE
@@ -129,16 +130,28 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   ! ... Here we set the kinetic energy (k+G)^2 psi and clean up garbage
   !
-  !$omp parallel do
-  DO ibnd = 1, m
-     hpsi(1:n,ibnd) = g2kin(1:n) * psi(1:n,ibnd)
-     IF (n<lda) hpsi(n+1:lda, ibnd) = (0.0_dp, 0.0_dp)
-     IF ( noncolin ) THEN
-        hpsi(lda+1:lda+n, ibnd) = g2kin(1:n) * psi(lda+1:lda+n, ibnd)
-        IF (n<lda) hpsi(lda+n+1:lda+lda, ibnd) = (0.0_dp, 0.0_dp)
-     ENDIF
-  ENDDO
-  !$omp end parallel do
+  IF ( do_nonloc ) THEN
+     !
+     !$omp parallel do
+     DO ibnd = 1, m
+        hpsi(1:lda, ibnd) = (0.0_dp, 0.0_dp)
+     ENDDO
+     !$omp end parallel do
+     !
+  ELSE
+     !
+     !$omp parallel do
+     DO ibnd = 1, m
+        hpsi(1:n,ibnd) = g2kin(1:n) * psi(1:n,ibnd)
+        IF (n<lda) hpsi(n+1:lda, ibnd) = (0.0_dp, 0.0_dp)
+        IF ( noncolin ) THEN
+           hpsi(lda+1:lda+n, ibnd) = g2kin(1:n) * psi(lda+1:lda+n, ibnd)
+           IF (n<lda) hpsi(lda+n+1:lda+lda, ibnd) = (0.0_dp, 0.0_dp)
+        ENDIF
+     ENDDO
+     !$omp end parallel do
+     !
+  END IF
 
   CALL start_clock( 'h_psi:pot' ); !write (*,*) 'start h_psi:pot';FLUSH(6)
   !
