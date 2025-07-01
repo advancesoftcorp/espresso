@@ -48,6 +48,7 @@ invmat.o \
 io_files.o \
 io_global.o  \
 ions_base.o \
+kin_funct.o \
 kind.o \
 lmdif.o \
 mdiis.o \

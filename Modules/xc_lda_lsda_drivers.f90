@@ -45,7 +45,7 @@ END SUBROUTINE
 !
 !
 !---------------------------------------------------------------------------
-SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
+SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out, fact_kin )
   !-------------------------------------------------------------------------
   !! Wrapper routine. Calls xc-driver routines from internal libraries
   !! of q-e or from the external libxc, depending on the input choice.
@@ -76,6 +76,8 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !! \(\epsilon_c(rho)\) ( NOT \(E_c(\text{rho})\) )
   REAL(DP), INTENT(OUT) :: vc_out(length,sv_d)
   !! \(dE_c(\text{rho})/d\text{rho}  ( NOT d\epsilon_c(\text{rho})/d\text{rho} )
+  REAL(DP), INTENT(IN), OPTIONAL :: fact_kin
+  !! scaling factor of Kinetic energy functional (if any)
   !
   ! ... local variables
   !
@@ -258,6 +260,11 @@ SUBROUTINE xc( length, sr_d, sv_d, rho_in, ex_out, ec_out, vx_out, vc_out )
   !
 #endif
   !
+  IF ( sr_d == 1 .AND. PRESENT(fact_kin) ) THEN
+     !
+     CALL kin_tf( length, fact_kin, ABS(rho_in(:,1)), ex_out(:,1), vx_out(:,1) )
+     !
+  END IF
   !
   RETURN
   !

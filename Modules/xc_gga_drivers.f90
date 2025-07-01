@@ -48,7 +48,7 @@ END SUBROUTINE
 !
 !
 !---------------------------------------------------------------------------
-SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
+SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud, fact_kin )
   !-------------------------------------------------------------------------
   !! Wrapper routine. Calls xc_gga-driver routines from internal libraries
   !! of q-e or from the external libxc, depending on the input choice.
@@ -88,6 +88,8 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !! correlation (gradient part)
   REAL(DP), INTENT(OUT), OPTIONAL :: v2c_ud(:)
   !! correlation
+  REAL(DP), INTENT(IN),  OPTIONAL :: fact_kin
+  !! scaling factor of Kinetic energy functional (if any)
   !
   ! ... local variables
   !
@@ -397,6 +399,11 @@ SUBROUTINE xc_gcx( length, ns, rho, grho, ex, ec, v1x, v2x, v1c, v2c, v2c_ud )
   !
 #endif
   !
+  IF ( ns == 1 .AND. PRESENT(fact_kin) ) THEN
+     !
+     CALL kin_vw( length, fact_kin, ABS(rho:,1), grho2(:,1), ex, v1x(:,1), v2x(:,1) )
+     !
+  END IF
   !
   RETURN
   !

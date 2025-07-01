@@ -21,7 +21,8 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   USE spin_orb,             ONLY : domag
   USE fft_base,             ONLY : dfftp
   USE fft_interfaces,       ONLY : fwfft
-  USE fft_rho,              ONLY: rho_r2g
+  USE fft_rho,              ONLY : rho_r2g
+  USE nonloc_module,        ONLY : do_nonloc, nonloc_coef_vw
   !
   IMPLICIT NONE
   !
@@ -118,7 +119,11 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      !
      ! ... This is the spin-unpolarised case
      !
-     CALL xc_gcx( dfftp%nnr, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c )
+     IF ( do_nonloc ) THEN
+        CALL xc_gcx( dfftp%nnr, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c, fact_kin=nonloc_coef_vw )
+     ELSE
+        CALL xc_gcx( dfftp%nnr, nspin0, rhoaux, grho, sx, sc, v1x, v2x, v1c, v2c )
+     END IF
      !
      DO k = 1, dfftp%nnr
         !

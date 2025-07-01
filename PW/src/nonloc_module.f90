@@ -17,12 +17,15 @@ MODULE nonloc_module
   USE control_flags, ONLY : isolve, rmm_conv
   USE ener,          ONLY : ef
   USE fft_base,      ONLY : dffts, dfftp
+  USE force_mod,     ONLY : lstres
   USE io_files,      ONLY : tmp_dir, prefix
   USE io_global,     ONLY : ionode, stdout
   USE ions_base,     ONLY : nat, ityp, atm, tau
   USE kinds,         ONLY : DP
   USE mp,            ONLY : mp_sum, mp_barrier
   USE mp_images,     ONLY : intra_image_comm
+  USE paw_variables, ONLY : okpaw
+  USE sannp_module,  ONLY : do_sannp
   USE scatter_mod,   ONLY : gather_grid
   USE scf,           ONLY : vrs
   USE uspp_param,    ONLY : nhm
@@ -166,6 +169,24 @@ CONTAINS
     IF (nspin /= 1) THEN
       !
       CALL errore('nonloc_print', 'Non-Local Energy Derivative supports only nspin = 1', 1)
+      !
+    END IF
+    !
+    IF (lstres) THEN
+      !
+      CALL errore('nonloc_print', 'Non-Local Energy Derivative does not support Stress', 1)
+      !
+    END IF
+    !
+    IF (okpaw) THEN
+      !
+      CALL errore('nonloc_print', 'Non-Local Energy Derivative does not support PAW', 1)
+      !
+    END IF
+    !
+    IF (do_sannp) THEN
+      !
+      CALL errore('nonloc_print', 'Non-Local Energy Derivative does not support SANNP', 1)
       !
     END IF
     !
