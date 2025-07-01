@@ -92,8 +92,8 @@ CONTAINS
 !$omp parallel do default(shared) private(ir, r, gr)
     DO ir = 1, length
        !
-       r  = rho(ri)
-       gr = grho(ri)
+       r  = rho (ir)
+       gr = grho(ir)
        !
        IF ( r > rho_threshold .AND. gr > grho_threshold ) THEN
           !
