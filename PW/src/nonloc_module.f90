@@ -21,6 +21,7 @@ MODULE nonloc_module
   USE io_files,      ONLY : tmp_dir, prefix
   USE io_global,     ONLY : ionode, stdout
   USE ions_base,     ONLY : nat, ityp, atm, tau
+  USE lsda_mod,      ONLY : nspin
   USE kinds,         ONLY : DP
   USE mp,            ONLY : mp_sum, mp_barrier
   USE mp_images,     ONLY : intra_image_comm
@@ -42,8 +43,8 @@ MODULE nonloc_module
   INTEGER  :: iunnonloc
   !
   PUBLIC :: do_nonloc
-  PUBLIC :: nonloc_coef_tf
-  PUBLIC :: nonloc_coef_vw
+  PUBLIC :: nonloc_kin_tf
+  PUBLIC :: nonloc_kin_vw
   PUBLIC :: nonloc_perturb
   PUBLIC :: nonloc_nprint
   PUBLIC :: nonloc_print
@@ -138,7 +139,7 @@ CONTAINS
     INTEGER, OPTIONAL, INTENT(IN) :: idx
     !
     INTEGER  :: idx_
-    INTEGER  :: ia
+    INTEGER  :: ia, it
     INTEGER  :: i1, i2, i3
     INTEGER  :: nr1, nr2, nr3
     INTEGER  :: nr1x, nr2x, nr3x
@@ -274,7 +275,8 @@ CONTAINS
         !
         DO i2 = 1, nr2
           !
-          WRITE(iunnonloc,'(6E25.16)') (dvdr_g(i1, i2, i3) / e2, i3 = 1, nr3)
+          WRITE(iunnonloc,'(6E25.16)') &
+          & (dvdr_g(i1 + (i2 - 1) * nr1x + (i3 - 1) * nr1x * nr2x) / e2, i3 = 1, nr3)
           !
         END DO
         !
@@ -318,4 +320,3 @@ CONTAINS
   END SUBROUTINE nonloc_add_perturb
   !
 END MODULE nonloc_module
-
