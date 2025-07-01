@@ -11,6 +11,7 @@ USE kinds,     ONLY: DP
 USE funct,     ONLY: get_igcx, get_igcc, is_libxc,    &
                      exx_is_active, get_exx_fraction, &
                      get_screening_parameter, get_gau_parameter
+USE kin_funct, ONLY: kin_vw
 !
 IMPLICIT NONE
 !

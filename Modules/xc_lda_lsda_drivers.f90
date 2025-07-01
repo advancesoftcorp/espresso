@@ -12,6 +12,7 @@ USE kinds,     ONLY: DP
 USE funct,     ONLY: get_iexch, get_icorr, is_libxc,  &
                      exx_is_active, get_exx_fraction, &
                      get_finite_size_cell_volume
+USE kin_funct, ONLY: kin_tf
 !
 IMPLICIT NONE
 !

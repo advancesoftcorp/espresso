@@ -51,6 +51,14 @@ add_gatefield.o : ../../Modules/mp_images.o
 add_gatefield.o : ../../UtilXlib/mp.o
 add_gatefield.o : extfield.o
 add_gatefield.o : pwcom.o
+add_local_perturb.o : ../../Modules/fft_base.o
+add_local_perturb.o : ../../Modules/io_global.o
+add_local_perturb.o : ../../Modules/ions_base.o
+add_local_perturb.o : ../../Modules/kind.o
+add_local_perturb.o : ../../Modules/mp_images.o
+add_local_perturb.o : ../../Modules/recvec.o
+add_local_perturb.o : ../../UtilXlib/mp.o
+add_local_perturb.o : pwcom.o
 add_paw_to_deeq.o : ../../Modules/ions_base.o
 add_paw_to_deeq.o : ../../Modules/kind.o
 add_paw_to_deeq.o : ../../Modules/paw_variables.o
@@ -254,6 +262,7 @@ c_bands.o : g_psi_mod.o
 c_bands.o : gcscf_module.o
 c_bands.o : kinetic_module.o
 c_bands.o : ldaU.o
+c_bands.o : nonloc_module.o
 c_bands.o : pwcom.o
 c_bands.o : scf_mod.o
 c_phase_field.o : ../../Modules/becmod.o
@@ -464,6 +473,7 @@ electrons.o : ldaU.o
 electrons.o : loc_scdm.o
 electrons.o : loc_scdm_k.o
 electrons.o : newd.o
+electrons.o : nonloc_module.o
 electrons.o : occmat_module.o
 electrons.o : paw_onecenter.o
 electrons.o : paw_symmetry.o
@@ -900,6 +910,7 @@ gradcorr.o : ../../Modules/funct.o
 gradcorr.o : ../../Modules/kind.o
 gradcorr.o : ../../Modules/recvec.o
 gradcorr.o : ../../Modules/xc_gga_drivers.o
+gradcorr.o : nonloc_module.o
 gradcorr.o : pwcom.o
 gram_schmidt.o : ../../Modules/control_flags.o
 gram_schmidt.o : ../../Modules/kind.o
@@ -947,10 +958,10 @@ h_psi.o : ../../Modules/noncol.o
 h_psi.o : ../../Modules/recvec.o
 h_psi.o : ../../UtilXlib/mp.o
 h_psi.o : ../../upflib/uspp.o
-h_psi.o : aepp_module.o
 h_psi.o : bp_mod.o
 h_psi.o : exx.o
 h_psi.o : ldaU.o
+h_psi.o : nonloc_module.o
 h_psi.o : pwcom.o
 h_psi.o : realus.o
 h_psi.o : scf_mod.o
@@ -1071,6 +1082,7 @@ init_us_1.o : ../../UtilXlib/mp.o
 init_us_1.o : ../../upflib/atom.o
 init_us_1.o : ../../upflib/splinelib.o
 init_us_1.o : ../../upflib/uspp.o
+init_us_1.o : aepp_module.o
 init_us_1.o : pwcom.o
 init_us_2.o : ../../Modules/cell_base.o
 init_us_2.o : ../../Modules/constants.o
@@ -1145,6 +1157,7 @@ input.o : kinetic_module.o
 input.o : ldaU.o
 input.o : loc_scdm.o
 input.o : martyna_tuckerman.o
+input.o : nonloc_module.o
 input.o : occmat_module.o
 input.o : pwcom.o
 input.o : realus.o
@@ -1199,11 +1212,9 @@ kinetic_module.o : ../../Modules/control_flags.o
 kinetic_module.o : ../../Modules/fft_base.o
 kinetic_module.o : ../../Modules/io_files.o
 kinetic_module.o : ../../Modules/io_global.o
-kinetic_module.o : ../../Modules/ions_base.o
 kinetic_module.o : ../../Modules/kind.o
 kinetic_module.o : ../../Modules/mp_bands.o
 kinetic_module.o : ../../Modules/mp_images.o
-kinetic_module.o : ../../Modules/recvec.o
 kinetic_module.o : ../../UtilXlib/mp.o
 kinetic_module.o : pwcom.o
 kinetic_module.o : scf_mod.o
@@ -1440,6 +1451,7 @@ newd.o : ../../Modules/recvec.o
 newd.o : ../../Modules/wavefunctions.o
 newd.o : ../../UtilXlib/mp.o
 newd.o : ../../upflib/uspp.o
+newd.o : aepp_module.o
 newd.o : ldaU.o
 newd.o : pwcom.o
 newd.o : realus.o
@@ -1453,6 +1465,25 @@ non_scf.o : ../../Modules/wavefunctions.o
 non_scf.o : bp_mod.o
 non_scf.o : buffers.o
 non_scf.o : pwcom.o
+nonloc_energy.o : ../../Modules/ions_base.o
+nonloc_energy.o : ../../Modules/kind.o
+nonloc_energy.o : ../../upflib/uspp.o
+nonloc_module.o : ../../FFTXlib/scatter_mod.o
+nonloc_module.o : ../../Modules/cell_base.o
+nonloc_module.o : ../../Modules/constants.o
+nonloc_module.o : ../../Modules/control_flags.o
+nonloc_module.o : ../../Modules/fft_base.o
+nonloc_module.o : ../../Modules/io_files.o
+nonloc_module.o : ../../Modules/io_global.o
+nonloc_module.o : ../../Modules/ions_base.o
+nonloc_module.o : ../../Modules/kind.o
+nonloc_module.o : ../../Modules/mp_images.o
+nonloc_module.o : ../../Modules/paw_variables.o
+nonloc_module.o : ../../UtilXlib/mp.o
+nonloc_module.o : ../../upflib/uspp.o
+nonloc_module.o : pwcom.o
+nonloc_module.o : sannp_module.o
+nonloc_module.o : scf_mod.o
 ns_adj.o : ../../Modules/io_global.o
 ns_adj.o : ../../Modules/ions_base.o
 ns_adj.o : ../../Modules/kind.o
@@ -2229,6 +2260,7 @@ setlocal.o : esm.o
 setlocal.o : extfield.o
 setlocal.o : kinetic_module.o
 setlocal.o : martyna_tuckerman.o
+setlocal.o : nonloc_module.o
 setlocal.o : pwcom.o
 setlocal.o : rism_module.o
 setlocal.o : scf_mod.o
@@ -2266,6 +2298,7 @@ setup.o : fcp_module.o
 setup.o : gcscf_module.o
 setup.o : kinetic_module.o
 setup.o : ldaU.o
+setup.o : nonloc_module.o
 setup.o : pwcom.o
 setup.o : rism_module.o
 setup.o : start_k.o
@@ -2601,6 +2634,7 @@ v_of_rho.o : Coul_cut_2D.o
 v_of_rho.o : esm.o
 v_of_rho.o : ldaU.o
 v_of_rho.o : martyna_tuckerman.o
+v_of_rho.o : nonloc_module.o
 v_of_rho.o : pwcom.o
 v_of_rho.o : scf_mod.o
 vcsmd.o : ../../Modules/cell_base.o

@@ -348,6 +348,7 @@ ions_base.o : io_global.o
 ions_base.o : kind.o
 ions_base.o : parameters.o
 ions_base.o : random_numbers.o
+kin_funct.o : kind.o
 latgen.o : constants.o
 latgen.o : io_global.o
 latgen.o : kind.o
@@ -896,10 +897,12 @@ xc_gga_drivers.o : beef_interface.o
 xc_gga_drivers.o : correlation_gga.o
 xc_gga_drivers.o : exchange_gga.o
 xc_gga_drivers.o : funct.o
+xc_gga_drivers.o : kin_funct.o
 xc_gga_drivers.o : kind.o
 xc_lda_lsda_drivers.o : correlation_lda_lsda.o
 xc_lda_lsda_drivers.o : exchange_lda_lsda.o
 xc_lda_lsda_drivers.o : funct.o
+xc_lda_lsda_drivers.o : kin_funct.o
 xc_lda_lsda_drivers.o : kind.o
 xc_mgga_drivers.o : funct.o
 xc_mgga_drivers.o : kind.o
