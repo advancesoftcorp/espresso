@@ -6,9 +6,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!---------------------------------------------------------------------------
+!--------------------------------------------------------------------------
 MODULE kin_funct
-  !---------------------------------------------------------------------------
+  !--------------------------------------------------------------------------
   !
   ! ... the module for Kinetic energy functionals
   !
@@ -23,9 +23,9 @@ MODULE kin_funct
   !
 CONTAINS
   !
-  !---------------------------------------------------------------------------
+  !--------------------------------------------------------------------------
   SUBROUTINE kin_tf( length, fact, rho, et, vt )
-    !-------------------------------------------------------------------------
+    !--------------------------------------------------------------------------
     !
     ! ... Kinetic energy functional of Thomas-Fermi model.
     ! ... it supports only spin-unpolarised case (nspin=1).
@@ -65,9 +65,9 @@ CONTAINS
     !
   END SUBROUTINE kin_tf
   !
-  !---------------------------------------------------------------------------
+  !--------------------------------------------------------------------------
   SUBROUTINE kin_vw( length, fact, rho, grho, et, v1t, v2t )
-    !-------------------------------------------------------------------------
+    !--------------------------------------------------------------------------
     !
     ! ... Kinetic energy functional of von Weizsacker model.
     ! ... it supports only spin-unpolarised case (nspin=1).
@@ -97,7 +97,7 @@ CONTAINS
        !
        IF ( r > rho_threshold .AND. gr > grho_threshold ) THEN
           !
-          et(ir)  = et(ir)  + fact * C_vw * gr / r
+          et (ir) = et (ir) + fact * C_vw * gr / r
           !
           v1t(ir) = v1t(ir) - fact * C_vw * gr / (r * r)
           !
