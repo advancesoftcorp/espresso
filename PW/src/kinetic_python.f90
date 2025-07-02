@@ -7,7 +7,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------------
-SUBROUTINE kinetic_python( rho, et, vt )
+SUBROUTINE kinetic_python( rho, ekin, vkin )
   !--------------------------------------------------------------------------
   !
   ! ... Calculate Kinetic energy functional, using external Python's code.
