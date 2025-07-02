@@ -221,7 +221,7 @@ SUBROUTINE iosys()
   USE kinetic_module,        ONLY : do_kinetic, kinetic_perturb, kinetic_nprint
 
   USE nonloc_module,         ONLY : do_nonloc, nonloc_perturb, nonloc_nprint, &
-                                    nonloc_kin_tf, nonloc_kin_vw
+                                    nonloc_kin_tf, nonloc_kin_vw, nonloc_kin_py
 
   USE occmat_module,         ONLY : do_occmat, fhi98_mat
 
@@ -241,7 +241,7 @@ SUBROUTINE iosys()
                                tqmmm, efield_phase, gate, trism, tsannp,       &
                                tkinetic, kin_perturb, kin_nprint,              &
                                tnonloc, nl_perturb, nl_nprint, nl_kin_tf,      &
-                               nl_kin_vw, toccmat, occmat_fhi98,               &
+                               nl_kin_vw, nl_kin_py, toccmat, occmat_fhi98,    &
                                taepp, aepp_file, max_xml_steps
 
   !
@@ -1728,6 +1728,7 @@ SUBROUTINE iosys()
   do_nonloc      = tnonloc
   nonloc_kin_tf  = nl_kin_tf
   nonloc_kin_vw  = nl_kin_vw
+  nonloc_kin_py  = nl_kin_py
   nonloc_perturb = nl_perturb
   nonloc_nprint  = nl_nprint
   !

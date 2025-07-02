@@ -272,9 +272,11 @@ MODULE input_parameters
 
         LOGICAL :: tnonloc = .FALSE.  ! punch data of Non-Local Energy Derivative. enabled if .true.
 
-        REAL(DP) :: nl_kin_tf  = 1.0_DP ! coefficient of Kinetic TF for Non-Local Energy Derivative.
+        REAL(DP) :: nl_kin_tf = 1.0_DP  ! coefficient of Kinetic TF for Non-Local Energy Derivative.
 
-        REAL(DP) :: nl_kin_vw  = 0.2_DP ! coefficient of Kinetic vW for Non-Local Energy Derivative.
+        REAL(DP) :: nl_kin_vw = 0.2_DP  ! coefficient of Kinetic vW for Non-Local Energy Derivative.
+
+        LOGICAL  :: nl_kin_py = .FALSE. ! using external Python's Kinetic Functional for Non-Local Energy Derivative.
 
         REAL(DP) :: nl_perturb = 0.0_DP ! scale of perturbation potential for Non-Local Energy Derivative.
 
@@ -312,7 +314,7 @@ MODULE input_parameters
           gdir, nppstr, wf_collect, lelfield, nberrycyc, refg,            &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
           lfcp, tqmmm, trism, tsannp, tkinetic, kin_perturb, kin_nprint,  &
-          tnonloc, nl_kin_tf, nl_kin_vw, nl_perturb, nl_nprint,           &
+          tnonloc, nl_kin_tf, nl_kin_vw, nl_kin_py, nl_perturb, nl_nprint,&
           toccmat, occmat_fhi98, taepp, aepp_file, vdw_table_name, lorbm, &
           memory, point_label_type, input_xml_schema_file, gate
 !

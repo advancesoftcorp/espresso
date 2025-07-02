@@ -38,6 +38,7 @@ MODULE nonloc_module
   LOGICAL  :: do_nonloc      = .FALSE.
   REAL(DP) :: nonloc_kin_tf  = 1.0_DP
   REAL(DP) :: nonloc_kin_vw  = 0.2_DP
+  LOGICAL  :: nonloc_kin_py  = .FALSE.
   REAL(DP) :: nonloc_perturb = 0.0_DP
   INTEGER  :: nonloc_nprint  = 0
   INTEGER  :: iunnonloc
@@ -45,6 +46,7 @@ MODULE nonloc_module
   PUBLIC :: do_nonloc
   PUBLIC :: nonloc_kin_tf
   PUBLIC :: nonloc_kin_vw
+  PUBLIC :: nonloc_kin_py
   PUBLIC :: nonloc_perturb
   PUBLIC :: nonloc_nprint
   PUBLIC :: nonloc_print
