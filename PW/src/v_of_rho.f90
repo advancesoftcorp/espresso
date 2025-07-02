@@ -348,7 +348,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   USE funct,            ONLY : nlc, dft_is_nonlocc
   USE xc_lda_lsda,      ONLY : xc
   USE scf,              ONLY : scf_type
-  USE nonloc_module,    ONLY : do_nonloc, nonloc_kin_tf
+  USE nonloc_module,    ONLY : do_nonloc, nonloc_kin_tf, nonloc_kin_py
   USE mp_bands,         ONLY : intra_bgrp_comm
   USE mp,               ONLY : mp_sum
   !
@@ -410,10 +410,14 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   IF ( nspin == 1 .OR. ( nspin == 4 .AND. .NOT. domag ) ) THEN
      ! ... spin-unpolarized case
      !
-     IF ( do_nonloc ) THEN
+     IF ( do_nonloc .AND. .NOT. nonloc_kin_py ) THEN
         CALL xc( dfftp%nnr, 1, 1, rho%of_r, ex, ec, vx, vc, fact_kin=nonloc_kin_tf )
      ELSE
         CALL xc( dfftp%nnr, 1, 1, rho%of_r, ex, ec, vx, vc )
+     END IF
+     !
+     IF ( do_nonloc .AND. nonloc_kin_py ) THEN
+        CALL kinetic_python( rho%of_r, ex, vx(:,1) )
      END IF
      !
      DO ir = 1, dfftp%nnr

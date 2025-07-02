@@ -142,7 +142,7 @@ CONTAINS
     !
     INTEGER  :: idx_
     INTEGER  :: ia, it
-    INTEGER  :: i1, i2, i3
+    INTEGER  :: ir1, ir2, ir3
     INTEGER  :: nr1, nr2, nr3
     INTEGER  :: nr1x, nr2x, nr3x
     INTEGER  :: nfft
@@ -273,12 +273,12 @@ CONTAINS
       !
       WRITE(iunnonloc, '("#Non-Local Energy Derivative")')
       !
-      DO i1 = 1, nr1
+      DO ir1 = 1, nr1
         !
-        DO i2 = 1, nr2
+        DO ir2 = 1, nr2
           !
           WRITE(iunnonloc,'(6E25.16)') &
-          & (dvdr_g(i1 + (i2 - 1) * nr1x + (i3 - 1) * nr1x * nr2x) / e2, i3 = 1, nr3)
+          & (dvdr_g(ir1 + (ir2 - 1) * nr1x + (ir3 - 1) * nr1x * nr2x) / e2, ir3 = 1, nr3)
           !
         END DO
         !
