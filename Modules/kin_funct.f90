@@ -56,7 +56,7 @@ CONTAINS
           !
           r23 = r ** (2.0_DP / 3.0_DP)
           !
-          et(ir) = et(ir) + fact * C_tf * r * r23
+          et(ir) = et(ir) + fact * C_tf * r23
           !
           vt(ir) = vt(ir) + fact * (5.0_DP / 3.0_DP) * C_tf * r23
           !
