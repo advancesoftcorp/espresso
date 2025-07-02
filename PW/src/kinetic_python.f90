@@ -15,6 +15,7 @@ SUBROUTINE kinetic_python( rho, et, vt )
   ! ... [NOTE]
   ! ... This subroutine supports only spin-unpolarized case.
   ! ... MPI-parallelization is not available (serial only).
+  ! ... Unit of energy is Hartree.
   ! ...
   ! ... T = \int tau(\text{rho}) dr, tau(\text{rho}) = \text{rho}\epsilon(\text{rho})\ ,
   ! ...
