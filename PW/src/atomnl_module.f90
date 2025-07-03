@@ -12,20 +12,22 @@ MODULE atomnl_module
   !
   ! ... the module for Atomic Non-Local Energy
   !
-  USE atom,           ONLY : rgrid
-  USE cell_base,      ONLY : at, alat
-  USE constants,      ONLY : e2, eps16
-  USE control_flags,  ONLY : isolve, rmm_conv
-  USE fft_base,       ONLY : dffts, dfftp
-  USE kinds,          ONLY : DP
-  USE io_files,       ONLY : tmp_dir, prefix
-  USE io_global,      ONLY : ionode, stdout
-  USE ions_base,      ONLY : nat, ityp, atm, tau
-  USE lsda_mod,       ONLY : nspin
-  USE mp,             ONLY : mp_sum, mp_barrier
-  USE mp_images,      ONLY : intra_image_comm
-  USE scatter_mod,    ONLY : gather_grid
-  USE uspp_param,     ONLY : upf, nhm
+  USE atom,             ONLY : rgrid
+  USE cell_base,        ONLY : at, alat
+  USE constants,        ONLY : e2, eps16
+  USE control_flags,    ONLY : isolve, rmm_conv
+  USE fft_base,         ONLY : dffts, dfftp
+  USE kinds,            ONLY : DP
+  USE io_files,         ONLY : tmp_dir, prefix
+  USE io_global,        ONLY : ionode, stdout
+  USE ions_base,        ONLY : nat, ityp, atm, tau
+  USE lsda_mod,         ONLY : nspin
+  USE mp,               ONLY : mp_sum, mp_barrier
+  USE mp_images,        ONLY : intra_image_comm
+  USE noncollin_module, ONLY : noncolin
+  USE scatter_mod,      ONLY : gather_grid
+  USE spin_orb,         ONLY : lspinorb
+  USE uspp_param,       ONLY : upf, nhm
   !
   IMPLICIT NONE
   SAVE
@@ -153,7 +155,7 @@ CONTAINS
       CALL errore('atomnl_print', 'Atom-NL works only for single atomic system', 1)
     END IF
     !
-    IF (ABS(tau(1, 1)) > eps .OR. ABS(tau(2, 1)) > eps .OR. ABS(tau(3, 1))) THEN
+    IF (ABS(tau(1, 1)) > eps .OR. ABS(tau(2, 1)) > eps .OR. ABS(tau(3, 1)) > eps) THEN
       CALL errore('atomnl_print', 'You have to put the atom on the position (0,0,0) for Atom-NL', 1)
     END IF
     !
@@ -277,7 +279,7 @@ CONTAINS
         !
         DO ir2 = 1, nr2
           !
-          WRITE(iunnonloc,'(6E25.16)') &
+          WRITE(iunatomnl,'(6E25.16)') &
           & (rhor_g(ir1 + (ir2 - 1) * nr1x + (ir3 - 1) * nr1x * nr2x), ir3 = 1, nr3)
           !
         END DO
