@@ -1755,13 +1755,6 @@ SUBROUTINE iosys()
   !
   IF ( do_atomnl ) ethr = MIN( ethr, 1.0D-8 )
   !
-  IF ( do_atomnl ) THEN
-     IF ( .NOT. nosym_ ) THEN
-        nosym_ = .TRUE.
-        CALL infomsg('iosys', 'cannot use symmetry with Atom-NL')
-     END IF
-  END IF
-  !
   ! ... set variables for Occupation Matrix
   !
   do_occmat = toccmat
