@@ -29,6 +29,7 @@ allocate_wfc.o \
 atomic_rho.o \
 atomic_wfc.o \
 atomic_wfc_mod.o \
+atomnl_module.o \
 average_pp.o \
 acfdt_in_pw.o \
 newd.o \
