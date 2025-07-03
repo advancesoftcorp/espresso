@@ -265,7 +265,7 @@ CONTAINS
       it = ityp(1) ! using only the first atom
       !
       WRITE(iunatomnl, '("#Element")')
-      WRITE(iunatomnl, '(A5)') ADJUSTL(atm(it))
+      WRITE(iunatomnl, '(A5)') TRIM(ADJUSTL(atm(it)))
       !
       WRITE(iunatomnl, '("#Cutoff Radius")')
       WRITE(iunatomnl, '(E25.16)') rgrid(it)%r(upf(it)%kkbeta)
