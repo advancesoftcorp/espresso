@@ -271,7 +271,7 @@ CONTAINS
       WRITE(iunatomnl, '(E25.16)') rgrid(it)%r(upf(it)%kkbeta)
       !
       WRITE(iunatomnl, '("#Non-Local Energy")')
-      WRITE(iunatomnl, '(E25.16)') energy(1)
+      WRITE(iunatomnl, '(E25.16)') energy(1) / e2
       !
       WRITE(iunatomnl, '("#Charge Density")')
       !
