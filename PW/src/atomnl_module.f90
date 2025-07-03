@@ -151,9 +151,9 @@ CONTAINS
       CALL errore('atomnl_print', 'Atom-NL works only for isotropic FFT-mesh', 1)
     END IF
     !
-    IF (nat /= 1) THEN
-      CALL errore('atomnl_print', 'Atom-NL works only for single atomic system', 1)
-    END IF
+    !IF (nat /= 1) THEN
+    !  CALL errore('atomnl_print', 'Atom-NL works only for single atomic system', 1)
+    !END IF
     !
     IF (ABS(tau(1, 1)) > eps .OR. ABS(tau(2, 1)) > eps .OR. ABS(tau(3, 1)) > eps) THEN
       CALL errore('atomnl_print', 'You have to put the atom on the position (0,0,0) for Atom-NL', 1)
