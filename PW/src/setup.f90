@@ -99,6 +99,7 @@ SUBROUTINE setup()
   USE additional_kpoints, ONLY : add_additional_kpoints
   USE kinetic_module,     ONLY : do_kinetic
   USE nonloc_module,      ONLY : do_nonloc
+  USE atomnl_module,      ONLY : do_atomnl
   !
   IMPLICIT NONE
   !
@@ -388,7 +389,7 @@ SUBROUTINE setup()
            ! ... do not spoil it with a lousy first diagonalization :
            ! ... set a strict ethr in the input file (diago_thr_init)
            !
-           IF ( do_kinetic .OR. do_nonloc ) THEN
+           IF ( do_kinetic .OR. do_nonloc .OR. do_atomnl ) THEN
               !
               ethr = 1.D-8
               !
@@ -407,7 +408,7 @@ SUBROUTINE setup()
            ! ... starting atomic potential is probably far from scf
            ! ... do not waste iterations in the first diagonalizations
            !
-           IF ( do_kinetic .OR. do_nonloc ) THEN
+           IF ( do_kinetic .OR. do_nonloc .OR. do_atomnl ) THEN
               !
               ethr = 1.0D-8
               !

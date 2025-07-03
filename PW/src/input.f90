@@ -223,6 +223,8 @@ SUBROUTINE iosys()
   USE nonloc_module,         ONLY : do_nonloc, nonloc_perturb, nonloc_nprint, &
                                     nonloc_kin_tf, nonloc_kin_vw, nonloc_kin_py
 
+  USE atomnl_module,         ONLY : do_atomnl, atomnl_nprint
+
   USE occmat_module,         ONLY : do_occmat, fhi98_mat
 
   USE aepp_module,           ONLY : do_aepp, filaepp
@@ -241,8 +243,9 @@ SUBROUTINE iosys()
                                tqmmm, efield_phase, gate, trism, tsannp,       &
                                tkinetic, kin_perturb, kin_nprint,              &
                                tnonloc, nl_perturb, nl_nprint, nl_kin_tf,      &
-                               nl_kin_vw, nl_kin_py, toccmat, occmat_fhi98,    &
-                               taepp, aepp_file, max_xml_steps
+                               nl_kin_vw, nl_kin_py, tatomnl, anl_nprint,      &
+                               toccmat, occmat_fhi98, taepp, aepp_file,        &
+                               max_xml_steps
 
   !
   ! ... SYSTEM namelist
@@ -1742,6 +1745,20 @@ SUBROUTINE iosys()
      IF ( .NOT. nosym_ ) THEN
         nosym_ = .TRUE.
         CALL infomsg('iosys', 'cannot use symmetry with nl_perturb > 0')
+     END IF
+  END IF
+  !
+  ! ... set variables for Atomic Non-Local Energy
+  !
+  do_atomnl     = tatomnl
+  atomnl_nprint = anl_nprint
+  !
+  IF ( do_atomnl ) ethr = MIN( ethr, 1.0D-8 )
+  !
+  IF ( do_atomnl ) THEN
+     IF ( .NOT. nosym_ ) THEN
+        nosym_ = .TRUE.
+        CALL infomsg('iosys', 'cannot use symmetry with Atom-NL')
      END IF
   END IF
   !

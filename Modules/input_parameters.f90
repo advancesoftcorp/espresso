@@ -282,6 +282,10 @@ MODULE input_parameters
 
         INTEGER :: nl_nprint = 5      ! scf-iters to punch data of Non-Local Energy Derivative.
 
+        LOGICAL :: tatomnl = .FALSE.  ! punch data of Atomic Non-Local Energy. enabled if .true.
+
+        INTEGER :: anl_nprint = 5     ! scf-iters to punch data of Atomic Non-Local Energy.
+
         LOGICAL :: toccmat = .FALSE.  ! punch data of Occupation Matrix. enabled if .true.
 
         LOGICAL :: occmat_fhi98 = .FALSE.  ! FHI98-type basis for Occupation Matrix.
@@ -315,8 +319,9 @@ MODULE input_parameters
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
           lfcp, tqmmm, trism, tsannp, tkinetic, kin_perturb, kin_nprint,  &
           tnonloc, nl_kin_tf, nl_kin_vw, nl_kin_py, nl_perturb, nl_nprint,&
-          toccmat, occmat_fhi98, taepp, aepp_file, vdw_table_name, lorbm, &
-          memory, point_label_type, input_xml_schema_file, gate
+          tatomnl, anl_nprint, toccmat, occmat_fhi98, taepp, aepp_file,   &
+          vdw_table_name, lorbm, memory, point_label_type,                &
+          input_xml_schema_file, gate
 !
 !=----------------------------------------------------------------------------=!
 !  SYSTEM Namelist Input Parameters

@@ -427,6 +427,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   !
   USE kinetic_module,       ONLY : do_kinetic, kinetic_nprint, kinetic_print
   USE nonloc_module,        ONLY : do_nonloc, nonloc_nprint, nonloc_print
+  USE atomnl_module,        ONLY : do_atomnl, atomnl_nprint, atomnl_print
   USE occmat_module,        ONLY : do_occmat, occmat_print
   !
   IMPLICIT NONE
@@ -566,7 +567,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
         !
         IF ( iter == 2 ) THEN
            !
-           IF ( do_kinetic .OR. do_nonloc ) THEN
+           IF ( do_kinetic .OR. do_nonloc .OR. do_atomnl ) THEN
               ethr = 1.D-8
            ELSE IF ( lgcscf ) THEN
               ethr = 1.D-5
@@ -772,7 +773,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                &    "too large:",/,5X,                      &
                                & "Diagonalizing with lowered threshold",/)' )
               !
-              IF ( do_kinetic .OR. do_nonloc ) THEN
+              IF ( do_kinetic .OR. do_nonloc .OR. do_atomnl ) THEN
                  ethr = MIN( ethr, 0.1D0*dr2 / MAX( 1.D0, nelec ) )
               ELSE
                  ethr = 0.1D0*dr2 / MAX( 1.D0, nelec )
@@ -834,6 +835,13 @@ SUBROUTINE electrons_scf ( printout, exxen )
               CALL nonloc_print( iter )
            END IF
            !
+           ! ... print Atomic Non-Local Energy
+           !
+           IF ( do_atomnl ) THEN
+              IF ( atomnl_nprint > 0 .AND. MOD(iter - 1, atomnl_nprint) == 0 ) &
+              CALL atomnl_print( iter )
+           END IF
+           !
         ELSE
            !
            ! ... convergence reached:
@@ -873,6 +881,12 @@ SUBROUTINE electrons_scf ( printout, exxen )
            !
            IF ( do_nonloc ) THEN
               CALL nonloc_print()
+           END IF
+           !
+           ! ... print Atomic Non-Local Energy
+           !
+           IF ( do_atomnl ) THEN
+              CALL atomnl_print()
            END IF
            !
            ! ... print Occupation Matrix

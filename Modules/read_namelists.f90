@@ -142,6 +142,8 @@ MODULE read_namelists_module
        nl_kin_py = .FALSE.
        nl_perturb = 0.0_DP
        nl_nprint = 5
+       tatomnl = .FALSE.
+       anl_nprint = 5
        toccmat = .FALSE.
        occmat_fhi98 = .FALSE.
        taepp = .FALSE.
@@ -931,6 +933,8 @@ MODULE read_namelists_module
        CALL mp_bcast( nl_kin_py,     ionode_id, intra_image_comm )
        CALL mp_bcast( nl_perturb,    ionode_id, intra_image_comm )
        CALL mp_bcast( nl_nprint,     ionode_id, intra_image_comm )
+       CALL mp_bcast( tatomnl,       ionode_id, intra_image_comm )
+       CALL mp_bcast( anl_nprint,    ionode_id, intra_image_comm )
        CALL mp_bcast( toccmat,       ionode_id, intra_image_comm )
        CALL mp_bcast( occmat_fhi98,  ionode_id, intra_image_comm )
        CALL mp_bcast( taepp,         ionode_id, intra_image_comm )

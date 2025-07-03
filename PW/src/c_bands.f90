@@ -184,6 +184,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE gcscf_module,         ONLY : lgcscf
   USE kinetic_module,       ONLY : do_kinetic
   USE nonloc_module,        ONLY : do_nonloc
+  USE atomnl_module,        ONLY : do_atomnl
   USE mp_bands,             ONLY : nproc_bgrp, intra_bgrp_comm, inter_bgrp_comm, &
                                    my_bgrp_id, nbgrp
   USE mp,                   ONLY : mp_sum, mp_bcast
@@ -713,7 +714,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
     !
     LOGICAL :: test_exit_cond
     !
-    IF ( do_kinetic .OR. do_nonloc ) THEN
+    IF ( do_kinetic .OR. do_nonloc .OR. do_atomnl ) THEN
        !
        ! ... tight condition for Kinetic Energy Density or Non-Local Energy Derivative
        !
