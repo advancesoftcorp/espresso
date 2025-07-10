@@ -141,15 +141,15 @@ CONTAINS
       CALL errore('atomnl_print', 'Atom-NL does not support Spin-Orbit spin', 1)
     END IF
     !
-    IF (ABS(at(1, 1) - 1.0_DP) > eps .OR. ABS(at(1, 2)) > eps .OR. ABS(at(1, 3)) > eps .OR. &
-      & ABS(at(2, 2) - 1.0_DP) > eps .OR. ABS(at(2, 1)) > eps .OR. ABS(at(2, 3)) > eps .OR. &
-      & ABS(at(3, 3) - 1.0_DP) > eps .OR. ABS(at(3, 1)) > eps .OR. ABS(at(3, 2)) > eps) THEN
-      CALL errore('atomnl_print', 'Atom-NL works only for cubic cell', 1)
-    END IF
+    !IF (ABS(at(1, 1) - 1.0_DP) > eps .OR. ABS(at(1, 2)) > eps .OR. ABS(at(1, 3)) > eps .OR. &
+    !  & ABS(at(2, 2) - 1.0_DP) > eps .OR. ABS(at(2, 1)) > eps .OR. ABS(at(2, 3)) > eps .OR. &
+    !  & ABS(at(3, 3) - 1.0_DP) > eps .OR. ABS(at(3, 1)) > eps .OR. ABS(at(3, 2)) > eps) THEN
+    !  CALL errore('atomnl_print', 'Atom-NL works only for cubic cell', 1)
+    !END IF
     !
-    IF (dffts%nr1 /= dffts%nr2 .OR. dffts%nr1 /= dffts%nr3 .OR. dffts%nr2 /= dffts%nr3) THEN
-      CALL errore('atomnl_print', 'Atom-NL works only for isotropic FFT-mesh', 1)
-    END IF
+    !IF (dffts%nr1 /= dffts%nr2 .OR. dffts%nr1 /= dffts%nr3 .OR. dffts%nr2 /= dffts%nr3) THEN
+    !  CALL errore('atomnl_print', 'Atom-NL works only for isotropic FFT-mesh', 1)
+    !END IF
     !
     !IF (nat /= 1) THEN
     !  CALL errore('atomnl_print', 'Atom-NL works only for single atomic system', 1)
@@ -257,10 +257,12 @@ CONTAINS
     IF (ionode) THEN
       !
       WRITE(iunatomnl, '("#Mesh")')
-      WRITE(iunatomnl, "(I8)") nr1
+      WRITE(iunatomnl, "(3I8)") nr1, nr2, nr3
       !
       WRITE(iunatomnl, '("#Lattice")')
-      WRITE(iunatomnl, '(E25.16)') alat
+      WRITE(iunatomnl, '(3E25.16)') alat * at(1, 1), alat * at(2, 1), alat * at(3, 1)  ! a-vector
+      WRITE(iunatomnl, '(3E25.16)') alat * at(1, 2), alat * at(2, 2), alat * at(3, 2)  ! b-vector
+      WRITE(iunatomnl, '(3E25.16)') alat * at(1, 3), alat * at(2, 3), alat * at(3, 3)  ! c-vector
       !
       it = ityp(1) ! using only the first atom
       !
