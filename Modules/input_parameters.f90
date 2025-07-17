@@ -284,6 +284,8 @@ MODULE input_parameters
 
         LOGICAL :: tatomnl = .FALSE.  ! punch data of Atomic Non-Local Energy. enabled if .true.
 
+        LOGICAL :: anl_single = .TRUE.! Atomic Non-Local Energy is calculated for only single atom.
+
         INTEGER :: anl_nprint = 5     ! scf-iters to punch data of Atomic Non-Local Energy.
 
         LOGICAL :: toccmat = .FALSE.  ! punch data of Occupation Matrix. enabled if .true.
@@ -319,8 +321,8 @@ MODULE input_parameters
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
           lfcp, tqmmm, trism, tsannp, tkinetic, kin_perturb, kin_nprint,  &
           tnonloc, nl_kin_tf, nl_kin_vw, nl_kin_py, nl_perturb, nl_nprint,&
-          tatomnl, anl_nprint, toccmat, occmat_fhi98, taepp, aepp_file,   &
-          vdw_table_name, lorbm, memory, point_label_type,                &
+          tatomnl, anl_single, anl_nprint, toccmat, occmat_fhi98, taepp,  &
+          aepp_file, vdw_table_name, lorbm, memory, point_label_type,     &
           input_xml_schema_file, gate
 !
 !=----------------------------------------------------------------------------=!

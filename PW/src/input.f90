@@ -223,7 +223,7 @@ SUBROUTINE iosys()
   USE nonloc_module,         ONLY : do_nonloc, nonloc_perturb, nonloc_nprint, &
                                     nonloc_kin_tf, nonloc_kin_vw, nonloc_kin_py
 
-  USE atomnl_module,         ONLY : do_atomnl, atomnl_nprint
+  USE atomnl_module,         ONLY : do_atomnl, atomnl_single, atomnl_nprint
 
   USE occmat_module,         ONLY : do_occmat, fhi98_mat
 
@@ -243,9 +243,9 @@ SUBROUTINE iosys()
                                tqmmm, efield_phase, gate, trism, tsannp,       &
                                tkinetic, kin_perturb, kin_nprint,              &
                                tnonloc, nl_perturb, nl_nprint, nl_kin_tf,      &
-                               nl_kin_vw, nl_kin_py, tatomnl, anl_nprint,      &
-                               toccmat, occmat_fhi98, taepp, aepp_file,        &
-                               max_xml_steps
+                               nl_kin_vw, nl_kin_py, tatomnl, anl_single,      &
+                               anl_nprint, toccmat, occmat_fhi98, taepp,       &
+                               aepp_file, max_xml_steps
 
   !
   ! ... SYSTEM namelist
@@ -1751,6 +1751,7 @@ SUBROUTINE iosys()
   ! ... set variables for Atomic Non-Local Energy
   !
   do_atomnl     = tatomnl
+  atomnl_single = anl_single
   atomnl_nprint = anl_nprint
   !
   IF ( do_atomnl ) ethr = MIN( ethr, 1.0D-8 )

@@ -143,6 +143,7 @@ MODULE read_namelists_module
        nl_perturb = 0.0_DP
        nl_nprint = 5
        tatomnl = .FALSE.
+       anl_single = .TRUE.
        anl_nprint = 5
        toccmat = .FALSE.
        occmat_fhi98 = .FALSE.
@@ -934,6 +935,7 @@ MODULE read_namelists_module
        CALL mp_bcast( nl_perturb,    ionode_id, intra_image_comm )
        CALL mp_bcast( nl_nprint,     ionode_id, intra_image_comm )
        CALL mp_bcast( tatomnl,       ionode_id, intra_image_comm )
+       CALL mp_bcast( anl_single,    ionode_id, intra_image_comm )
        CALL mp_bcast( anl_nprint,    ionode_id, intra_image_comm )
        CALL mp_bcast( toccmat,       ionode_id, intra_image_comm )
        CALL mp_bcast( occmat_fhi98,  ionode_id, intra_image_comm )
