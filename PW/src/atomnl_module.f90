@@ -34,10 +34,12 @@ MODULE atomnl_module
   PRIVATE
   !
   LOGICAL  :: do_atomnl     = .FALSE.
+  LOGICAL  :: atomnl_single = .TRUE.
   INTEGER  :: atomnl_nprint = 0
   INTEGER  :: iunatomnl
   !
   PUBLIC :: do_atomnl
+  PUBLIC :: atomnl_single
   PUBLIC :: atomnl_nprint
   PUBLIC :: atomnl_print
   !
@@ -155,8 +157,10 @@ CONTAINS
     !  CALL errore('atomnl_print', 'Atom-NL works only for single atomic system', 1)
     !END IF
     !
-    IF (ABS(tau(1, 1)) > eps .OR. ABS(tau(2, 1)) > eps .OR. ABS(tau(3, 1)) > eps) THEN
-      CALL errore('atomnl_print', 'You have to put the atom on the position (0,0,0) for Atom-NL', 1)
+    IF (atomnl_single) THEN
+      IF (ABS(tau(1, 1)) > eps .OR. ABS(tau(2, 1)) > eps .OR. ABS(tau(3, 1)) > eps) THEN
+        CALL errore('atomnl_print', 'You have to put the atom on the position (0,0,0) for Atom-NL', 1)
+      END IF
     END IF
     !
     IF (isolve == 4 .AND. .NOT. rmm_conv) THEN
@@ -237,7 +241,7 @@ CONTAINS
     !
     CALL sannp_sum_band(rhokin, rhobec)
     !
-    CALL sannp_energy_us(energy, rhobec, 1, 1)
+    CALL sannp_energy_us(energy, rhobec, 1, nat)
     !
     ! ... calculate Charge density from Wave function
     !
@@ -264,16 +268,25 @@ CONTAINS
       WRITE(iunatomnl, '(3E25.16)') alat * at(1, 2), alat * at(2, 2), alat * at(3, 2)  ! b-vector
       WRITE(iunatomnl, '(3E25.16)') alat * at(1, 3), alat * at(2, 3), alat * at(3, 3)  ! c-vector
       !
-      it = ityp(1) ! using only the first atom
-      !
-      WRITE(iunatomnl, '("#Element")')
-      WRITE(iunatomnl, '(A5)') TRIM(ADJUSTL(atm(it)))
-      !
-      WRITE(iunatomnl, '("#Cutoff Radius")')
-      WRITE(iunatomnl, '(E25.16)') rgrid(it)%r(upf(it)%kkbeta)
-      !
-      WRITE(iunatomnl, '("#Non-Local Energy")')
-      WRITE(iunatomnl, '(E25.16)') energy(1) / e2
+      IF (atomnl_single) THEN
+        !
+        it = ityp(1) ! using only the first atom
+        !
+        WRITE(iunatomnl, '("#Element")')
+        WRITE(iunatomnl, '(A5)') TRIM(ADJUSTL(atm(it)))
+        !
+        WRITE(iunatomnl, '("#Cutoff Radius")')
+        WRITE(iunatomnl, '(E25.16)') rgrid(it)%r(upf(it)%kkbeta)
+        !
+        WRITE(iunatomnl, '("#Non-Local Energy")')
+        WRITE(iunatomnl, '(E25.16)') energy(1) / e2
+        !
+      ELSE
+        !
+        WRITE(iunatomnl, '("#Non-Local Energy")')
+        WRITE(iunatomnl, '(E25.16)') SUM(energy) / e2
+        !
+      END IF
       !
       WRITE(iunatomnl, '("#Charge Density")')
       !
