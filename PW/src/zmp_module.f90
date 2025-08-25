@@ -17,9 +17,9 @@ MODULE zmp_module
   USE constants,   ONLY : e2
   USE fft_base,    ONLY : dfftp
   USE io_files,    ONLY : tmp_dir, prefix
-  USE io_global,   ONLY : ionode
+  USE io_global,   ONLY : ionode, ionode_id
   USE kinds,       ONLY : DP
-  USE mp,          ONLY : mp_sum, mp_barrier
+  USE mp,          ONLY : mp_sum, mp_bcast, mp_barrier
   USE mp_images,   ONLY : intra_image_comm
   USE scatter_mod, ONLY : scatter_grid
   !
@@ -27,8 +27,14 @@ MODULE zmp_module
   SAVE
   PRIVATE
   !
-  LOGICAL            :: do_zmp = .FALSE.
-  CHARACTER(LEN=256) :: filzmp = ''
+  LOGICAL               :: do_zmp  = .FALSE.
+  CHARACTER(LEN=256)    :: filzmp  = ''
+  INTEGER               :: n_group = 0
+  REAL(DP)              :: lambda
+  REAL(DP)              :: omega
+  LOGICAL               :: yukawa
+  REAL(DP), ALLOCATABLE :: wei(:, :) ! (dfftp%nnr, n_group)
+  REAL(DP), ALLOCATABLE :: rho(:, :) ! (dfftp%nnr, n_group)
   !
   PUBLIC :: do_zmp
   PUBLIC :: filzmp
@@ -39,52 +45,50 @@ MODULE zmp_module
 CONTAINS
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE aepp_initialize()
+  SUBROUTINE zmp_initialize()
     !----------------------------------------------------------------------------
     !
-    ! ... read effective local potential from file
+    ! ... read data of ZMP-potential from file
     !
     IMPLICIT NONE
     !
-    IF (.NOT. do_aepp) RETURN
+    IF (.NOT. do_zmp) RETURN
     !
-    IF (has_vaepp) THEN
+    IF (n_group > 0) THEN
       !
-      CALL aepp_finalize()
-      !
-    END IF
-    !
-    IF (LEN(TRIM(filaepp)) == 0) THEN
-      !
-      filaepp = TRIM(tmp_dir) // TRIM(prefix) // '.aepp'
+      CALL zmp_finalize()
       !
     END IF
     !
-    ALLOCATE(vaepp(dfftp%nnr))
+    IF (LEN(TRIM(filzmp)) == 0) THEN
+      !
+      filzmp = TRIM(tmp_dir) // TRIM(prefix) // '.zmp'
+      !
+    END IF
     !
-    CALL read_cube_file(filaepp, vaepp)
+    CALL read_zmp_file(filzmp)
     !
-    has_vaepp = .TRUE.
-    !
-  END SUBROUTINE aepp_initialize
+  END SUBROUTINE zmp_initialize
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE aepp_finalize()
+  SUBROUTINE zmp_finalize()
     !----------------------------------------------------------------------------
     !
     ! ... release effective local potential
     !
     IMPLICIT NONE
     !
-    IF (.NOT. do_aepp) RETURN
+    IF (.NOT. do_zmp) RETURN
     !
-    IF (.NOT. has_vaepp) RETURN
+    IF (n_group < 1)  RETURN
     !
-    DEALLOCATE(vaepp)
+    n_group = 0
     !
-    has_vaepp = .FALSE.
+    DEALLOCATE(wei)
     !
-  END SUBROUTINE aepp_finalize
+    DEALLOCATE(rho)
+    !
+  END SUBROUTINE zmp_finalize
   !
   !----------------------------------------------------------------------------
   SUBROUTINE aepp_add_vloc(vloc, minus)
@@ -118,34 +122,30 @@ CONTAINS
   END SUBROUTINE aepp_add_vloc
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE read_cube_file(filename, v)
+  SUBROUTINE read_zmp_file(filename)
     !----------------------------------------------------------------------------
     !
     IMPLICIT NONE
     !
-    CHARACTER(LEN=*), INTENT(IN)  :: filename
-    REAL(DP),         INTENT(OUT) :: v(dfftp%nnr)
+    CHARACTER(LEN=*), INTENT(IN) :: filename
     !
     INTEGER  :: iun
     INTEGER  :: ios
-    INTEGER  :: nat, ia
-    INTEGER  :: nr1, nr2, nr3
     INTEGER  :: ir1, ir2, ir3
     INTEGER  :: ir, jr
-    REAL(DP) :: xyz(3)
+    INTEGER  :: i_group
     !
-    REAL(DP), ALLOCATABLE :: vaux(:)
-    REAL(DP), ALLOCATABLE :: vcub(:)
+    CHARACTER(LEN=256) :: line
     !
     INTEGER, EXTERNAL :: find_free_unit
     !
+    REAL(DP), ALLOCATABLE :: wei_t(:, :)
+    REAL(DP), ALLOCATABLE :: wei_x(:, :)
+    REAL(DP), ALLOCATABLE :: rho_t(:, :)
+    REAL(DP), ALLOCATABLE :: rho_x(:, :)
+    !
+    ! ... read data from file
     ios = 0
-    !
-    ALLOCATE(vaux(dfftp%nr1x * dfftp%nr2x * dfftp%nr3x))
-    ALLOCATE(vcub(dfftp%nr1  * dfftp%nr2  * dfftp%nr3 ))
-    !
-    vaux = 0.0_DP
-    vcub = 0.0_DP
     !
     IF (ionode) THEN
       !
@@ -155,49 +155,46 @@ CONTAINS
       !
       IF (ios == 0) THEN ! opened
         !
-        READ(iun, '()')
-        READ(iun, '()')
-        READ(iun, *) nat, xyz
-        READ(iun, *) nr1, xyz
-        READ(iun, *) nr2, xyz
-        READ(iun, *) nr3, xyz
+        READ(iun, '(A)') line
+        READ(line, *) lambda
         !
-        IF (nr1 /= dfftp%nr1 .OR. nr2 /= dfftp%nr2 .OR. nr3 /= dfftp%nr3) THEN
+        READ(iun, '(A)') line
+        READ(line, *) yukawa
+        !
+        READ(iun, '(A)') line
+        READ(line, *) omega
+        !
+        READ(iun, '(A)') line
+        READ(line, *) n_group
+        !
+        READ(iun, '(A)') line
+        READ(line, *) ir1, ir2, ir3
+        !
+        IF (n_group < 1) THEN
           !
           ios = 1
           !
-          CALL infomsg('aepp_initialize', 'incorrect FFT-mesh at: ' // TRIM(filename))
+          CALL infomsg('zmp_initialize', 'there is no group at: ' // TRIM(filename))
           !
         END IF
         !
-        IF (ios == 0) THEN ! correct mesh
+        IF (ir1 /= dfftp%nr1 .OR. ir2 /= dfftp%nr2 .OR. ir3 /= dfftp%nr3) THEN
           !
-          DO ia = 1, ABS(nat)
-            !
-            READ(iun, '()')
-            !
-          END DO
+          ios = 2
           !
-          READ(iun, *) vcub(:)
+          CALL infomsg('zmp_initialize', 'incorrect FFT-mesh at: ' // TRIM(filename))
           !
-          DO ir3 = 1, nr3
-            !
-            DO ir2 = 1, nr2
-              !
-              DO ir1 = 1, nr1
-                !
-                ir = ir1 + (ir2 - 1) * dfftp%nr1x + (ir3 - 1) * dfftp%nr1x * dfftp%nr2x
-                jr = ir3 + (ir2 - 1) * dfftp%nr3  + (ir1 - 1) * dfftp%nr3  * dfftp%nr2
-                !
-                vaux(ir) = e2 * vcub(jr) ! Hartree -> Rydberg
-                !
-              END DO
-              !
-            END DO
-            !
-          END DO
+        END IF
+        !
+        IF (ios == 0) THEN ! correct group and mesh
           !
-        END IF ! correct mesh
+          ALLOCATE(wei_t(dfftp%nr1 * dfftp%nr2 * dfftp%nr3, n_group))
+          ALLOCATE(rho_t(dfftp%nr1 * dfftp%nr2 * dfftp%nr3, n_group))
+          !
+          READ(iun, *) wei_t
+          READ(iun, *) rho_t
+          !
+        END IF ! correct group and mesh
         !
         CLOSE(unit=iun)
         !
@@ -211,24 +208,63 @@ CONTAINS
     !
     IF (ios /= 0) THEN
       !
-      DEALLOCATE(vaux)
-      DEALLOCATE(vcub)
+      IF (ALLOCATED(wei_t)) DEALLOCATE(wei_t)
+      IF (ALLOCATED(rho_t)) DEALLOCATE(rho_t)
       !
-      CALL errore('aepp_initialize', 'cannot open file: ' // TRIM(filename), ios)
+      CALL errore('zmp_initialize', 'error to open/read file: ' // TRIM(filename), ios)
       !
       RETURN
       !
     END IF
     !
+    ! ... share data for all node
+    CALL mp_bcast(lambda,  ionode_id, intra_image_comm)
+    CALL mp_bcast(yukawa,  ionode_id, intra_image_comm)
+    CALL mp_bcast(omega,   ionode_id, intra_image_comm)
+    CALL mp_bcast(n_group, ionode_id, intra_image_comm)
+    !
+    ALLOCATE(wei_x(dfftp%nr1x * dfftp%nr2x * dfftp%nr3x, n_group))
+    ALLOCATE(rho_x(dfftp%nr1x * dfftp%nr2x * dfftp%nr3x, n_group))
+    !
+    wei_x = 0.0_DP
+    rho_x = 0.0_DP
+    !
+    IF (ionode) THEN
+      !
+      DO i_group = 1, n_group
+        !
+        DO ir3 = 1, dfftp%nr3
+          !
+          DO ir2 = 1, dfftp%nr2
+            !
+            ir = (ir2 - 1) * dfftp%nr1x + (ir3 - 1) * dfftp%nr1x * dfftp%nr2x
+            jr = (ir2 - 1) * dfftp%nr1  + (ir3 - 1) * dfftp%nr1  * dfftp%nr2
+            !
+            wei_x((ir+1):(ir+dfftp%nr1), i_group) = wei_t((jr+1):(jr+dfftp%nr1), i_group)
+            rho_x((ir+1):(ir+dfftp%nr1), i_group) = rho_t((jr+1):(jr+dfftp%nr1), i_group)
+            !
+          END DO
+          !
+        END DO
+        !
+      END DO
+      !
+    END IF
+    !
+    ALLOCATE(wei(dfftp%nnr, n_group))
+    ALLOCATE(rho(dfftp%nnr, n_group))
+    !
 #if defined(__MPI)
-    CALL scatter_grid(dfftp, vaux, v)
+    CALL scatter_grid(dfftp, wei_x, wei)
+    CALL scatter_grid(dfftp, rho_x, rho)
 #else
-    v = vaux
+    wei = wei_x
+    rho = rho_x
 #endif
     !
-    DEALLOCATE(vaux)
-    DEALLOCATE(vcub)
+    DEALLOCATE(wei_x)
+    DEALLOCATE(rho_x)
     !
-  END SUBROUTINE read_cube_file
+  END SUBROUTINE read_zmp_file
   !
 END MODULE zmp_module
