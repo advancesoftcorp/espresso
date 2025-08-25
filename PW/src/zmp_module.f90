@@ -114,35 +114,30 @@ CONTAINS
   END SUBROUTINE zmp_finalize
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE aepp_add_vloc(vloc, minus)
+  SUBROUTINE add_vzmp(v)
     !----------------------------------------------------------------------------
     !
-    ! ... add effective local potential
+    ! ... add ZMP-potential
     !
     IMPLICIT NONE
     !
-    REAL(DP),          INTENT(INOUT) :: vloc(dfftp%nnr)
-    LOGICAL, OPTIONAL, INTENT(IN)    :: minus
+    REAL(DP), INTENT(INOUT) :: v(dfftp%nnr)
     !
     REAL(DP) :: fac
     !
-    IF (.NOT. do_aepp) RETURN
+    IF (.NOT. do_zmp) RETURN
     !
-    IF (.NOT. has_vaepp) THEN
+    IF (n_group < 1) THEN
       !
-      CALL aepp_initialize()
+      CALL zmp_initialize()
       !
     END IF
     !
-    fac = 1.0_DP
+    ! TODO
+    ! TODO
+    ! TODO
     !
-    IF (PRESENT(minus)) THEN
-      IF (minus) fac = -1.0_DP
-    END IF
-    !
-    vloc = vloc + fac * vaepp
-    !
-  END SUBROUTINE aepp_add_vloc
+  END SUBROUTINE add_vzmp
   !
   !----------------------------------------------------------------------------
   SUBROUTINE read_zmp_file(filename)
