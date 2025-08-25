@@ -123,8 +123,6 @@ CONTAINS
     !
     REAL(DP), INTENT(INOUT) :: v(dfftp%nnr)
     !
-    REAL(DP) :: fac
-    !
     IF (.NOT. do_zmp) RETURN
     !
     IF (n_group < 1) THEN
