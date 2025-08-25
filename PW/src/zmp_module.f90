@@ -14,7 +14,6 @@ MODULE zmp_module
   ! ... where the spatial regions are limited inside the pseudopotential radii.
   ! ... The coulombic interaction is screened as Yukawa or Erfc/r.
   !
-  USE constants,   ONLY : e2
   USE fft_base,    ONLY : dfftp
   USE io_files,    ONLY : tmp_dir, prefix
   USE io_global,   ONLY : ionode, ionode_id
