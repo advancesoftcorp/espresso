@@ -249,6 +249,9 @@ CONTAINS
         !
       END DO
       !
+      DEALLOCATE(wei_t)
+      DEALLOCATE(rho_t)
+      !
     END IF
     !
     ALLOCATE(wei(dfftp%nnr, n_group))
