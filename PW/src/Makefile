@@ -280,7 +280,8 @@ ortho_wfc.o \
 wannier_init.o \
 wannier_check.o \
 wannier_clean.o \
-wannier_occ.o
+wannier_occ.o \
+zmp_module.o
 
 QEMODS=../../Modules/libqemod.a ../../KS_Solvers/libks_solvers.a ../../upflib/libupf.a \
        ../../FFTXlib/libqefft.a ../../LAXlib/libqela.a ../../UtilXlib/libutil.a ../../dft-d3/libdftd3qe.a
