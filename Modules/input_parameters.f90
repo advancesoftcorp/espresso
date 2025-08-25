@@ -270,6 +270,10 @@ MODULE input_parameters
 
         INTEGER :: kin_nprint = 5     ! scf-iters to punch data of Kinetic Energy Density.
 
+        LOGICAL :: tzmp = .FALSE.    ! read data of ZMP-potential. enabled if .true.
+
+        CHARACTER(len=256) :: zmp_file = '' ! file name of ZMP
+
         CHARACTER(len=256) :: vdw_table_name = ' '
 
         CHARACTER(len=10) :: point_label_type='SC'
@@ -294,7 +298,8 @@ MODULE input_parameters
           gdir, nppstr, wf_collect, lelfield, nberrycyc, refg,            &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
           lfcp, tqmmm, trism, tsannp, tkinetic, kin_perturb, kin_nprint,  &
-          vdw_table_name, lorbm, memory, point_label_type, input_xml_schema_file, gate
+          tzmp, zmp_file, vdw_table_name, lorbm, memory,                  &
+          point_label_type, input_xml_schema_file, gate
 !
 !=----------------------------------------------------------------------------=!
 !  SYSTEM Namelist Input Parameters
