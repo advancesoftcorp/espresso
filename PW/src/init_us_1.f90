@@ -41,6 +41,7 @@ subroutine init_us_1
   USE paw_variables,ONLY : okpaw
   USE mp_bands,     ONLY : intra_bgrp_comm
   USE mp,           ONLY : mp_sum
+  USE zmp_module,   ONLY : do_zmp
   !
   implicit none
   !
@@ -206,14 +207,16 @@ subroutine init_us_1
               do is1=1,2
                  do is2=1,2
                     ijs=ijs+1
-                    dvan_so(ih,jh,ijs,nt) = upf(nt)%dion(vi,vj) * &
-                                            fcoef(ih,jh,is1,is2,nt)
+                    if (.not. do_zmp) then
+                       dvan_so(ih,jh,ijs,nt) = upf(nt)%dion(vi,vj) * &
+                                               fcoef(ih,jh,is1,is2,nt)
+                    endif
                     if (vi.ne.vj) fcoef(ih,jh,is1,is2,nt)=(0.d0,0.d0)
                  enddo
               enddo
            enddo
         enddo
-     else
+     else if (.not. do_zmp) then
         do ih = 1, nh (nt)
           do jh = 1, nh (nt)
             if (nhtol (ih, nt) == nhtol (jh, nt) .and. &

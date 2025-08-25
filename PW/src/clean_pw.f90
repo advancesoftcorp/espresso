@@ -68,6 +68,7 @@ SUBROUTINE clean_pw( lflag )
   USE dftd3_qe,             ONLY : dftd3_clean
   !
   USE rism_module,          ONLY : deallocate_rism
+  USE zmp_module,           ONLY : zmp_finalize
   !
   IMPLICIT NONE
   !
@@ -213,6 +214,10 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays for RISM
   !
   CALL deallocate_rism( lflag )
+  !
+  ! ... arrays for ZMP
+  !
+  CALL zmp_finalize()
   !
   CALL plugin_clean( 'PW', lflag )
   !

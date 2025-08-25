@@ -14,13 +14,17 @@ MODULE zmp_module
   ! ... where the spatial regions are limited inside the pseudopotential radii.
   ! ... The coulombic interaction is screened as Yukawa or Erfc/r.
   !
-  USE fft_base,    ONLY : dfftp
-  USE io_files,    ONLY : tmp_dir, prefix
-  USE io_global,   ONLY : ionode, ionode_id
-  USE kinds,       ONLY : DP
-  USE mp,          ONLY : mp_sum, mp_bcast, mp_barrier
-  USE mp_images,   ONLY : intra_image_comm
-  USE scatter_mod, ONLY : scatter_grid
+  USE fft_base,      ONLY : dfftp
+  USE force_mod,     ONLY : lforce, lstres
+  USE io_files,      ONLY : tmp_dir, prefix
+  USE io_global,     ONLY : ionode, ionode_id
+  USE kinds,         ONLY : DP
+  USE lsda_mod,      ONLY : nspin
+  USE mp,            ONLY : mp_sum, mp_bcast, mp_barrier
+  USE mp_images,     ONLY : intra_image_comm
+  USE paw_variables, ONLY : okpaw
+  USE scatter_mod,   ONLY : scatter_grid
+  USE uspp,          ONLY : okvan
   !
   IMPLICIT NONE
   SAVE
@@ -52,6 +56,26 @@ CONTAINS
     IMPLICIT NONE
     !
     IF (.NOT. do_zmp) RETURN
+    !
+    IF (lforce) THEN
+      CALL errore('zmp_initialize', 'you cannot calculate force for ZMP', 1)
+    END IF
+    !
+    IF (lstres) THEN
+      CALL errore('zmp_initialize', 'you cannot calculate stress for ZMP', 1)
+    END IF
+    !
+    IF (nspin /= 1) THEN
+      CALL errore('zmp_initialize', 'ZMP does not support spin-polarized calculation', 1)
+    END IF
+    !
+    IF (okvan) THEN
+      CALL errore('zmp_initialize', 'ZMP does not support USPP', 1)
+    END IF
+    !
+    IF (okpaw) THEN
+      CALL errore('zmp_initialize', 'ZMP does not support PAW', 1)
+    END IF
     !
     IF (n_group > 0) THEN
       !
