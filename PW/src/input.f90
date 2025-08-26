@@ -1721,6 +1721,13 @@ SUBROUTINE iosys()
   do_zmp = tzmp
   filzmp = zmp_file
   !
+  IF ( do_zmp ) THEN
+     IF ( .NOT. nosym_ ) THEN
+        nosym_ = .TRUE.
+        CALL infomsg('iosys', 'cannot use symmetry with ZMP-potential')
+     END IF
+  END IF
+  !
   ! ... End of reading input parameters
   !
 #if ! defined (__INTEL_COMPILER) || (__INTEL_COMPILER >= 1300) 
