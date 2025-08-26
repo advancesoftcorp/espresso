@@ -301,6 +301,7 @@ clean_pw.o : symm_base.o
 clean_pw.o : symme.o
 clean_pw.o : tetra.o
 clean_pw.o : xdm_dispersion.o
+clean_pw.o : zmp_module.o
 close_files.o : ../../Modules/control_flags.o
 close_files.o : ../../Modules/io_files.o
 close_files.o : ../../Modules/mp_images.o
@@ -1061,6 +1062,7 @@ init_us_1.o : ../../upflib/atom.o
 init_us_1.o : ../../upflib/splinelib.o
 init_us_1.o : ../../upflib/uspp.o
 init_us_1.o : pwcom.o
+init_us_1.o : zmp_module.o
 init_us_2.o : ../../Modules/cell_base.o
 init_us_2.o : ../../Modules/constants.o
 init_us_2.o : ../../Modules/ions_base.o
@@ -1142,6 +1144,7 @@ input.o : symm_base.o
 input.o : tetra.o
 input.o : update_pot.o
 input.o : xdm_dispersion.o
+input.o : zmp_module.o
 intersite_V.o : ../../Modules/cell_base.o
 intersite_V.o : ../../Modules/constants.o
 intersite_V.o : ../../Modules/control_flags.o
@@ -1186,12 +1189,14 @@ kinetic_module.o : ../../Modules/control_flags.o
 kinetic_module.o : ../../Modules/fft_base.o
 kinetic_module.o : ../../Modules/io_files.o
 kinetic_module.o : ../../Modules/io_global.o
+kinetic_module.o : ../../Modules/ions_base.o
 kinetic_module.o : ../../Modules/kind.o
 kinetic_module.o : ../../Modules/mp_bands.o
 kinetic_module.o : ../../Modules/mp_images.o
-kinetic_module.o : ../../Modules/random_numbers.o
+kinetic_module.o : ../../Modules/recvec.o
 kinetic_module.o : ../../UtilXlib/mp.o
 kinetic_module.o : pwcom.o
+kinetic_module.o : scf_mod.o
 kinetic_sum_band.o : ../../FFTXlib/fft_interfaces.o
 kinetic_sum_band.o : ../../Modules/cell_base.o
 kinetic_sum_band.o : ../../Modules/control_flags.o
@@ -1687,7 +1692,6 @@ punch.o : ../../Modules/wavefunctions.o
 punch.o : ../../Modules/wrappers.o
 punch.o : a2fmod.o
 punch.o : io_rho_xml.o
-punch.o : kinetic_module.o
 punch.o : pw_restart_new.o
 punch.o : pwcom.o
 punch.o : scf_mod.o
@@ -2566,6 +2570,7 @@ v_of_rho.o : ldaU.o
 v_of_rho.o : martyna_tuckerman.o
 v_of_rho.o : pwcom.o
 v_of_rho.o : scf_mod.o
+v_of_rho.o : zmp_module.o
 vcsmd.o : ../../Modules/cell_base.o
 vcsmd.o : ../../Modules/constants.o
 vcsmd.o : ../../Modules/constraints_module.o
@@ -2697,3 +2702,18 @@ xdm_dispersion.o : ../../upflib/uspp.o
 xdm_dispersion.o : paw_onecenter.o
 xdm_dispersion.o : pwcom.o
 xdm_dispersion.o : scf_mod.o
+zmp_module.o : ../../FFTXlib/fft_interfaces.o
+zmp_module.o : ../../FFTXlib/scatter_mod.o
+zmp_module.o : ../../Modules/cell_base.o
+zmp_module.o : ../../Modules/constants.o
+zmp_module.o : ../../Modules/control_flags.o
+zmp_module.o : ../../Modules/fft_base.o
+zmp_module.o : ../../Modules/io_files.o
+zmp_module.o : ../../Modules/io_global.o
+zmp_module.o : ../../Modules/kind.o
+zmp_module.o : ../../Modules/mp_images.o
+zmp_module.o : ../../Modules/paw_variables.o
+zmp_module.o : ../../Modules/recvec.o
+zmp_module.o : ../../UtilXlib/mp.o
+zmp_module.o : ../../upflib/uspp.o
+zmp_module.o : pwcom.o
