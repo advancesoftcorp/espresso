@@ -39,7 +39,7 @@ MODULE zmp_module
   CHARACTER(LEN=256)    :: filzmp  = ''
   INTEGER               :: n_group = 0
   REAL(DP)              :: lambda
-  REAL(DP)              :: omega
+  REAL(DP)              :: omega ! in 1/Bohr
   LOGICAL               :: yukawa
   REAL(DP), ALLOCATABLE :: wei_group(:, :) ! (dfftp%nnr, n_group)
   REAL(DP), ALLOCATABLE :: rho_group(:, :) ! (dfftp%nnr, n_group)
@@ -131,6 +131,7 @@ CONTAINS
     INTEGER  :: ig
     INTEGER  :: i_group
     REAL(DP) :: fac
+    REAL(DP) :: ww
     !
     REAL(DP),    ALLOCATABLE :: drho(:)
     COMPLEX(DP), ALLOCATABLE :: rhog(:)
@@ -153,6 +154,7 @@ CONTAINS
     ALLOCATE(aux (dfftp%nnr))
     !
     fac = e2 * fpi / tpiba2
+    ww  = omega * omega / tpiba2
     !
     DO i_group = 1, n_group
       !
@@ -164,19 +166,39 @@ CONTAINS
       !
       rhog(1:ngm) = aux(dfftp%nl(1:ngm))
       !
-      DO ig = gstart, ngm
+      IF (yukawa) THEN
         !
-        ! >>> TODO
-        ! >>> TODO
-        ! >>> TODO
+        ! ... exp(-w*r)/r  ->  4pi/(g2+w2)
         !
-        vg(ig) = rhog(ig) * fac / gg(ig)
+        DO ig = gstart, ngm
+          !
+          vg(ig) = rhog(ig) * fac / (gg(ig) + ww)
+          !
+        END DO
         !
-        ! <<< TODO
-        ! <<< TODO
-        ! <<< TODO
+        IF (gstart > 1) THEN
+          !
+          vg(1) = rhog(1) * fac / ww
+          !
+        END IF
         !
-      END DO
+      ELSE
+        !
+        ! ... erfc(w*r)/r  ->  4pi*(1-exp(-g2/(4*w2)))/g2,  if g > 0
+        !                      4pi/(4*w2),                  if g = 0
+        DO ig = gstart, ngm
+          !
+          vg(ig) = rhog(ig) * fac * (1.0_DP - EXP(-0.25_DP * gg(ig) / ww)) / gg(ig)
+          !
+        END DO
+        !
+        IF (gstart > 1) THEN
+          !
+          vg(1) = rhog(1) * fac * 0.25_DP / ww
+          !
+        END IF
+        !
+      END IF
       !
       aux(:) = 0.0_DP
       !
