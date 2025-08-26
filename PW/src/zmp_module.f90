@@ -272,6 +272,8 @@ CONTAINS
         READ(iun, '(A)') line
         READ(line, *) ir1, ir2, ir3
         !
+        READ(iun, '()')
+        !
         IF (n_group < 1) THEN
           !
           ios = 1
