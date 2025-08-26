@@ -14,17 +14,22 @@ MODULE zmp_module
   ! ... where the spatial regions are limited inside the pseudopotential radii.
   ! ... The coulombic interaction is screened as Yukawa or Erfc/r.
   !
-  USE fft_base,      ONLY : dfftp
-  USE force_mod,     ONLY : lforce, lstres
-  USE io_files,      ONLY : tmp_dir, prefix
-  USE io_global,     ONLY : ionode, ionode_id
-  USE kinds,         ONLY : DP
-  USE lsda_mod,      ONLY : nspin
-  USE mp,            ONLY : mp_sum, mp_bcast, mp_barrier
-  USE mp_images,     ONLY : intra_image_comm
-  USE paw_variables, ONLY : okpaw
-  USE scatter_mod,   ONLY : scatter_grid
-  USE uspp,          ONLY : okvan
+  USE constants,      ONLY : fpi, e2
+  USE control_flags,  ONLY : gamma_only
+  USE cell_base,      ONLY : tpiba2
+  USE fft_base,       ONLY : dfftp
+  USE fft_interfaces, ONLY : fwfft, invfft
+  USE force_mod,      ONLY : lforce, lstres
+  USE gvect,          ONLY : ngm, gg, gstart
+  USE io_files,       ONLY : tmp_dir, prefix
+  USE io_global,      ONLY : ionode, ionode_id
+  USE kinds,          ONLY : DP
+  USE lsda_mod,       ONLY : nspin
+  USE mp,             ONLY : mp_sum, mp_bcast, mp_barrier
+  USE mp_images,      ONLY : intra_image_comm
+  USE paw_variables,  ONLY : okpaw
+  USE scatter_mod,    ONLY : scatter_grid
+  USE uspp,           ONLY : okvan
   !
   IMPLICIT NONE
   SAVE
@@ -36,8 +41,8 @@ MODULE zmp_module
   REAL(DP)              :: lambda
   REAL(DP)              :: omega
   LOGICAL               :: yukawa
-  REAL(DP), ALLOCATABLE :: wei(:, :) ! (dfftp%nnr, n_group)
-  REAL(DP), ALLOCATABLE :: rho(:, :) ! (dfftp%nnr, n_group)
+  REAL(DP), ALLOCATABLE :: wei_group(:, :) ! (dfftp%nnr, n_group)
+  REAL(DP), ALLOCATABLE :: rho_group(:, :) ! (dfftp%nnr, n_group)
   !
   PUBLIC :: do_zmp
   PUBLIC :: filzmp
@@ -107,33 +112,92 @@ CONTAINS
     !
     n_group = 0
     !
-    DEALLOCATE(wei)
-    !
-    DEALLOCATE(rho)
+    DEALLOCATE(wei_group)
+    DEALLOCATE(rho_group)
     !
   END SUBROUTINE zmp_finalize
   !
   !----------------------------------------------------------------------------
-  SUBROUTINE add_vzmp(v)
+  SUBROUTINE add_vzmp(v, rho)
     !----------------------------------------------------------------------------
     !
     ! ... add ZMP-potential
     !
     IMPLICIT NONE
     !
-    REAL(DP), INTENT(INOUT) :: v(dfftp%nnr)
+    REAL(DP), INTENT(INOUT) :: v  (dfftp%nnr)
+    REAL(DP), INTENT(IN)    :: rho(dfftp%nnr)
+    !
+    INTEGER  :: ig
+    INTEGER  :: i_group
+    REAL(DP) :: fac
+    !
+    REAL(DP),    ALLOCATABLE :: drho(:)
+    COMPLEX(DP), ALLOCATABLE :: rhog(:)
+    COMPLEX(DP), ALLOCATABLE :: vg  (:)
+    COMPLEX(DP), ALLOCATABLE :: aux (:)
     !
     IF (.NOT. do_zmp) RETURN
     !
+    ! ... read and initialize data
     IF (n_group < 1) THEN
       !
       CALL zmp_initialize()
       !
     END IF
     !
-    ! TODO
-    ! TODO
-    ! TODO
+    ! ... calculate and add potentials for each group
+    ALLOCATE(drho(dfftp%nnr))
+    ALLOCATE(rhog(dfftp%nnr))
+    ALLOCATE(vg  (dfftp%nnr))
+    ALLOCATE(aux (dfftp%nnr))
+    !
+    fac = e2 * fpi / tpiba2
+    !
+    DO i_group = 1, n_group
+      !
+      drho(:) = wei_group(:, i_group) * (rho(:) - rho_group(:, i_group))
+      !
+      aux(:) = drho(:)
+      !
+      CALL fwfft('Rho', aux, dfftp)
+      !
+      rhog(1:ngm) = aux(dfftp%nl(1:ngm))
+      !
+      DO ig = gstart, ngm
+        !
+        ! >>> TODO
+        ! >>> TODO
+        ! >>> TODO
+        !
+        vg(ig) = rhog(ig) * fac / gg(ig)
+        !
+        ! <<< TODO
+        ! <<< TODO
+        ! <<< TODO
+        !
+      END DO
+      !
+      aux(:) = 0.0_DP
+      !
+      aux(dfftp%nl(1:ngm)) = vg(1:ngm)
+      !
+      IF (gamma_only) THEN
+        !
+        aux(dfftp%nlm(1:ngm)) = CONJG(vg(1:ngm))
+        !
+      END IF
+      !
+      CALL invfft('Rho', aux, dfftp)
+      !
+      v(:) = v(:) + lambda * wei_group(:, i_group) * DBLE(aux(:))
+      !
+    END DO
+    !
+    DEALLOCATE(drho)
+    DEALLOCATE(rhog)
+    DEALLOCATE(vg)
+    DEALLOCATE(aux)
     !
   END SUBROUTINE add_vzmp
   !
@@ -145,11 +209,11 @@ CONTAINS
     !
     CHARACTER(LEN=*), INTENT(IN) :: filename
     !
-    INTEGER  :: iun
-    INTEGER  :: ios
-    INTEGER  :: ir1, ir2, ir3
-    INTEGER  :: ir, jr
-    INTEGER  :: i_group
+    INTEGER :: iun
+    INTEGER :: ios
+    INTEGER :: ir1, ir2, ir3
+    INTEGER :: ir, jr
+    INTEGER :: i_group
     !
     CHARACTER(LEN=256) :: line
     !
@@ -270,17 +334,17 @@ CONTAINS
       !
     END IF
     !
-    ALLOCATE(wei(dfftp%nnr, n_group))
-    ALLOCATE(rho(dfftp%nnr, n_group))
+    ALLOCATE(wei_group(dfftp%nnr, n_group))
+    ALLOCATE(rho_group(dfftp%nnr, n_group))
     !
 #if defined(__MPI)
     DO i_group = 1, n_group
-      CALL scatter_grid(dfftp, wei_x(:, i_group), wei(:, i_group))
-      CALL scatter_grid(dfftp, rho_x(:, i_group), rho(:, i_group))
+      CALL scatter_grid(dfftp, wei_x(:, i_group), wei_group(:, i_group))
+      CALL scatter_grid(dfftp, rho_x(:, i_group), rho_group(:, i_group))
     END DO
 #else
-    wei = wei_x
-    rho = rho_x
+    wei_group = wei_x
+    rho_group = rho_x
 #endif
     !
     DEALLOCATE(wei_x)

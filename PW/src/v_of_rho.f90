@@ -26,6 +26,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   USE cell_base,        ONLY : alat
   USE control_flags,    ONLY : ts_vdw
   USE tsvdw_module,     ONLY : tsvdw_calculate, UtsvdW
+  USE zmp_module,       ONLY : do_zmp, add_vzmp
   !
   IMPLICIT NONE
   !
@@ -130,6 +131,12 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
            v%of_r(ir,is)=v%of_r(ir,is)+2.0d0*UtsvdW(ir)
         END DO
      END DO
+  END IF
+  !
+  ! ... add ZMP-potential
+  !
+  IF (do_zmp) THEN
+     CALL add_vzmp(v%of_r(:,1), rho%of_r(:,1))
   END IF
   !
   CALL stop_clock( 'v_of_rho' )
