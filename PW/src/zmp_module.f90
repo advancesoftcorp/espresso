@@ -200,7 +200,7 @@ CONTAINS
         !
       END IF
       !
-      aux(:) = 0.0_DP
+      aux(:) = CMPLX(0.0_DP, 0.0_DP, KIND=DP)
       !
       aux(dfftp%nl(1:ngm)) = vg(1:ngm)
       !
