@@ -246,7 +246,7 @@ CONTAINS
       !
       CALL invfft('Rho', aux, dfftp)
       !
-      vnew(:) = vnew(:) + lambda * wei_group(:, i_group) * DBLE(aux(:))
+      vnew(:) = vnew(:) + wei_group(:, i_group) * DBLE(aux(:))
       !
     END DO
     !
@@ -256,7 +256,7 @@ CONTAINS
     vzmp(:) = (1.0_DP - beta) * vzmp(:) + beta * vnew(:)
     !
     ! ... add potential
-    v(:) = v(:) + vzmp(:)
+    v(:) = v(:) + lambda * vzmp(:)
     !
     DEALLOCATE(drho)
     DEALLOCATE(vnew)
