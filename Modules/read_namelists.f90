@@ -138,6 +138,7 @@ MODULE read_namelists_module
        kin_nprint = 5
        tzmp = .FALSE.
        zmp_file = ''
+       zmp_mixing = 0.1_DP
        !
        saverho = .TRUE.
        memory = 'default'
@@ -919,6 +920,7 @@ MODULE read_namelists_module
        CALL mp_bcast( kin_nprint,    ionode_id, intra_image_comm )
        CALL mp_bcast( tzmp,          ionode_id, intra_image_comm )
        CALL mp_bcast( zmp_file,      ionode_id, intra_image_comm )
+       CALL mp_bcast( zmp_mixing,    ionode_id, intra_image_comm )
        CALL mp_bcast( vdw_table_name,ionode_id, intra_image_comm )
        CALL mp_bcast( memory,        ionode_id, intra_image_comm )
        CALL mp_bcast( input_xml_schema_file, ionode_id, intra_image_comm )

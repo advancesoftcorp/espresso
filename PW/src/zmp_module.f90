@@ -35,17 +35,20 @@ MODULE zmp_module
   SAVE
   PRIVATE
   !
-  LOGICAL               :: do_zmp  = .FALSE.
-  CHARACTER(LEN=256)    :: filzmp  = ''
-  INTEGER               :: n_group = 0
+  LOGICAL               :: do_zmp     = .FALSE.
+  CHARACTER(LEN=256)    :: filzmp     = ''
+  REAL(DP)              :: zmp_mixing = 0.1_DP
+  INTEGER               :: n_group    = 0
   REAL(DP)              :: lambda
   REAL(DP)              :: omega ! in 1/Bohr
   LOGICAL               :: yukawa
   REAL(DP), ALLOCATABLE :: wei_group(:, :) ! (dfftp%nnr, n_group)
   REAL(DP), ALLOCATABLE :: rho_group(:, :) ! (dfftp%nnr, n_group)
+  REAL(DP), ALLOCATABLE :: vzmp     (:)    ! (dfftp%nnr)
   !
   PUBLIC :: do_zmp
   PUBLIC :: filzmp
+  PUBLIC :: zmp_mixing
   PUBLIC :: zmp_initialize
   PUBLIC :: zmp_finalize
   PUBLIC :: add_vzmp
@@ -96,6 +99,10 @@ CONTAINS
     !
     CALL read_zmp_file(filzmp)
     !
+    ALLOCATE(vzmp(dfftp%nnr))
+    !
+    vzmp = 0.0_DP
+    !
   END SUBROUTINE zmp_initialize
   !
   !----------------------------------------------------------------------------
@@ -114,6 +121,7 @@ CONTAINS
     !
     DEALLOCATE(wei_group)
     DEALLOCATE(rho_group)
+    DEALLOCATE(vzmp)
     !
   END SUBROUTINE zmp_finalize
   !
@@ -132,8 +140,10 @@ CONTAINS
     INTEGER  :: i_group
     REAL(DP) :: fac
     REAL(DP) :: ww
+    REAL(DP) :: beta
     !
     REAL(DP),    ALLOCATABLE :: drho(:)
+    REAL(DP),    ALLOCATABLE :: vnew(:)
     COMPLEX(DP), ALLOCATABLE :: rhog(:)
     COMPLEX(DP), ALLOCATABLE :: vg  (:)
     COMPLEX(DP), ALLOCATABLE :: aux (:)
@@ -147,11 +157,14 @@ CONTAINS
       !
     END IF
     !
-    ! ... calculate and add potentials for each group
     ALLOCATE(drho(dfftp%nnr))
+    ALLOCATE(vnew(dfftp%nnr))
     ALLOCATE(rhog(dfftp%nnr))
     ALLOCATE(vg  (dfftp%nnr))
     ALLOCATE(aux (dfftp%nnr))
+    !
+    ! ... calculate potentials for each group
+    vnew(:) = 0.0_DP
     !
     fac = e2 * fpi / tpiba2
     ww  = omega * omega / tpiba2
@@ -212,11 +225,20 @@ CONTAINS
       !
       CALL invfft('Rho', aux, dfftp)
       !
-      v(:) = v(:) + lambda * wei_group(:, i_group) * DBLE(aux(:))
+      vnew(:) = vnew(:) + lambda * wei_group(:, i_group) * DBLE(aux(:))
       !
     END DO
     !
+    ! ... mixing potential
+    beta = MIN(MAX(0.0_DP, zmp_mixing), 1.0_DP)
+    !
+    vzmp(:) = (1.0_DP - beta) * vzmp(:) + beta * vnew(:)
+    !
+    ! ... add potential
+    v(:) = v(:) + vzmp(:)
+    !
     DEALLOCATE(drho)
+    DEALLOCATE(vnew)
     DEALLOCATE(rhog)
     DEALLOCATE(vg)
     DEALLOCATE(aux)

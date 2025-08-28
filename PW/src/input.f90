@@ -220,7 +220,7 @@ SUBROUTINE iosys()
 
   USE kinetic_module,        ONLY : do_kinetic, kinetic_perturb, kinetic_nprint
 
-  USE zmp_module,            ONLY : do_zmp, filzmp
+  USE zmp_module,            ONLY : do_zmp, filzmp, zmp_mixing_ => zmp_mixing
 
   USE vlocal,        ONLY : starting_charge_ => starting_charge
   !
@@ -235,7 +235,7 @@ SUBROUTINE iosys()
                                lfcp, vdw_table_name, memory, max_seconds,      &
                                tqmmm, efield_phase, gate, trism, tsannp,       &
                                tkinetic, kin_perturb, kin_nprint,              &
-                               tzmp, zmp_file, max_xml_steps
+                               tzmp, zmp_file, zmp_mixing, max_xml_steps
 
   !
   ! ... SYSTEM namelist
@@ -1718,8 +1718,9 @@ SUBROUTINE iosys()
   !
   ! ... set variables for ZMP
   !
-  do_zmp = tzmp
-  filzmp = zmp_file
+  do_zmp      = tzmp
+  filzmp      = zmp_file
+  zmp_mixing_ = zmp_mixing
   !
   IF ( do_zmp ) THEN
      IF ( .NOT. nosym_ ) THEN
