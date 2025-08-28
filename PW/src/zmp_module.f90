@@ -12,9 +12,9 @@ MODULE zmp_module
   !
   ! ... the module for Zhao-Morrison-Parr (ZMP) method,
   ! ... where the spatial regions are limited inside the pseudopotential radii.
-  ! ... The coulombic interaction is screened as Yukawa or Erfc/r.
+  ! ... The coulombic interaction is screened as Yukawa, Erfc/r or Gaussian.
   !
-  USE constants,      ONLY : fpi, e2
+  USE constants,      ONLY : pi, fpi, e2
   USE control_flags,  ONLY : gamma_only
   USE cell_base,      ONLY : tpiba2
   USE fft_base,       ONLY : dfftp
@@ -39,9 +39,9 @@ MODULE zmp_module
   CHARACTER(LEN=256)    :: filzmp     = ''
   REAL(DP)              :: zmp_mixing = 1.0_DP
   INTEGER               :: n_group    = 0
+  INTEGER               :: kernel
   REAL(DP)              :: lambda
   REAL(DP)              :: omega ! in 1/Bohr
-  LOGICAL               :: yukawa
   REAL(DP), ALLOCATABLE :: wei_group(:, :) ! (dfftp%nnr, n_group)
   REAL(DP), ALLOCATABLE :: rho_group(:, :) ! (dfftp%nnr, n_group)
   REAL(DP), ALLOCATABLE :: vzmp     (:)    ! (dfftp%nnr)
@@ -138,7 +138,7 @@ CONTAINS
     !
     INTEGER  :: ig
     INTEGER  :: i_group
-    REAL(DP) :: fac
+    REAL(DP) :: fac1, fac2
     REAL(DP) :: ww
     REAL(DP) :: beta
     !
@@ -166,8 +166,9 @@ CONTAINS
     ! ... calculate potentials for each group
     vnew(:) = 0.0_DP
     !
-    fac = e2 * fpi / tpiba2
-    ww  = omega * omega / tpiba2
+    fac1 = e2 * fpi / tpiba2
+    fac2 = e2 * (pi ** (3.0_DP / 2.0_DP)) / tpiba2
+    ww   = omega * omega / tpiba2
     !
     DO i_group = 1, n_group
       !
@@ -179,37 +180,57 @@ CONTAINS
       !
       rhog(1:ngm) = aux(dfftp%nl(1:ngm))
       !
-      IF (yukawa) THEN
+      IF (kernel == 1) THEN
         !
         ! ... exp(-w*r)/r  ->  4pi/(g2+w2)
         !
         DO ig = gstart, ngm
           !
-          vg(ig) = rhog(ig) * fac / (gg(ig) + ww)
+          vg(ig) = rhog(ig) * fac1 / (gg(ig) + ww)
           !
         END DO
         !
         IF (gstart > 1) THEN
           !
-          vg(1) = rhog(1) * fac / ww
+          vg(1) = rhog(1) * fac1 / ww
           !
         END IF
         !
-      ELSE
+      ELSE IF (kernel == 2) THEN
         !
         ! ... erfc(w*r)/r  ->  4pi*(1-exp(-g2/(4*w2)))/g2,  if g > 0
         !                      4pi/(4*w2),                  if g = 0
         DO ig = gstart, ngm
           !
-          vg(ig) = rhog(ig) * fac * (1.0_DP - EXP(-0.25_DP * gg(ig) / ww)) / gg(ig)
+          vg(ig) = rhog(ig) * fac1 * (1.0_DP - EXP(-0.25_DP * gg(ig) / ww)) / gg(ig)
           !
         END DO
         !
         IF (gstart > 1) THEN
           !
-          vg(1) = rhog(1) * fac * 0.25_DP / ww
+          vg(1) = rhog(1) * fac1 * 0.25_DP / ww
           !
         END IF
+        !
+      ELSE IF (kernel == 3) THEN
+        !
+        ! ... exp(-(w*r)^2)*w  ->  (pi^(3/2))*exp(-g2/(4*w2))/w2
+        !
+        DO ig = gstart, ngm
+          !
+          vg(ig) = rhog(ig) * fac2 * EXP(-0.25_DP * gg(ig) / ww) / ww
+          !
+        END DO
+        !
+        IF (gstart > 1) THEN
+          !
+          vg(1) = rhog(1) * fac2 / ww
+          !
+        END IF
+        !
+      ELSE
+        !
+        CALL errore('add_vzmp', 'incorrect type of kernel', MAX(1, kernel))
         !
       END IF
       !
@@ -283,7 +304,7 @@ CONTAINS
         READ(line, *) lambda
         !
         READ(iun, '(A)') line
-        READ(line, *) yukawa
+        READ(line, *) kernel
         !
         READ(iun, '(A)') line
         READ(line, *) omega
@@ -345,7 +366,7 @@ CONTAINS
     !
     ! ... share data for all node
     CALL mp_bcast(lambda,  ionode_id, intra_image_comm)
-    CALL mp_bcast(yukawa,  ionode_id, intra_image_comm)
+    CALL mp_bcast(kernel,  ionode_id, intra_image_comm)
     CALL mp_bcast(omega,   ionode_id, intra_image_comm)
     CALL mp_bcast(n_group, ionode_id, intra_image_comm)
     !
