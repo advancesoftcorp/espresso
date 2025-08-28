@@ -37,7 +37,7 @@ MODULE zmp_module
   !
   LOGICAL               :: do_zmp     = .FALSE.
   CHARACTER(LEN=256)    :: filzmp     = ''
-  REAL(DP)              :: zmp_mixing = 0.1_DP
+  REAL(DP)              :: zmp_mixing = 1.0_DP
   INTEGER               :: n_group    = 0
   REAL(DP)              :: lambda
   REAL(DP)              :: omega ! in 1/Bohr

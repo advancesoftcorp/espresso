@@ -274,7 +274,7 @@ MODULE input_parameters
 
         CHARACTER(len=256) :: zmp_file = '' ! file name of ZMP
 
-        REAL(DP) :: zmp_mixing = 0.1_DP ! mixing rate of ZMP-potential.
+        REAL(DP) :: zmp_mixing = 1.0_DP ! mixing rate of ZMP-potential.
 
         CHARACTER(len=256) :: vdw_table_name = ' '
 
