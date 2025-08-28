@@ -361,6 +361,9 @@ CONTAINS
     ALLOCATE(wei_group(dfftp%nnr, n_group))
     ALLOCATE(rho_group(dfftp%nnr, n_group))
     !
+    wei_group = 0.0_DP
+    rho_group = 0.0_DP
+    !
 #if defined(__MPI)
     DO i_group = 1, n_group
       CALL scatter_grid(dfftp, wei_x(:, i_group), wei_group(:, i_group))
