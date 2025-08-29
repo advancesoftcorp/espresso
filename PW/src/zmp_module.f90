@@ -26,6 +26,7 @@ MODULE zmp_module
   USE kinds,          ONLY : DP
   USE lsda_mod,       ONLY : nspin
   USE mp,             ONLY : mp_sum, mp_bcast, mp_barrier
+  USE mp_bands,       ONLY : intra_bgrp_comm
   USE mp_images,      ONLY : intra_image_comm
   USE paw_variables,  ONLY : okpaw
   USE scatter_mod,    ONLY : scatter_grid
@@ -265,6 +266,7 @@ CONTAINS
     REAL(DP) :: wei_tot
     REAL(DP) :: rho_tot
     REAL(DP) :: coef1, coef2
+    REAL(DP) :: sum0, sum1, sum2
     !
     REAL(DP), ALLOCATABLE :: rho1(:)
     REAL(DP), ALLOCATABLE :: rho2(:)
@@ -320,6 +322,16 @@ CONTAINS
       rho2(ir) = coef2 * rho_tot
       !
     END DO
+    !
+    sum0 = SUM(rho)
+    sum1 = SUM(rho1)
+    sum2 = SUM(rho2)
+    !
+    CALL mp_sum(sum0, intra_bgrp_comm)
+    CALL mp_sum(sum1, intra_bgrp_comm)
+    CALL mp_sum(sum2, intra_bgrp_comm)
+    !
+    rho(:) = ((sum0 - sum2) / sum1) * rho1(:) + rho2(:)
     !
     DEALLOCATE(rho1)
     DEALLOCATE(rho2)
