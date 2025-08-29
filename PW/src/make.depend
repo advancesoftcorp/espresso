@@ -422,6 +422,7 @@ electrons.o : ../../Modules/check_stop.o
 electrons.o : ../../Modules/constants.o
 electrons.o : ../../Modules/control_flags.o
 electrons.o : ../../Modules/fft_base.o
+electrons.o : ../../Modules/fft_rho.o
 electrons.o : ../../Modules/funct.o
 electrons.o : ../../Modules/gvecw.o
 electrons.o : ../../Modules/io_files.o
@@ -462,6 +463,7 @@ electrons.o : pwcom.o
 electrons.o : rism_module.o
 electrons.o : scf_mod.o
 electrons.o : xdm_dispersion.o
+electrons.o : zmp_module.o
 eqvect.o : ../../Modules/kind.o
 esm.o : ../../Modules/constants.o
 esm.o : ../../Modules/kind.o
@@ -1434,6 +1436,7 @@ newd.o : ldaU.o
 newd.o : pwcom.o
 newd.o : realus.o
 newd.o : scf_mod.o
+newd.o : zmp_module.o
 non_scf.o : ../../Modules/check_stop.o
 non_scf.o : ../../Modules/control_flags.o
 non_scf.o : ../../Modules/io_files.o
@@ -1663,6 +1666,7 @@ potinit.o : paw_onecenter.o
 potinit.o : pwcom.o
 potinit.o : rism_module.o
 potinit.o : scf_mod.o
+potinit.o : zmp_module.o
 print_clock_pw.o : ../../Modules/control_flags.o
 print_clock_pw.o : ../../Modules/funct.o
 print_clock_pw.o : ../../Modules/io_global.o
@@ -2711,6 +2715,7 @@ zmp_module.o : ../../Modules/fft_base.o
 zmp_module.o : ../../Modules/io_files.o
 zmp_module.o : ../../Modules/io_global.o
 zmp_module.o : ../../Modules/kind.o
+zmp_module.o : ../../Modules/mp_bands.o
 zmp_module.o : ../../Modules/mp_images.o
 zmp_module.o : ../../Modules/paw_variables.o
 zmp_module.o : ../../Modules/recvec.o
