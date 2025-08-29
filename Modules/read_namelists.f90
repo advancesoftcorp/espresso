@@ -138,7 +138,7 @@ MODULE read_namelists_module
        kin_nprint = 5
        tzmp = .FALSE.
        zmp_file = ''
-       zmp_mixing = 0.2_DP
+       zmp_mixing = 1.0_DP
        !
        saverho = .TRUE.
        memory = 'default'
