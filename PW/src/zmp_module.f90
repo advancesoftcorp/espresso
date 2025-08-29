@@ -260,6 +260,7 @@ CONTAINS
     !
     INTEGER  :: ir
     INTEGER  :: i_group
+    REAL(DP) :: beta
     REAL(DP) :: wei_sum
     REAL(DP) :: wei_tot
     REAL(DP) :: rho_tot
