@@ -57,6 +57,7 @@ SUBROUTINE potinit()
   USE paw_onecenter,        ONLY : PAW_potential
   !
   USE rism_module,          ONLY : lrism, rism_init3d, rism_calc3d
+  USE zmp_module,           ONLY : do_zmp, mix_rho_zmp
   !
   IMPLICIT NONE
   !
@@ -224,6 +225,16 @@ SUBROUTINE potinit()
         ! ... rho%kin was read from file in G-space, bring it to R-space
         CALL rho_g2r (dfftp, rho%kin_g, rho%kin_r)
      ENDIF
+     !
+  END IF
+  !
+  ! ... modify charge density for ZMP
+  !
+  IF (do_zmp) THEN
+     !
+     CALL mix_rho_zmp(rho%of_r)
+     !
+     CALL rho_r2g (dfftp, rho%of_r, rho%of_g)
      !
   END IF
   !

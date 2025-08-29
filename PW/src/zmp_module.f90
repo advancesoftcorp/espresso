@@ -44,7 +44,6 @@ MODULE zmp_module
   REAL(DP)              :: omega ! in 1/Bohr
   REAL(DP), ALLOCATABLE :: wei_group(:, :) ! (dfftp%nnr, n_group)
   REAL(DP), ALLOCATABLE :: rho_group(:, :) ! (dfftp%nnr, n_group)
-  REAL(DP), ALLOCATABLE :: vzmp     (:)    ! (dfftp%nnr)
   !
   PUBLIC :: do_zmp
   PUBLIC :: filzmp
@@ -52,6 +51,7 @@ MODULE zmp_module
   PUBLIC :: zmp_initialize
   PUBLIC :: zmp_finalize
   PUBLIC :: add_vzmp
+  PUBLIC :: mix_rho_zmp
   !
 CONTAINS
   !
@@ -99,10 +99,6 @@ CONTAINS
     !
     CALL read_zmp_file(filzmp)
     !
-    ALLOCATE(vzmp(dfftp%nnr))
-    !
-    vzmp = 0.0_DP
-    !
   END SUBROUTINE zmp_initialize
   !
   !----------------------------------------------------------------------------
@@ -121,7 +117,6 @@ CONTAINS
     !
     DEALLOCATE(wei_group)
     DEALLOCATE(rho_group)
-    DEALLOCATE(vzmp)
     !
   END SUBROUTINE zmp_finalize
   !
@@ -143,7 +138,6 @@ CONTAINS
     REAL(DP) :: beta
     !
     REAL(DP),    ALLOCATABLE :: drho(:)
-    REAL(DP),    ALLOCATABLE :: vnew(:)
     COMPLEX(DP), ALLOCATABLE :: rhog(:)
     COMPLEX(DP), ALLOCATABLE :: vg  (:)
     COMPLEX(DP), ALLOCATABLE :: aux (:)
@@ -158,14 +152,11 @@ CONTAINS
     END IF
     !
     ALLOCATE(drho(dfftp%nnr))
-    ALLOCATE(vnew(dfftp%nnr))
     ALLOCATE(rhog(dfftp%nnr))
     ALLOCATE(vg  (dfftp%nnr))
     ALLOCATE(aux (dfftp%nnr))
     !
     ! ... calculate potentials for each group
-    vnew(:) = 0.0_DP
-    !
     fac1 = e2 * fpi / tpiba2
     fac2 = e2 * (pi ** (3.0_DP / 2.0_DP)) / tpiba2
     ww   = omega * omega / tpiba2
@@ -246,25 +237,78 @@ CONTAINS
       !
       CALL invfft('Rho', aux, dfftp)
       !
-      vnew(:) = vnew(:) + wei_group(:, i_group) * DBLE(aux(:))
+      v(:) = v(:) + lambda * wei_group(:, i_group) * DBLE(aux(:))
       !
     END DO
     !
-    ! ... mixing potential
-    beta = MIN(MAX(0.0_DP, zmp_mixing), 1.0_DP)
-    !
-    vzmp(:) = (1.0_DP - beta) * vzmp(:) + beta * vnew(:)
-    !
-    ! ... add potential
-    v(:) = v(:) + lambda * vzmp(:)
-    !
     DEALLOCATE(drho)
-    DEALLOCATE(vnew)
     DEALLOCATE(rhog)
     DEALLOCATE(vg)
     DEALLOCATE(aux)
     !
   END SUBROUTINE add_vzmp
+  !
+  !----------------------------------------------------------------------------
+  SUBROUTINE mix_rho_zmp(rho)
+    !----------------------------------------------------------------------------
+    !
+    ! ... mixing charge density of ZMP
+    !
+    IMPLICIT NONE
+    !
+    REAL(DP), INTENT(INOUT) :: rho(dfftp%nnr)
+    !
+    INTEGER  :: ir
+    INTEGER  :: i_group
+    REAL(DP) :: wei_sum
+    REAL(DP) :: wei_tot
+    REAL(DP) :: rho_tot
+    REAL(DP) :: coef1, coef2
+    !
+    IF (.NOT. do_zmp) RETURN
+    !
+    ! ... read and initialize data
+    IF (n_group < 1) THEN
+      !
+      CALL zmp_initialize()
+      !
+    END IF
+    !
+    ! ... mixing charge
+    beta = MIN(MAX(0.0_DP, zmp_mixing), 1.0_DP)
+    !
+    DO ir = 1, dfftp%nnr
+      !
+      wei_sum = 0.0_DP
+      !
+      DO i_group = 1, n_group
+        !
+        wei_sum = wei_sum + wei_group(ir, i_group)
+        !
+      END DO
+      !
+      IF (wei_sum < 1.0E-8_DP) CYCLE
+      !
+      wei_tot = 0.0_DP
+      !
+      rho_tot = 0.0_DP
+      !
+      DO i_group = 1, n_group
+        !
+        wei_tot = MAX(wei_tot, wei_group(ir, i_group))
+        !
+        rho_tot = rho_tot + rho_group(ir, i_group) * wei_group(ir, i_group) / wei_sum
+        !
+      END DO
+      !
+      coef2 = (1.0_DP - beta) * TANH(wei_tot)
+      coef1 = 1.0_DP - coef2
+      !
+      rho(ir) = coef1 * rho(ir) + coef2 * rho_tot
+      !
+    END DO
+    !
+  END SUBROUTINE mix_rho_zmp
   !
   !----------------------------------------------------------------------------
   SUBROUTINE read_zmp_file(filename)

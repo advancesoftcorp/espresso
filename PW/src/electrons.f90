@@ -362,6 +362,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE basis,                ONLY : starting_pot
   USE bp,                   ONLY : lelfield
   USE fft_base,             ONLY : dfftp
+  USE fft_rho,              ONLY : rho_r2g
   USE gvect,                ONLY : ngm, gstart, g, gg, gcutm
   USE gvecs,                ONLY : doublegrid, ngms
   USE klist,                ONLY : xk, wk, nelec, ngk, nks, nkstot, lgauss, &
@@ -426,6 +427,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
   USE plugin_variables,     ONLY : plugin_etot
   !
   USE kinetic_module,       ONLY : do_kinetic, kinetic_nprint, kinetic_print
+  USE zmp_module,           ONLY : do_zmp, mix_rho_zmp
   !
   IMPLICIT NONE
   !
@@ -732,6 +734,11 @@ SUBROUTINE electrons_scf ( printout, exxen )
         ! ... Results are broadcast from pool 0 to others to prevent trouble
         ! ... on machines unable to yield the same results for the same 
         ! ... calculations on the same data, performed on different procs
+        !
+        IF ( do_zmp )  THEN
+           CALL mix_rho_zmp( rhoin%of_r )
+           CALL rho_r2g( dfftp, rhoin%of_r, rhoin%of_g )
+        ENDIF
         !
         IF ( lda_plus_u )  THEN
            ! ... For DFT+U, ns and ns_nc are also broadcast inside each pool
