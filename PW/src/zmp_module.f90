@@ -45,6 +45,7 @@ MODULE zmp_module
   REAL(DP)              :: omega ! in 1/Bohr
   REAL(DP), ALLOCATABLE :: wei_group(:, :) ! (dfftp%nnr, n_group)
   REAL(DP), ALLOCATABLE :: rho_group(:, :) ! (dfftp%nnr, n_group)
+  REAL(DP), ALLOCATABLE :: vzmp     (:)    ! (dfftp%nnr)
   !
   PUBLIC :: do_zmp
   PUBLIC :: filzmp
@@ -52,6 +53,7 @@ MODULE zmp_module
   PUBLIC :: zmp_initialize
   PUBLIC :: zmp_finalize
   PUBLIC :: add_vzmp
+  PUBLIC :: trim_vzmp
   PUBLIC :: mix_rho_zmp
   !
 CONTAINS
@@ -100,6 +102,8 @@ CONTAINS
     !
     CALL read_zmp_file(filzmp)
     !
+    ALLOCATE(vzmp(dfftp%nnr))
+    !
   END SUBROUTINE zmp_initialize
   !
   !----------------------------------------------------------------------------
@@ -118,6 +122,7 @@ CONTAINS
     !
     DEALLOCATE(wei_group)
     DEALLOCATE(rho_group)
+    DEALLOCATE(vzmp)
     !
   END SUBROUTINE zmp_finalize
   !
@@ -158,6 +163,8 @@ CONTAINS
     ALLOCATE(aux (dfftp%nnr))
     !
     ! ... calculate potentials for each group
+    vzmp(:) = 0.0_DP
+    !
     fac1 = e2 * fpi / tpiba2
     fac2 = e2 * (pi ** (3.0_DP / 2.0_DP)) / tpiba2
     ww   = omega * omega / tpiba2
@@ -238,9 +245,11 @@ CONTAINS
       !
       CALL invfft('Rho', aux, dfftp)
       !
-      v(:) = v(:) + lambda * wei_group(:, i_group) * DBLE(aux(:))
+      vzmp(:) = vzmp(:) + wei_group(:, i_group) * DBLE(aux(:))
       !
     END DO
+    !
+    v(:) = v(:) + lambda * vzmp(:)
     !
     DEALLOCATE(drho)
     DEALLOCATE(rhog)
@@ -248,6 +257,28 @@ CONTAINS
     DEALLOCATE(aux)
     !
   END SUBROUTINE add_vzmp
+  !
+  !----------------------------------------------------------------------------
+  SUBROUTINE trim_vzmp(v)
+    !----------------------------------------------------------------------------
+    !
+    ! ... trim ZMP-potential
+    !
+    IMPLICIT NONE
+    !
+    REAL(DP), INTENT(INOUT) :: v(dfftp%nnr)
+    !
+    IF (.NOT. do_zmp) RETURN
+    !
+    IF (n_group < 1) THEN
+      !
+      CALL errore('trim_vzmp', 'ZMP-potential is not defined', 1)
+      !
+    END IF
+    !
+    v(:) = v(:) - lambda * vzmp(:)
+    !
+  END SUBROUTINE trim_vzmp
   !
   !----------------------------------------------------------------------------
   SUBROUTINE mix_rho_zmp(rho)

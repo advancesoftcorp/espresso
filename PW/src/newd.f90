@@ -32,6 +32,7 @@ SUBROUTINE newq( vr, deeq, skip_vltot )
   USE mp_bands,             ONLY : intra_bgrp_comm
   USE mp_pools,             ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_sum
+  USE zmp_module,           ONLY : do_zmp, trim_vzmp
   !
   IMPLICIT NONE
   !
@@ -54,6 +55,9 @@ SUBROUTINE newq( vr, deeq, skip_vltot )
   REAL(DP), ALLOCATABLE :: ylmk0(:,:), qmod(:), deeaux(:,:)
   ! spherical harmonics, modulus of G
   REAL(DP) :: fact
+  !
+  REAL(DP), ALLOCATABLE :: vr_(:)
+  ! tempolary vr for ZMP
   !
   IF ( gamma_only ) THEN
      fact = 2.0_dp
@@ -86,11 +90,33 @@ SUBROUTINE newq( vr, deeq, skip_vltot )
   DO is = 1, nspin_mag
      !
      IF ( (nspin_mag == 4 .AND. is /= 1) .OR. skip_vltot ) THEN 
+        IF ( do_zmp .AND. is == 1 ) THEN
+           ALLOCATE( vr_(dfftp%nnr) )
+           vr_(1:dfftp%nnr) = vr(1:dfftp%nnr,is)
+           CALL trim_vzmp( vr_ )
+!$omp parallel do default(shared) private(ig)
+           DO ig = 1, dfftp%nnr
+              psic(ig) = vr_(ig)
+           ENDDO
+!$omp end parallel do
+           DEALLOCATE( vr_ )
+        ELSE
+!$omp parallel do default(shared) private(ig)
+           DO ig = 1, dfftp%nnr
+              psic(ig) = vr(ig,is)
+           ENDDO
+!$omp end parallel do
+        ENDIF
+     ELSE IF ( do_zmp .AND. is == 1 ) THEN
+        ALLOCATE( vr_(dfftp%nnr) )
+        vr_(1:dfftp%nnr) = vr(1:dfftp%nnr,is)
+        CALL trim_vzmp( vr_ )
 !$omp parallel do default(shared) private(ig)
         DO ig = 1, dfftp%nnr
-           psic(ig) = vr(ig,is)
+           psic(ig) = vltot(ig) + vr_(ig)
         ENDDO
 !$omp end parallel do
+        DEALLOCATE( vr_ )
      ELSE
 !$omp parallel do default(shared) private(ig)
         DO ig = 1, dfftp%nnr
