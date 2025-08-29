@@ -266,6 +266,9 @@ CONTAINS
     REAL(DP) :: rho_tot
     REAL(DP) :: coef1, coef2
     !
+    REAL(DP), ALLOCATABLE :: rho1(:)
+    REAL(DP), ALLOCATABLE :: rho2(:)
+    !
     IF (.NOT. do_zmp) RETURN
     !
     IF (zmp_mixing >= 1.0_DP) RETURN
@@ -279,6 +282,12 @@ CONTAINS
     !
     ! ... mixing charge
     beta = MIN(MAX(0.0_DP, zmp_mixing), 1.0_DP)
+    !
+    ALLOCATE(rho1(dfftp%nnr))
+    ALLOCATE(rho2(dfftp%nnr))
+    !
+    rho1 = rho
+    rho2 = 0.0_DP
     !
     DO ir = 1, dfftp%nnr
       !
@@ -307,9 +316,13 @@ CONTAINS
       coef2 = (1.0_DP - beta) * TANH(wei_tot)
       coef1 = 1.0_DP - coef2
       !
-      rho(ir) = coef1 * rho(ir) + coef2 * rho_tot
+      rho1(ir) = coef1 * rho(ir)
+      rho2(ir) = coef2 * rho_tot
       !
     END DO
+    !
+    DEALLOCATE(rho1)
+    DEALLOCATE(rho2)
     !
   END SUBROUTINE mix_rho_zmp
   !
