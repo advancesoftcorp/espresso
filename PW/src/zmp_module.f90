@@ -78,9 +78,9 @@ CONTAINS
       CALL errore('zmp_initialize', 'ZMP does not support spin-polarized calculation', 1)
     END IF
     !
-    IF (okvan) THEN
-      CALL errore('zmp_initialize', 'ZMP does not support USPP', 1)
-    END IF
+    !IF (okvan) THEN
+    !  CALL errore('zmp_initialize', 'ZMP does not support USPP', 1)
+    !END IF
     !
     IF (okpaw) THEN
       CALL errore('zmp_initialize', 'ZMP does not support PAW', 1)
