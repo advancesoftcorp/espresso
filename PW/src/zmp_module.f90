@@ -267,6 +267,8 @@ CONTAINS
     !
     IF (.NOT. do_zmp) RETURN
     !
+    IF (zmp_mixing >= 1.0_DP) RETURN
+    !
     ! ... read and initialize data
     IF (n_group < 1) THEN
       !
