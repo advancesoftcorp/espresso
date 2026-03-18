@@ -35,6 +35,7 @@ MODULE kinetic_module
   PRIVATE
   !
   LOGICAL  :: do_kinetic      = .FALSE.
+  LOGICAL  :: kinetic_dtdr    = .TRUE.
   REAL(DP) :: kinetic_perturb = 0.0_DP
   INTEGER  :: kinetic_nprint  = 0
   INTEGER  :: iunkinetic
@@ -273,7 +274,7 @@ CONTAINS
       !
       WRITE(iunkinetic, '("#Including Kinetic Energy Derivative")')
       !
-      IF (with_dtdr) THEN
+      IF (kinetic_dtdr .AND. with_dtdr) THEN
         WRITE(iunkinetic, "(I8)") 1
       ELSE
         WRITE(iunkinetic, "(I8)") 0
@@ -291,7 +292,7 @@ CONTAINS
       WRITE(iunkinetic, '("#Kinetic Energy Density (by Laplacian)")')
       CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP / e2, tauL_g)
       !
-      IF (with_dtdr) THEN
+      IF (kinetic_dtdr .AND. with_dtdr) THEN
         !
         WRITE(iunkinetic, '("#Kinetic Energy Derivative")')
         CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP / e2, dtdr_g)

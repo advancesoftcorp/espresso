@@ -134,6 +134,7 @@ MODULE read_namelists_module
        trism = .FALSE.
        tsannp = .FALSE.
        tkinetic = .FALSE.
+       kin_dtdr = .TRUE.
        kin_perturb = 0.0_DP
        kin_nprint = 5
        !
@@ -913,6 +914,7 @@ MODULE read_namelists_module
        CALL mp_bcast( trism,         ionode_id, intra_image_comm )
        CALL mp_bcast( tsannp,        ionode_id, intra_image_comm )
        CALL mp_bcast( tkinetic,      ionode_id, intra_image_comm )
+       CALL mp_bcast( kin_dtdr,      ionode_id, intra_image_comm )
        CALL mp_bcast( kin_perturb,   ionode_id, intra_image_comm )
        CALL mp_bcast( kin_nprint,    ionode_id, intra_image_comm )
        CALL mp_bcast( vdw_table_name,ionode_id, intra_image_comm )
