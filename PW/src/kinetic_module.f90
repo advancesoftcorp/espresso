@@ -41,6 +41,7 @@ MODULE kinetic_module
   INTEGER  :: iunkinetic
   !
   PUBLIC :: do_kinetic
+  PUBLIC :: kinetic_dtdr
   PUBLIC :: kinetic_perturb
   PUBLIC :: kinetic_nprint
   PUBLIC :: kinetic_print

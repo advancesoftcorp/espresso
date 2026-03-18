@@ -218,7 +218,7 @@ SUBROUTINE iosys()
 
   USE sannp_module,          ONLY : do_sannp, sannp_check
 
-  USE kinetic_module,        ONLY : do_kinetic, kinetic_perturb, kinetic_nprint
+  USE kinetic_module,        ONLY : do_kinetic, kinetic_dtdr, kinetic_perturb, kinetic_nprint
 
   USE vlocal,        ONLY : starting_charge_ => starting_charge
   !
