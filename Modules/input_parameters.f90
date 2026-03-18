@@ -266,7 +266,7 @@ MODULE input_parameters
 
         LOGICAL :: tkinetic = .FALSE. ! punch data of Kinetic Energy Density. enabled if .true.
 
-        LOGICAL :: kin_dtddr = .TRUE. ! calculate dT/drho for Kinetic Energy Density.
+        LOGICAL :: kin_dtdr = .TRUE.  ! calculate dT/drho for Kinetic Energy Density.
 
         REAL(DP) :: kin_perturb = 0.0_DP ! scale of perturbation potential for Kinetic Energy Density.
 
