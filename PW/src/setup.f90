@@ -97,7 +97,7 @@ SUBROUTINE setup()
   USE gcscf_module,       ONLY : lgcscf
   USE rism_module,        ONLY : lrism, rism_calc1d
   USE additional_kpoints, ONLY : add_additional_kpoints
-  USE kinetic_module,     ONLY : do_kinetic
+  USE kinetic_module,     ONLY : do_kinetic, kinetic_nprint
   !
   IMPLICIT NONE
   !
@@ -387,7 +387,7 @@ SUBROUTINE setup()
            ! ... do not spoil it with a lousy first diagonalization :
            ! ... set a strict ethr in the input file (diago_thr_init)
            !
-           IF ( do_kinetic ) THEN
+           IF ( do_kinetic .AND. kinetic_nprint > 0 ) THEN
               !
               ethr = 1.D-8
               !
@@ -406,7 +406,7 @@ SUBROUTINE setup()
            ! ... starting atomic potential is probably far from scf
            ! ... do not waste iterations in the first diagonalizations
            !
-           IF ( do_kinetic ) THEN
+           IF ( do_kinetic .AND. kinetic_nprint > 0 ) THEN
               !
               ethr = 1.0D-8
               !

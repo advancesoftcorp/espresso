@@ -564,7 +564,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
         !
         IF ( iter == 2 ) THEN
            !
-           IF ( do_kinetic ) THEN
+           IF ( do_kinetic .AND. kinetic_nprint > 0 ) THEN
               ethr = 1.D-8
            ELSE IF ( lgcscf ) THEN
               ethr = 1.D-5
@@ -770,7 +770,7 @@ SUBROUTINE electrons_scf ( printout, exxen )
                                &    "too large:",/,5X,                      &
                                & "Diagonalizing with lowered threshold",/)' )
               !
-              IF ( do_kinetic ) THEN
+              IF ( do_kinetic .AND. kinetic_nprint > 0 ) THEN
                  ethr = MIN( ethr, 0.1D0*dr2 / MAX( 1.D0, nelec ) )
               ELSE
                  ethr = 0.1D0*dr2 / MAX( 1.D0, nelec )

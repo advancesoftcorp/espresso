@@ -1706,7 +1706,7 @@ SUBROUTINE iosys()
   kinetic_perturb = kin_perturb
   kinetic_nprint  = kin_nprint
   !
-  IF ( do_kinetic ) ethr = MIN( ethr, 1.0D-8 )
+  IF ( do_kinetic .AND. kinetic_nprint > 0 ) ethr = MIN( ethr, 1.0D-8 )
   !
   IF ( do_kinetic .AND. kinetic_perturb > 0.0_DP ) THEN
      IF ( .NOT. nosym_ ) THEN

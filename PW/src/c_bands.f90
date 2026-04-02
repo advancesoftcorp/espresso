@@ -182,7 +182,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
                                    allocate_bec_type, deallocate_bec_type
   USE klist,                ONLY : nks, ngk
   USE gcscf_module,         ONLY : lgcscf
-  USE kinetic_module,       ONLY : do_kinetic
+  USE kinetic_module,       ONLY : do_kinetic, kinetic_nprint
   USE mp_bands,             ONLY : nproc_bgrp, intra_bgrp_comm, inter_bgrp_comm, &
                                    my_bgrp_id, nbgrp
   USE mp,                   ONLY : mp_sum, mp_bcast
@@ -712,7 +712,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
     !
     LOGICAL :: test_exit_cond
     !
-    IF ( do_kinetic ) THEN
+    IF ( do_kinetic .AND. kinetic_nprint > 0 ) THEN
        !
        ! ... tight condition for Kinetic Energy Density
        !
