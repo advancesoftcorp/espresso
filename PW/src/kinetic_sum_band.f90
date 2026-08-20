@@ -7,7 +7,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------------
-SUBROUTINE kinetic_sum_band(rhor, tauG, tauL, dtdr, by_veff)
+SUBROUTINE kinetic_sum_band(rhor, tauG, tauL, dtdr, weir)
   !--------------------------------------------------------------------------
   !
   ! ... calculate Kinetic Energy Density
@@ -36,31 +36,69 @@ SUBROUTINE kinetic_sum_band(rhor, tauG, tauL, dtdr, by_veff)
   REAL(DP), INTENT(OUT) :: tauG(dffts%nnr)
   REAL(DP), INTENT(OUT) :: tauL(dffts%nnr)
   REAL(DP), INTENT(OUT) :: dtdr(dffts%nnr)
-  LOGICAL,  INTENT(IN)  :: by_veff
+  REAL(DP), INTENT(IN)  :: weir(dffts%nnr)
   !
-  INTEGER  :: ig, ir
+  INTEGER  :: ig, ix
   INTEGER  :: ibnd_start, ibnd_end
   REAL(DP) :: fac
   REAL(DP) :: rho0
   !
   REAL(DP),    ALLOCATABLE :: kplusg(:)
-  COMPLEX(DP), ALLOCATABLE :: aux(:)
-  !
-  REAL(DP),    PARAMETER   :: rho_min = 1.0E-16_DP
+  REAL(DP),    ALLOCATABLE :: grad_w(:,:)
+  COMPLEX(DP), ALLOCATABLE :: weig(:)
+  COMPLEX(DP), ALLOCATABLE :: aux (:)
   !
   CALL divide(inter_bgrp_comm, nbnd, ibnd_start, ibnd_end)
   !
   ALLOCATE(kplusg(npwx))
-  ALLOCATE(aux(dffts%nnr))
+  ALLOCATE(grad_w(3, dffts%nnr))
+  ALLOCATE(weig(dffts%nnr))
+  ALLOCATE(aux (dffts%nnr))
   !
   rhor(:) = 0.0_DP
   tauG(:) = 0.0_DP
   tauL(:) = 0.0_DP
   dtdr(:) = 0.0_DP
   !
+  ! ... wei(r) -> grad wei
+  !
+  weig(:) = weir(:)
+  !
+  CALL fwfft('Rho', weig, dffts)
+  !
+  DO ix = 1, 3
+    !
+    IF (gstart > 1) THEN
+      !
+      aux(dffts%nl(1)) = (0.0_DP, 0.0_DP)
+      !
+    END IF
+    !
+    DO ig = gstart, dffts%ngm
+      !
+      aux(dffts%nl(ig)) = tpiba * CMPLX(0.0_DP, g(ix, ig), kind=DP) * weig(dffts%nl(ig))
+      !
+    END DO
+    !
+    IF (gamma_only) THEN
+      !
+      DO ig = gstart, dffts%ngm
+        !
+        aux(dffts%nlm(ig)) = CONJG(aux(dffts%nl(ig)))
+        !
+      END DO
+      !
+    END IF
+    !
+    CALL invfft('Rho', aux, dffts)
+    !
+    grad_w(ix, :) = DBLE(aux(:))
+    !
+  END DO
+  !
   ! ... calculate rhor = |psi|^2
   ! ... and       tauG = |grad psi|^2
-  ! ... and       dtdr = (ef-e)*|psi|^2
+  ! ... and       dtdr = -psi * (grad wei) * (grad psi) + (ef-e)*|psi|^2
   !
   IF (gamma_only) THEN
     !
@@ -115,35 +153,19 @@ SUBROUTINE kinetic_sum_band(rhor, tauG, tauL, dtdr, by_veff)
   !
   tauL(:) = tauG(:) - DBLE(aux(:))
   !
-  IF (by_veff) THEN
-    !
-    ! ... dtdr = ef - veff
-    !
-    dtdr(1:dffts%nnr) = ef - vrs(1:dffts%nnr, 1)
-    !
-  ELSE
-    !
-    ! ... dtdr = (-psi Lap psi + (ef-e)*|psi|^2) / rho
-    !
-    DO ir = 1, dffts%nnr
-      !
-      rho0 = rhor(ir)
-      !
-      IF (rho0 > rho_min) THEN
-        !
-        dtdr(ir) = (tauL(ir) + dtdr(ir)) / rho0
-        !
-      ELSE
-        !
-        dtdr(ir) = 0.0_DP
-        !
-      END IF
-      !
-    END DO
-    !
-  END IF
+  ! ... tauG, tauL -> wei * tauG, wei * tauL
+  !
+  tauG(:) = weir(:) * tauG(:)
+  !
+  tauL(:) = weir(:) * tauL(:)
+  !
+  ! ... (dtdr * rho) = -wei * (psi Lap psi) - psi * (grad wei) * (grad psi) + (ef-e)*|psi|^2
+  !
+  dtdr(:) = tauL(:) + dtdr(:)
   !
   DEALLOCATE(kplusg)
+  DEALLOCATE(grad_w)
+  DEALLOCATE(weig)
   DEALLOCATE(aux)
   !
 CONTAINS
@@ -162,7 +184,12 @@ CONTAINS
     REAL(DP) :: w1, w2
     REAL(DP) :: de1, de2
     REAL(DP) :: psir, psii
+    REAL(DP) :: gw_gpsir, gw_gpsii
     REAL(DP) :: rho1, rho2
+    !
+    COMPLEX(DP), ALLOCATABLE :: gw_gpsi(:)
+    !
+    ALLOCATE(gw_gpsi(dffts%nnr))
     !
     DO ik = 1, nks
       !
@@ -187,7 +214,9 @@ CONTAINS
           !
         END IF
         !
-        ! ... |grad psi|^2
+        ! ... |grad psi|^2 and (grad wei) * (grad psi)
+        gw_gpsi(:) = (0.0_DP, 0.0_DP)
+        !
         DO ix = 1, 3
           !
           psic(:) = (0.0_DP, 0.0_DP)
@@ -223,9 +252,11 @@ CONTAINS
             tauG(ir) = tauG(ir) + w1 * psir * psir + w2 * psii * psii
           END DO
           !
+          gw_gpsi(:) = gw_gpsi(:) + grad_w(:, ix) * psic(:)
+          !
         END DO
         !
-        ! ... |psi|^2 and (ef-e)*|psi|^2
+        ! ... |psi|^2 and -psi * (grad wei) * (grad psi) + (ef-e)*|psi|^2
         psic(:) = (0.0_DP, 0.0_DP)
         !
         IF (ibnd < ibnd_end) THEN
@@ -246,16 +277,21 @@ CONTAINS
           psir =  DBLE(psic(ir))
           psii = AIMAG(psic(ir))
           !
+          gw_gpsir =  DBLE(gw_gpsi(ir))
+          gw_gpsii = AIMAG(gw_gpsi(ir))
+          !
           rho1 = w1 * psir * psir
           rho2 = w2 * psii * psii
           !
           rhor(ir) = rhor(ir) + rho1 + rho2
-          dtdr(ir) = dtdr(ir) + de1 * rho1 + de2 * rho2
+          dtdr(ir) = dtdr(ir) - w1 * psir * gw_gpsir - w2 * psii * gw_gpsii + de1 * rho1 + de2 * rho2
         END DO
         !
       END DO
       !
     END DO
+    !
+    DEALLOCATE(gw_gpsi)
     !
   END SUBROUTINE sum_band_gamma
   !
@@ -274,7 +310,17 @@ CONTAINS
     INTEGER  :: ig
     REAL(DP) :: w, de
     REAL(DP) :: psir, psii
+    REAL(DP) :: gw_gpsir, gw_gpsii
     REAL(DP) :: rho0
+    !
+    COMPLEX(DP), ALLOCATABLE :: gw_gpsi(:)
+    COMPLEX(DP), ALLOCATABLE :: gw_gpsi_nc(:,:)
+    !
+    IF (noncolin) THEN
+      ALLOCATE(gw_gpsi_nc(dffts%nnr, 2))
+    ELSE
+      ALLOCATE(gw_gpsi(dffts%nnr))
+    END IF
     !
     DO ik = 1, nks
       !
@@ -289,7 +335,9 @@ CONTAINS
         !
         IF (noncolin) THEN
           !
-          ! ... |grad psi|^2
+          ! ... |grad psi|^2 and (grad wei) * (grad psi)
+          gw_gpsi_nc(:, :) = (0.0_DP, 0.0_DP)
+          !
           DO ix = 1, 3
             !
             psic_nc(:, :) = (0.0_DP, 0.0_DP)
@@ -318,11 +366,13 @@ CONTAINS
                 tauG(ir) = tauG(ir) + w * (psir * psir + psii * psii)
               END DO
               !
+              gw_gpsi_nc(:, ipol) = gw_gpsi_nc(:, ipol) + grad_w(:, ix) * psic_nc(:, ipol)
+              !
             END DO
             !
           END DO
           !
-          ! ... |psi|^2 and (ef-e)*|psi|^2
+          ! ... |psi|^2 and -psi * (grad wei) * (grad psi) + (ef-e)*|psi|^2
           psic_nc(:, :) = (0.0_DP, 0.0_DP)
           !
           DO ig = 1, npw
@@ -342,20 +392,25 @@ CONTAINS
               psir =  DBLE(psic_nc(ir, ipol))
               psii = AIMAG(psic_nc(ir, ipol))
               !
+              gw_gpsir =  DBLE(gw_gpsi_nc(ir, ipol))
+              gw_gpsii = AIMAG(gw_gpsi_nc(ir, ipol))
+              !
               rho0 = w * (psir * psir + psii * psii)
               !
               rhor(ir) = rhor(ir) + rho0
-              dtdr(ir) = dtdr(ir) + de * rho0
+              dtdr(ir) = dtdr(ir) - w * (psir * gw_gpsir + psii * gw_gpsii) + de * rho0
             END DO
             !
           END DO
           !
         ELSE
           !
-          ! ... |grad psi|^2
+          ! ... |grad psi|^2 and (grad wei) * (grad psi)
+          gw_gpsi(:) = (0.0_DP, 0.0_DP)
+          !
           DO ix = 1, 3
             !
-            psic = (0.0_DP, 0.0_DP)
+            psic(:) = (0.0_DP, 0.0_DP)
             !
             kplusg(1:npw) = (xk(ix, ik) + g(ix, igk_k(1:npw, ik))) * tpiba
             !
@@ -373,9 +428,11 @@ CONTAINS
               tauG(ir) = tauG(ir) + w * (psir * psir + psii * psii)
             END DO
             !
+            gw_gpsi(:) = gw_gpsi(:) + grad_w(:, ix) * psic(:)
+            !
           END DO
           !
-          ! ... |psi|^2 and (ef-e)*|psi|^2
+          ! ... |psi|^2 and -psi * (grad wei) * (grad psi) + (ef-e)*|psi|^2
           psic = (0.0_DP, 0.0_DP)
           !
           DO ig = 1, npw
@@ -388,10 +445,13 @@ CONTAINS
             psir =  DBLE(psic(ir))
             psii = AIMAG(psic(ir))
             !
+            gw_gpsir =  DBLE(gw_gpsi(ir))
+            gw_gpsii = AIMAG(gw_gpsi(ir))
+            !
             rho0 = w * (psir * psir + psii * psii)
             !
             rhor(ir) = rhor(ir) + rho0
-            dtdr(ir) = dtdr(ir) + de * rho0
+            dtdr(ir) = dtdr(ir) - w * (psir * gw_gpsir + psii * gw_gpsii) + de * rho0
           END DO
           !
         END IF
@@ -399,6 +459,12 @@ CONTAINS
       END DO
       !
     END DO
+    !
+    IF (noncolin) THEN
+      DEALLOCATE(gw_gpsi_nc)
+    ELSE
+      DEALLOCATE(gw_gpsi)
+    END IF
     !
   END SUBROUTINE sum_band_k
   !

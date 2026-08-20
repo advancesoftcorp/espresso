@@ -211,7 +211,7 @@ CONTAINS
     !
     ! ... calculate Kinetic Energy Density
     !
-    CALL kinetic_sum_band(rhor, tauG, tauL, dtdr, .TRUE.)
+    CALL kinetic_sum_band(rhor, tauG, tauL, dtdr)
     !
     eneTauG = 0.0_DP
     eneTauL = 0.0_DP
@@ -223,7 +223,7 @@ CONTAINS
       !
       eneTauG = eneTauG + fac * tauG(ir)
       eneTauL = eneTauL + fac * tauL(ir)
-      eneDtdr = eneDtdr + fac * dtdr(ir) * rhor(ir)
+      eneDtdr = eneDtdr + fac * dtdr(ir) !* rhor(ir)
       !
     END DO
     !
@@ -295,7 +295,7 @@ CONTAINS
       !
       IF (kinetic_dtdr .AND. with_dtdr) THEN
         !
-        WRITE(iunkinetic, '("#Kinetic Energy Derivative")')
+        WRITE(iunkinetic, '("#Kinetic Energy Derivative (dT/drho(r) * rho(r))")')
         CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP / e2, dtdr_g)
         !
       END IF
