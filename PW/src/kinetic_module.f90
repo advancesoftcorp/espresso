@@ -425,7 +425,7 @@ CONTAINS
       !
       IF (kinetic_dtdr .AND. with_dtdr) THEN
         !
-        WRITE(iunkinetic, '("#Kinetic Energy Derivative (dT/drho(r) * rho(r))")')
+        WRITE(iunkinetic, '("#Kinetic Energy Derivative")')
         CALL density_print(iunkinetic, nr1x, nr2x, nr3x, 1.0_DP / e2, dtdr_g)
         !
       END IF
