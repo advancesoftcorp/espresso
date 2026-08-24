@@ -154,36 +154,50 @@ CONTAINS
     !
     IF (ionode) THEN
       !
-      iun = find_free_unit()
-      !
-      filename = TRIM(tmp_dir) // TRIM(prefix) // '.kwei'
-      !
-      OPEN(unit=iun, file=filename, status='old', form='formatted', action='read', iostat=ios)
-      !
-      IF (ios == 0) THEN ! opened
+      IF (kinetic_weight) THEN
         !
-        READ(iun, '(A)') line
-        READ(line, *) ir1, ir2, ir3
+        ! ... kinetic weight from file
         !
-        IF (ir1 /= dffts%nr1 .OR. ir2 /= dffts%nr2 .OR. ir3 /= dffts%nr3) THEN
-          !
-          ios = 1
-          !
-          CALL infomsg('kinetic_print', 'incorrect FFT-mesh at: ' // TRIM(filename))
-          !
-        END IF
+        iun = find_free_unit()
         !
-        IF (ios == 0) THEN ! correct mesh
-          !
-          ALLOCATE(weir_t(dffts%nr1 * dffts%nr2 * dffts%nr3))
-          !
-          READ(iun, *) weir_t
-          !
-        END IF ! correct group and mesh
+        filename = TRIM(tmp_dir) // TRIM(prefix) // '.kwei'
         !
-        CLOSE(unit=iun)
+        OPEN(unit=iun, file=filename, status='old', form='formatted', action='read', iostat=ios)
         !
-      END IF ! opened
+        IF (ios == 0) THEN ! opened
+          !
+          READ(iun, '(A)') line
+          READ(line, *) ir1, ir2, ir3
+          !
+          IF (ir1 /= dffts%nr1 .OR. ir2 /= dffts%nr2 .OR. ir3 /= dffts%nr3) THEN
+            !
+            ios = 1
+            !
+            CALL infomsg('kinetic_print', 'incorrect FFT-mesh at: ' // TRIM(filename))
+            !
+          END IF
+          !
+          IF (ios == 0) THEN ! correct mesh
+            !
+            ALLOCATE(weir_t(dffts%nr1 * dffts%nr2 * dffts%nr3))
+            !
+            READ(iun, *) weir_t
+            !
+          END IF ! correct group and mesh
+          !
+          CLOSE(unit=iun)
+          !
+        END IF ! opened
+        !
+      ELSE
+        !
+        ! ... constant kinetic weight
+        !
+        ALLOCATE(weir_t(dffts%nr1 * dffts%nr2 * dffts%nr3))
+        !
+        weir_t(:) = 1.0_DP
+        !
+      END IF
       !
     END IF
     !
@@ -327,15 +341,7 @@ CONTAINS
     !
     ! ... calculate Kinetic Energy Density
     !
-    IF (kinetic_weight) THEN
-      !
-      CALL read_kinetic_weight(weir)
-      !
-    ELSE
-      !
-      weir = 1.0_DP
-      !
-    END IF
+    CALL read_kinetic_weight(weir)
     !
     CALL kinetic_sum_band(rhor, tauG, tauL, dtdr, weir)
     !

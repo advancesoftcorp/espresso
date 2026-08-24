@@ -45,6 +45,7 @@ SUBROUTINE kinetic_sum_band(rhor, tauG, tauL, dtdr, weir)
   !
   REAL(DP),    ALLOCATABLE :: kplusg(:)
   REAL(DP),    ALLOCATABLE :: grad_w(:,:)
+  COMPLEX(DP), ALLOCATABLE :: rhog(:)
   COMPLEX(DP), ALLOCATABLE :: weig(:)
   COMPLEX(DP), ALLOCATABLE :: aux (:)
   !
@@ -52,6 +53,7 @@ SUBROUTINE kinetic_sum_band(rhor, tauG, tauL, dtdr, weir)
   !
   ALLOCATE(kplusg(npwx))
   ALLOCATE(grad_w(3, dffts%nnr))
+  ALLOCATE(rhog(dffts%nnr))
   ALLOCATE(weig(dffts%nnr))
   ALLOCATE(aux (dffts%nnr))
   !
@@ -67,6 +69,8 @@ SUBROUTINE kinetic_sum_band(rhor, tauG, tauL, dtdr, weir)
   CALL fwfft('Rho', weig, dffts)
   !
   DO ix = 1, 3
+    !
+    aux(:) = (0.0_DP, 0.0_DP)
     !
     IF (gstart > 1) THEN
       !
@@ -121,9 +125,11 @@ SUBROUTINE kinetic_sum_band(rhor, tauG, tauL, dtdr, weir)
   !
   ! ... tauL = -psi Lap psi = |grad psi|^2 - (1/2)*Lap rho
   !
-  aux(:) = rhor(:)
+  rhog(:) = rhor(:)
   !
-  CALL fwfft('Rho', aux, dffts)
+  CALL fwfft('Rho', rhog, dffts)
+  !
+  aux(:) = (0.0_DP, 0.0_DP)
   !
   IF (gstart > 1) THEN
     !
@@ -135,7 +141,7 @@ SUBROUTINE kinetic_sum_band(rhor, tauG, tauL, dtdr, weir)
   !
   DO ig = gstart, dffts%ngm
     !
-    aux(dffts%nl(ig)) = fac * gg(ig) * aux(dffts%nl(ig))
+    aux(dffts%nl(ig)) = fac * gg(ig) * rhog(dffts%nl(ig))
     !
   END DO
   !
@@ -165,6 +171,7 @@ SUBROUTINE kinetic_sum_band(rhor, tauG, tauL, dtdr, weir)
   !
   DEALLOCATE(kplusg)
   DEALLOCATE(grad_w)
+  DEALLOCATE(rhog)
   DEALLOCATE(weig)
   DEALLOCATE(aux)
   !
