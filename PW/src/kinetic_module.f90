@@ -332,7 +332,7 @@ CONTAINS
       !
     ELSE
       !
-      weir = 0.0_DP
+      weir = 1.0_DP
       !
     END IF
     !
