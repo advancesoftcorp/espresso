@@ -126,6 +126,117 @@ CONTAINS
   END SUBROUTINE kinetic_close
   !
   !----------------------------------------------------------------------------
+  SUBROUTINE read_kinetic_weight(weir)
+    !----------------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    !
+    REAL(DP), INTENT(OUT) :: weir(dffts%nnr)
+    !
+    INTEGER :: iun
+    INTEGER :: ios
+    INTEGER :: ir1, ir2, ir3
+    INTEGER :: ir, jr
+    !
+    CHARACTER(LEN=256) :: line
+    CHARACTER(LEN=256) :: filename
+    !
+    INTEGER, EXTERNAL :: find_free_unit
+    !
+    REAL(DP), ALLOCATABLE :: weir_t(:)
+    REAL(DP), ALLOCATABLE :: weir_x(:)
+    !
+    ! ... read data from file
+    !
+    ios = 0
+    !
+    IF (ionode) THEN
+      !
+      iun = find_free_unit()
+      !
+      filename = TRIM(tmp_dir) // TRIM(prefix) // '.kwei'
+      !
+      OPEN(unit=iun, file=filename, status='old', form='formatted', action='read', iostat=ios)
+      !
+      IF (ios == 0) THEN ! opened
+        !
+        READ(iun, '(A)') line
+        READ(line, *) ir1, ir2, ir3
+        !
+        IF (ir1 /= dffts%nr1 .OR. ir2 /= dffts%nr2 .OR. ir3 /= dffts%nr3) THEN
+          !
+          ios = 1
+          !
+          CALL infomsg('kinetic_print', 'incorrect FFT-mesh at: ' // TRIM(filename))
+          !
+        END IF
+        !
+        IF (ios == 0) THEN ! correct mesh
+          !
+          ALLOCATE(weir_t(dffts%nr1 * dffts%nr2 * dffts%nr3))
+          !
+          READ(iun, *) weir_t
+          !
+        END IF ! correct group and mesh
+        !
+        CLOSE(unit=iun)
+        !
+      END IF ! opened
+      !
+    END IF
+    !
+    CALL mp_barrier(intra_image_comm)
+    !
+    CALL mp_sum(ios, intra_image_comm)
+    !
+    IF (ios /= 0) THEN
+      !
+      IF (ALLOCATED(weir_t)) DEALLOCATE(weir_t)
+      !
+      CALL errore('kinetic_print', 'error to open/read file: ' // TRIM(filename), ios)
+      !
+      RETURN
+      !
+    END IF
+    !
+    ! ... share data for all node
+    !
+    ALLOCATE(weir_x(dffts%nr1x * dffts%nr2x * dffts%nr3x))
+    !
+    weir_x = 0.0_DP
+    !
+    IF (ionode) THEN
+      !
+      DO ir3 = 1, dffts%nr3
+        !
+        DO ir2 = 1, dffts%nr2
+          !
+          ir = (ir2 - 1) * dffts%nr1x + (ir3 - 1) * dffts%nr1x * dffts%nr2x
+          jr = (ir2 - 1) * dffts%nr1  + (ir3 - 1) * dffts%nr1  * dffts%nr2
+          !
+          weir_x((ir+1):(ir+dffts%nr1)) = weir_t((jr+1):(jr+dffts%nr1))
+          !
+        END DO
+        !
+      END DO
+      !
+      DEALLOCATE(weir_t)
+      !
+    END IF
+    !
+    weir = 0.0_DP
+    !
+#if defined(__MPI)
+    CALL scatter_grid(dffts, weir_x(:), weir(:))
+#else
+    weir = weir_x
+#endif
+    !
+    DEALLOCATE(weir_x)
+    !
+  END SUBROUTINE read_kinetic_weight
+  !
+  !----------------------------------------------------------------------------
   SUBROUTINE kinetic_print(with_dtdr, idx)
     !----------------------------------------------------------------------------
     !
@@ -149,6 +260,7 @@ CONTAINS
     REAL(DP), ALLOCATABLE :: tauG(:)
     REAL(DP), ALLOCATABLE :: tauL(:)
     REAL(DP), ALLOCATABLE :: dtdr(:)
+    REAL(DP), ALLOCATABLE :: weir(:)
     REAL(DP), ALLOCATABLE :: rho1_g(:)
     REAL(DP), ALLOCATABLE :: rho2_g(:)
     REAL(DP), ALLOCATABLE :: tauG_g(:)
@@ -203,6 +315,7 @@ CONTAINS
     ALLOCATE(tauG(dffts%nnr))
     ALLOCATE(tauL(dffts%nnr))
     ALLOCATE(dtdr(dffts%nnr))
+    ALLOCATE(weir(dffts%nnr))
     ALLOCATE(rho1_g(nfft))
     ALLOCATE(rho2_g(nfft))
     ALLOCATE(tauG_g(nfft))
@@ -211,7 +324,9 @@ CONTAINS
     !
     ! ... calculate Kinetic Energy Density
     !
-    CALL kinetic_sum_band(rhor, tauG, tauL, dtdr)
+    CALL read_kinetic_weight(weir)
+    !
+    CALL kinetic_sum_band(rhor, tauG, tauL, dtdr, weir)
     !
     eneTauG = 0.0_DP
     eneTauL = 0.0_DP
@@ -312,6 +427,7 @@ CONTAINS
     DEALLOCATE(tauG)
     DEALLOCATE(tauL)
     DEALLOCATE(dtdr)
+    DEALLOCATE(weir)
     DEALLOCATE(rho1_g)
     DEALLOCATE(rho2_g)
     DEALLOCATE(tauG_g)
