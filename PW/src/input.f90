@@ -218,7 +218,8 @@ SUBROUTINE iosys()
 
   USE sannp_module,          ONLY : do_sannp, sannp_check
 
-  USE kinetic_module,        ONLY : do_kinetic, kinetic_dtdr, kinetic_perturb, kinetic_nprint
+  USE kinetic_module,        ONLY : do_kinetic, kinetic_dtdr, kinetic_weight, &
+                                    kinetic_perturb, kinetic_nprint
 
   USE vlocal,        ONLY : starting_charge_ => starting_charge
   !
@@ -232,8 +233,8 @@ SUBROUTINE iosys()
                                nberrycyc, efield_cart, lecrpa,                 &
                                lfcp, vdw_table_name, memory, max_seconds,      &
                                tqmmm, efield_phase, gate, trism, tsannp,       &
-                               tkinetic, kin_dtdr, kin_perturb, kin_nprint,    &
-                               max_xml_steps
+                               tkinetic, kin_dtdr, kin_weight, kin_perturb,    &
+                               kin_nprint, max_xml_steps
 
   !
   ! ... SYSTEM namelist
@@ -1703,6 +1704,7 @@ SUBROUTINE iosys()
   !
   do_kinetic      = tkinetic
   kinetic_dtdr    = kin_dtdr
+  kinetic_weight  = kin_weight
   kinetic_perturb = kin_perturb
   kinetic_nprint  = kin_nprint
   !

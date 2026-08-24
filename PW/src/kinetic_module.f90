@@ -36,12 +36,14 @@ MODULE kinetic_module
   !
   LOGICAL  :: do_kinetic      = .FALSE.
   LOGICAL  :: kinetic_dtdr    = .TRUE.
+  LOGICAL  :: kinetic_weight  = .TRUE.
   REAL(DP) :: kinetic_perturb = 0.0_DP
   INTEGER  :: kinetic_nprint  = 0
   INTEGER  :: iunkinetic
   !
   PUBLIC :: do_kinetic
   PUBLIC :: kinetic_dtdr
+  PUBLIC :: kinetic_weight
   PUBLIC :: kinetic_perturb
   PUBLIC :: kinetic_nprint
   PUBLIC :: kinetic_print
@@ -324,7 +326,15 @@ CONTAINS
     !
     ! ... calculate Kinetic Energy Density
     !
-    CALL read_kinetic_weight(weir)
+    IF (kinetic_weight) THEN
+      !
+      CALL read_kinetic_weight(weir)
+      !
+    ELSE
+      !
+      weir = 0.0_DP
+      !
+    END IF
     !
     CALL kinetic_sum_band(rhor, tauG, tauL, dtdr, weir)
     !

@@ -268,6 +268,8 @@ MODULE input_parameters
 
         LOGICAL :: kin_dtdr = .TRUE.  ! calculate dT/drho for Kinetic Energy Density.
 
+        LOGICAL :: kin_weight = .TRUE.  ! use weight function for Kinetic Energy Density.
+
         REAL(DP) :: kin_perturb = 0.0_DP ! scale of perturbation potential for Kinetic Energy Density.
 
         INTEGER :: kin_nprint = 5     ! scf-iters to punch data of Kinetic Energy Density.
@@ -295,7 +297,7 @@ MODULE input_parameters
           forc_conv_thr, pseudo_dir, disk_io, tefield, dipfield, lberry,  &
           gdir, nppstr, wf_collect, lelfield, nberrycyc, refg,            &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier, lecrpa,     &
-          lfcp, tqmmm, trism, tsannp, tkinetic, kin_dtdr, kin_perturb, kin_nprint,  &
+          lfcp, tqmmm, trism, tsannp, tkinetic, kin_dtdr, kin_weight, kin_perturb, kin_nprint,  &
           vdw_table_name, lorbm, memory, point_label_type, input_xml_schema_file, gate
 !
 !=----------------------------------------------------------------------------=!
