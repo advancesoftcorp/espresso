@@ -252,7 +252,7 @@ CONTAINS
             tauG(ir) = tauG(ir) + w1 * psir * psir + w2 * psii * psii
           END DO
           !
-          gw_gpsi(:) = gw_gpsi(:) + grad_w(:, ix) * psic(:)
+          gw_gpsi(:) = gw_gpsi(:) + grad_w(ix, :) * psic(:)
           !
         END DO
         !
@@ -366,7 +366,7 @@ CONTAINS
                 tauG(ir) = tauG(ir) + w * (psir * psir + psii * psii)
               END DO
               !
-              gw_gpsi_nc(:, ipol) = gw_gpsi_nc(:, ipol) + grad_w(:, ix) * psic_nc(:, ipol)
+              gw_gpsi_nc(:, ipol) = gw_gpsi_nc(:, ipol) + grad_w(ix, :) * psic_nc(:, ipol)
               !
             END DO
             !
@@ -428,7 +428,7 @@ CONTAINS
               tauG(ir) = tauG(ir) + w * (psir * psir + psii * psii)
             END DO
             !
-            gw_gpsi(:) = gw_gpsi(:) + grad_w(:, ix) * psic(:)
+            gw_gpsi(:) = gw_gpsi(:) + grad_w(ix, :) * psic(:)
             !
           END DO
           !

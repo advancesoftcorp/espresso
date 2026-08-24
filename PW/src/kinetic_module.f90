@@ -254,6 +254,7 @@ CONTAINS
     INTEGER  :: nr1x, nr2x, nr3x
     INTEGER  :: nfft
     REAL(DP) :: fac
+    REAL(DP) :: totRhor
     REAL(DP) :: eneTauG
     REAL(DP) :: eneTauL
     REAL(DP) :: eneDtdr
@@ -338,6 +339,7 @@ CONTAINS
     !
     CALL kinetic_sum_band(rhor, tauG, tauL, dtdr, weir)
     !
+    totRhor = 0.0_DP
     eneTauG = 0.0_DP
     eneTauL = 0.0_DP
     eneDtdr = 0.0_DP
@@ -346,12 +348,14 @@ CONTAINS
     !
     DO ir = 1, dffts%nnr
       !
+      totRhor = totRhor + fac * rhor(ir)
       eneTauG = eneTauG + fac * tauG(ir)
       eneTauL = eneTauL + fac * tauL(ir)
       eneDtdr = eneDtdr + fac * dtdr(ir) !* rhor(ir)
       !
     END DO
     !
+    CALL mp_sum(totRhor, intra_bgrp_comm)
     CALL mp_sum(eneTauG, intra_bgrp_comm)
     CALL mp_sum(eneTauL, intra_bgrp_comm)
     CALL mp_sum(eneDtdr, intra_bgrp_comm)
@@ -359,6 +363,7 @@ CONTAINS
     IF (ionode .AND. idx_ < 0) THEN
       !
       WRITE(stdout, '()')
+      WRITE(stdout, '(5X,"Total number of electrons     =",F17.8)')       totRhor
       WRITE(stdout, '(5X,"Kinetic energy (by Gradient)  =",F17.8," Ry")') eneTauG
       WRITE(stdout, '(5X,"Kinetic energy (by Laplacian) =",F17.8," Ry")') eneTauL
       WRITE(stdout, '(5X,"Integral [ dT/drho * rho ]    =",F17.8," Ry")') eneDtdr
